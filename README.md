@@ -44,7 +44,7 @@ Academic Year 2025–2026
 ## Getting Started
 1. Clone the repository:
    ``bash
-   git clone  https://github.com/Laythh224/Esprit-PW-2A19-2526-CAREERLAB.git
+   git clone  https://github.com/Laythh224/Esprit-PW-2A33-2526-CAREERLAB.git
 
 ## Acknowledgments
 Developed at Esprit School of Engineering – Tunisia Academic Year 2025–2026 Technologies: JS,HTML,PHP, MySQL
