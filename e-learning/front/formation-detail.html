@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Détail formation — CareerLab e_learning</title>
+    <link rel="stylesheet" href="../assets/css/front-layout.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a href="formations.html" class="logo">
+          <span class="logo__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" aria-label="">
+              <path d="M12 11.8a4.4 4.4 0 1 0 0-8.8 4.4 4.4 0 0 0 0 8.8Zm-4.8 8.2.9-4h1.8l2.1 3 2.1-3h1.8l.9 4H19v1.5H5V20h2.2Z" />
+            </svg>
+          </span>
+          CareerLab <span>e_learning</span>
+        </a>
+        <nav class="nav-main" aria-label="Navigation principale">
+          <a href="formations.html" class="is-active">Optionn</a>
+          <a href="certifications.html">Planning</a>
+          <a href="../../indexF.html" class="btn btn--outline" style="margin-left: 0.75rem">Main page</a>
+        </nav>
+      </div>
+    </header>
+    <main class="main-wrap">
+      <p style="margin: 0 0 0.5rem"><a href="formations.html">← Retour à optionn</a></p>
+      <h1 class="page-title">Détail optionn + planning</h1>
+      <p class="page-subtitle">Vue liée aux tables <strong>optionn</strong>, <strong>planning</strong> et <strong>planning_option</strong>.</p>
+      <div class="tabs" role="tablist">
+        <a href="#optionn" class="is-active">Optionn</a>
+        <a href="#planning">Planning</a>
+      </div>
+      <section id="optionn" class="card" aria-labelledby="optionn-title">
+        <h2 id="optionn-title" style="margin: 0 0 1rem; font-size: 1.1rem">Table optionn (exemple)</h2>
+        <ul class="list-resources" id="optionn-detail-current"></ul>
+      </section>
+      <section id="planning" class="card" aria-labelledby="planning-title">
+        <h2 id="planning-title" style="margin: 0 0 1rem; font-size: 1.1rem">Table planning (exemple)</h2>
+        <ul class="list-resources">
+          <li>
+            <div>
+              <strong>id_planning: 1</strong> — nom_de_formation: Session printemps web
+              <div style="font-size: 0.85rem; color: #64748b">date_debut: 2026-04-01 · date_fin: 2026-05-15 · TYPE: En ligne · durée: 44 jours</div>
+            </div>
+            <span class="badge">En cours</span>
+          </li>
+          <li>
+            <div>
+              <strong>id_planning: 2</strong> — nom_de_formation: Session communication
+              <div style="font-size: 0.85rem; color: #64748b">date_debut: 2026-05-20 · date_fin: 2026-06-10 · TYPE: Présentiel · durée: 21 jours</div>
+            </div>
+            <span class="badge">À venir</span>
+          </li>
+        </ul>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <p>CareerLab — Module e_learning · optionn, planning, planning_option</p>
+    </footer>
+    <script src="../assets/js/optionn-crud.js"></script>
+  </body>
+</html>
+
+

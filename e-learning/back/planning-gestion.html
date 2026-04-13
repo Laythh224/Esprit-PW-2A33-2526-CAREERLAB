@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Planning — Administration | CareerLab</title>
+    <link rel="stylesheet" href="../assets/css/back-layout.css" />
+  </head>
+  <body>
+    <div class="back-shell">
+      <aside class="back-sidebar" aria-label="Navigation administration">
+        <div class="back-sidebar__brand">
+          <strong>CareerLab</strong>
+          <small>Back office · e_learning</small>
+        </div>
+        <ul class="back-nav">
+          <li><a href="index.html">Tableau de bord</a></li>
+          <li><a href="formations-gestion.html">Optionn</a></li>
+          <li><a href="planning-gestion.html" class="is-active">Planning</a></li>
+          <li><a href="ressources-gestion.html">Planning_Option</a></li>
+          <li><a href="certifications-gestion.html">Structure SQL</a></li>
+          <li><a href="../../indexF.html">Main page</a></li>
+        </ul>
+      </aside>
+      <div class="back-main">
+        <header class="back-topbar">
+          <h1>Table planning</h1>
+          <span style="font-size: 0.875rem; color: #64748b">id_planning, nom_de_formation, date_debut, date_fin, TYPE</span>
+        </header>
+        <div class="back-content">
+          <p style="margin: 0 0 1rem; color: #64748b">
+            Détail planning : colonnes SQL + indicateurs calculés (durée en jours, statut selon les dates) + liaisons
+            avec <strong>planning_option</strong>.
+          </p>
+          <div class="back-card">
+            <form id="planning-back-form">
+              <input id="id_planning" name="id_planning" type="hidden" />
+              <div class="form-grid" style="margin-bottom: 1rem">
+                <div class="form-group">
+                  <label for="nom_de_formation">nom_de_formation</label>
+                  <input id="nom_de_formation" type="text" placeholder="Ex. Session printemps web" required />
+                </div>
+                <div class="form-group">
+                  <label for="date_debut">date_debut</label>
+                  <input id="date_debut" type="date" required />
+                </div>
+                <div class="form-group">
+                  <label for="date_fin">date_fin</label>
+                  <input id="date_fin" type="date" required />
+                </div>
+                <div class="form-group">
+                  <label for="TYPE">TYPE</label>
+                  <input id="TYPE" type="text" placeholder="Ex. Présentiel" required />
+                </div>
+              </div>
+              <div class="actions-row">
+                <button type="submit" class="btn-primary">Enregistrer planning</button>
+                <button id="planning-cancel-btn" type="button" class="btn-secondary">Annuler</button>
+              </div>
+            </form>
+          </div>
+          <div class="back-card">
+            <h2 class="back-card__title">Liste planning</h2>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>id_planning</th>
+                    <th>nom_de_formation</th>
+                    <th>date_debut</th>
+                    <th>date_fin</th>
+                    <th>TYPE</th>
+                    <th>Durée (jours)</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="planning-back-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="back-card">
+            <h2 class="back-card__title">Liaisons planning_option (détail)</h2>
+            <form id="planning-option-back-form">
+              <input id="po_original_id_planning" type="hidden" />
+              <input id="po_original_id_option" type="hidden" />
+              <div class="form-grid" style="margin-bottom: 1rem">
+                <div class="form-group">
+                  <label for="po_id_planning">id_planning</label>
+                  <select id="po_id_planning" required></select>
+                </div>
+                <div class="form-group">
+                  <label for="po_id_option">id_option</label>
+                  <select id="po_id_option" required></select>
+                </div>
+              </div>
+              <div class="actions-row" style="margin-top: 0; margin-bottom: 1rem">
+                <button type="submit" class="btn-primary">Enregistrer liaison</button>
+                <button id="po-cancel-btn" type="button" class="btn-secondary">Annuler</button>
+              </div>
+            </form>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>id_planning</th>
+                    <th>nom_de_formation</th>
+                    <th>id_option</th>
+                    <th>nom_option</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="planning-option-back-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="../assets/js/optionn-crud.js"></script>
+  </body>
+</html>
+
+

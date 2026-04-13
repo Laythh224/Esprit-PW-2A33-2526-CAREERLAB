@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Optionn — Administration | CareerLab</title>
+    <link rel="stylesheet" href="../assets/css/back-layout.css" />
+  </head>
+  <body>
+    <div class="back-shell">
+      <aside class="back-sidebar" aria-label="Navigation administration">
+        <div class="back-sidebar__brand">
+          <strong>CareerLab</strong>
+          <small>Back office · e_learning</small>
+        </div>
+        <ul class="back-nav">
+          <li><a href="index.html">Tableau de bord</a></li>
+          <li><a href="formations-gestion.html" class="is-active">Optionn</a></li>
+          <li><a href="planning-gestion.html">Planning</a></li>
+          <li><a href="ressources-gestion.html">Planning_Option</a></li>
+          <li><a href="certifications-gestion.html">Structure SQL</a></li>
+          <li><a href="../../indexF.html">Main page</a></li>
+        </ul>
+      </aside>
+      <div class="back-main">
+        <header class="back-topbar">
+          <h1>Table optionn</h1>
+          <span style="font-size: 0.875rem; color: #64748b">CRUD BackOffice</span>
+        </header>
+        <div class="back-content">
+          <div class="back-card">
+            <h2 class="back-card__title" id="optionn-back-inline-title">Ajouter une option</h2>
+            <form id="optionn-back-inline-form">
+              <input id="optionn_back_id_option" type="hidden" />
+              <div class="form-grid">
+                <div class="form-group" style="grid-column: 1 / -1">
+                  <label for="optionn_back_nom_option">nom_option</label>
+                  <input id="optionn_back_nom_option" type="text" placeholder="Ex. Développement web" required />
+                </div>
+                <div class="form-group">
+                  <label for="optionn_back_specialite">specialite</label>
+                  <input id="optionn_back_specialite" type="text" placeholder="Ex. Front-end" />
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1">
+                  <label for="optionn_back_description">description</label>
+                  <textarea id="optionn_back_description" placeholder="Description de l'option"></textarea>
+                </div>
+              </div>
+              <div class="actions-row">
+                <button type="submit" class="btn-primary">Enregistrer</button>
+                <button id="optionn-back-inline-cancel" type="button" class="btn-secondary">Annuler</button>
+              </div>
+            </form>
+          </div>
+          <div class="back-card">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>id_option</th>
+                    <th>nom_option</th>
+                    <th>specialite</th>
+                    <th>description</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="optionn-back-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="../assets/js/optionn-crud.js"></script>
+  </body>
+</html>
+
+
