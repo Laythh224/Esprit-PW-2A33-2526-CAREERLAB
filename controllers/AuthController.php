@@ -2,17 +2,15 @@
 
 class AuthController
 {
-    private const ACCOUNT_SOURCES = [
-        ['role' => 'utilisateur', 'table' => 'utilisateur'],
-        ['role' => 'formateur', 'table' => 'formateur'],
-        ['role' => 'entreprise', 'table' => 'entreprise'],
-    ];
+    private UserModel $userModel;
+    private FormateurModel $formateurModel;
+    private EntrepriseModel $entrepriseModel;
 
-    private AuthRepository $repository;
-
-    public function __construct(AuthRepository $repository)
+    public function __construct(UserModel $userModel, FormateurModel $formateurModel, EntrepriseModel $entrepriseModel)
     {
-        $this->repository = $repository;
+        $this->userModel = $userModel;
+        $this->formateurModel = $formateurModel;
+        $this->entrepriseModel = $entrepriseModel;
     }
 
     public function processLogin(): array
@@ -94,8 +92,14 @@ class AuthController
 
     private function authenticateAndRedirect(string $email, string $password): bool
     {
-        foreach (self::ACCOUNT_SOURCES as $entry) {
-            $account = $this->repository->findByEmail($entry['table'], $email);
+        $sources = [
+            ['role' => 'utilisateur', 'lookup' => fn () => $this->userModel->findByEmail($email)],
+            ['role' => 'formateur', 'lookup' => fn () => $this->formateurModel->findByEmail($email)],
+            ['role' => 'entreprise', 'lookup' => fn () => $this->entrepriseModel->findByEmail($email)],
+        ];
+
+        foreach ($sources as $entry) {
+            $account = $entry['lookup']();
 
             if ($account && $this->isMatchingPassword($password, (string) $account['password'])) {
                 $this->storeAuthenticatedSession($entry['role'], $account);

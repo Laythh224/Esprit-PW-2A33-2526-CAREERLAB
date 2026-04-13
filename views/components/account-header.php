@@ -2,7 +2,7 @@
     <div class="main-header-logo">
         <div class="logo-header" data-background-color="dark">
             <a href="index.php?page=dashboard-admin" class="logo">
-                <img src="image_2026-04-11_005109464-removebg-preview.png" alt="navbar brand" class="navbar-brand" height="20" />
+                <img src="views/assets/img/image_2026-04-11_005109464-removebg-preview.png" alt="navbar brand" class="navbar-brand" height="20" />
             </a>
             <div class="nav-toggle">
                 <button class="btn btn-toggle toggle-sidebar"><i class="gg-menu-right"></i></button>

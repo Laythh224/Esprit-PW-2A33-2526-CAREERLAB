@@ -13,7 +13,7 @@
         <div class="row justify-content-center mb-4">
             <div class="col-auto text-center">
                 <a href="index.php?page=accueil">
-                    <img src="image_2026-04-11_005109464-removebg-preview.png" alt="CareerLab" style="height: 56px; max-width: 100%;" />
+                    <img src="views/assets/img/image_2026-04-11_005109464-removebg-preview.png" alt="CareerLab" style="height: 56px; max-width: 100%;" />
                 </a>
             </div>
         </div>

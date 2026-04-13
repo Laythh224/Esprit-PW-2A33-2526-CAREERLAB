@@ -58,22 +58,33 @@ $homeRoutes = [
     'creer-compte' => 'creerCompte',
 ];
 
-$containerRoutes = [
-    'login' => ['factory' => 'makeAuthController', 'action' => 'login'],
-    'logout' => ['factory' => 'makeAuthController', 'action' => 'logout'],
-    'dashboard' => ['factory' => 'makeDashboardController', 'action' => 'index'],
-    'utilisateur' => ['factory' => 'makeUserSignupController', 'action' => 'index'],
-    'entreprise' => ['factory' => 'makeEntrepriseSignupController', 'action' => 'index'],
-    'formateur' => ['factory' => 'makeFormateurSignupController', 'action' => 'index'],
-    'api-entreprises' => ['factory' => 'makeEntrepriseApiController', 'action' => 'handle'],
-    'api-formateurs' => ['factory' => 'makeFormateurApiController', 'action' => 'handle'],
-    'api-utilisateurs' => ['factory' => 'makeUserApiController', 'action' => 'handle'],
-];
-
 try {
     $database = new Database();
     $conn = $database->connection();
-    $container = new AppContainer($conn);
+
+    $cvUploadService = new CvUploadService();
+    $userModel = new UserModel($conn, $cvUploadService);
+    $formateurModel = new FormateurModel($conn, $cvUploadService);
+    $entrepriseModel = new EntrepriseModel($conn);
+
+    $homeController = new HomeController();
+    $authController = new AuthController($userModel, $formateurModel, $entrepriseModel);
+    $dashboardController = new DashboardController($userModel, $formateurModel, $entrepriseModel);
+    $userController = new UserController($userModel);
+    $formateurController = new FormateurController($formateurModel);
+    $entrepriseController = new EntrepriseController($entrepriseModel);
+
+    $controllerRoutes = [
+        'login' => [$authController, 'login'],
+        'logout' => [$authController, 'logout'],
+        'dashboard' => [$dashboardController, 'index'],
+        'utilisateur' => [$userController, 'signup'],
+        'formateur' => [$formateurController, 'signup'],
+        'entreprise' => [$entrepriseController, 'signup'],
+        'api-utilisateurs' => [$userController, 'api'],
+        'api-formateurs' => [$formateurController, 'api'],
+        'api-entreprises' => [$entrepriseController, 'api'],
+    ];
 
     // Sécurité : Validation basique
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $page)) {
@@ -84,15 +95,10 @@ try {
 
     if (isset($homeRoutes[$page])) {
         $action = $homeRoutes[$page];
-        $controller = new HomeController();
-        $controller->$action();
+        $homeController->$action();
         $handled = true;
-    } elseif (isset($containerRoutes[$page])) {
-        $route = $containerRoutes[$page];
-        $factory = $route['factory'];
-        $action = $route['action'];
-
-        $controller = $container->$factory();
+    } elseif (isset($controllerRoutes[$page])) {
+        [$controller, $action] = $controllerRoutes[$page];
         $controller->$action();
         $handled = true;
     } elseif (isset($viewRoutes[$page])) {

@@ -9,12 +9,12 @@
     />
     <link
       rel="icon"
-      href="views/assets/img/kaiadmin/favicon.ico"
+      href="views/assets/img/favicon.ico"
       type="image/x-icon"
     />
 
     <!-- Fonts and icons -->
-    <script src="views/assets/js/plugin/webfont/webfont.min.js"></script>
+    <script src="views/assets/js/webfont.min.js"></script>
     <script>
       WebFont.load({
         google: { families: ["Public Sans:300,400,500,600,700"] },
@@ -133,7 +133,7 @@
             <div class="logo-header" data-background-color="dark">
               <a href="index.php?page=dashboard-admin" class="logo">
                 <img
-                  src="image_2026-04-11_005109464-removebg-preview.png"
+                  src="views/assets/img/image_2026-04-11_005109464-removebg-preview.png"
                   alt="navbar brand"
                   class="navbar-brand"
                   height="20"
@@ -1192,12 +1192,12 @@
       <!-- End Custom template -->
     </div>
     <!--   Core JS Files   -->
-    <script src="views/assets/js/core/jquery-3.7.1.min.js"></script>
-    <script src="views/assets/js/core/popper.min.js"></script>
-    <script src="views/assets/js/core/bootstrap.min.js"></script>
+    <script src="views/assets/js/jquery-3.7.1.min.js"></script>
+    <script src="views/assets/js/popper.min.js"></script>
+    <script src="views/assets/js/bootstrap.min.js"></script>
 
     <!-- jQuery Scrollbar -->
-    <script src="views/assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+    <script src="views/assets/js/jquery.scrollbar.min.js"></script>
     <!-- Kaiadmin JS -->
     <script src="views/assets/js/kaiadmin.min.js"></script>
     <!-- Kaiadmin DEMO methods, don't include it in your project! -->

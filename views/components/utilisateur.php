@@ -10,9 +10,9 @@
 </head>
 <body>
     <div class="wrapper">
-        <?php $activeAccountPage = 'utilisateur'; include __DIR__ . '/partials/account-sidebar.php'; ?>
+        <?php $activeAccountPage = 'utilisateur'; include __DIR__ . '/account-sidebar.php'; ?>
         <div class="main-panel">
-            <?php include __DIR__ . '/partials/account-header.php'; ?>
+            <?php include __DIR__ . '/account-header.php'; ?>
             <div class="container py-4">
                 <div class="row g-4">
                     <div class="col-lg-4">
@@ -64,9 +64,9 @@
         </div>
     </div>
 
-    <script src="views/assets/js/core/jquery-3.7.1.min.js"></script>
-    <script src="views/assets/js/core/popper.min.js"></script>
-    <script src="views/assets/js/core/bootstrap.min.js"></script>
+    <script src="views/assets/js/jquery-3.7.1.min.js"></script>
+    <script src="views/assets/js/popper.min.js"></script>
+    <script src="views/assets/js/bootstrap.min.js"></script>
     <script src="views/assets/js/kaiadmin.min.js"></script>
     <script>
         const API_URL = "index.php?page=api-utilisateurs";

@@ -2,11 +2,15 @@
 
 class DashboardController
 {
-    private AuthRepository $repository;
+    private UserModel $userModel;
+    private FormateurModel $formateurModel;
+    private EntrepriseModel $entrepriseModel;
 
-    public function __construct(AuthRepository $repository)
+    public function __construct(UserModel $userModel, FormateurModel $formateurModel, EntrepriseModel $entrepriseModel)
     {
-        $this->repository = $repository;
+        $this->userModel = $userModel;
+        $this->formateurModel = $formateurModel;
+        $this->entrepriseModel = $entrepriseModel;
     }
 
     public function getViewData(): array
@@ -14,9 +18,9 @@ class DashboardController
         $this->ensureAuthenticated();
 
         return [
-            'totalUtilisateurs' => $this->repository->countAll('utilisateur'),
-            'totalFormateurs' => $this->repository->countAll('formateur'),
-            'totalEntreprises' => $this->repository->countAll('entreprise'),
+            'totalUtilisateurs' => $this->userModel->count(),
+            'totalFormateurs' => $this->formateurModel->count(),
+            'totalEntreprises' => $this->entrepriseModel->count(),
             'nom' => $_SESSION['user_name'] ?? 'Utilisateur',
             'role' => $_SESSION['role'],
         ];

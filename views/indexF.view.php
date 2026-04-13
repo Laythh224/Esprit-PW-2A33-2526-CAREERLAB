@@ -21,8 +21,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
 
     <!-- Libraries Stylesheet -->
-    <link href="views/assets/lib/owlcarousel/views/assets/owl.carousel.min.css" rel="stylesheet">
-    <link href="views/assets/lib/animate/animate.min.css" rel="stylesheet">
+    <link href="views/assets/css/owl.carousel.min.css" rel="stylesheet">
+    <link href="views/assets/css/animate.min.css" rel="stylesheet">
 
     <!-- Customized Bootstrap Stylesheet -->
     <link href="views/assets/css/bootstrap.min.css" rel="stylesheet">
@@ -67,7 +67,7 @@
     <div class="container-fluid position-relative p-0">
         <nav class="navbar navbar-expand-lg navbar-dark px-5 py-3 py-lg-0">
             <a href="index.php?page=accueil" class="navbar-brand p-0">
-                <img src="image_2026-04-11_005109464-removebg-preview.png" alt="CareerLab" style="height: 52px; max-width: 100%;" />
+                <img src="views/assets/img/image_2026-04-11_005109464-removebg-preview.png" alt="CareerLab" style="height: 52px; max-width: 100%;" />
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
                 <span class="fa fa-bars"></span>
@@ -89,6 +89,7 @@
                 </div>
                 <a href="index.php?page=login" class="btn btn-outline-light py-2 px-3 ms-lg-3 me-2">Se connecter</a>
                 <a href="index.php?page=creer-compte" class="btn btn-primary py-2 px-3">Créer un compte</a>
+                <a href="index.php?page=dashboard-admin" class="btn btn-warning py-2 px-3 ms-2">Backoffice</a>
                 <butaton type="button" class="btn text-primary ms-3" data-bs-toggle="modal" data-bs-target="#searchModal"><i class="fa fa-search"></i></butaton>
 
             </div>
@@ -819,11 +820,11 @@
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="views/assets/lib/wow/wow.min.js"></script>
-    <script src="views/assets/lib/easing/easing.min.js"></script>
-    <script src="views/assets/lib/waypoints/waypoints.min.js"></script>
-    <script src="views/assets/lib/counterup/counterup.min.js"></script>
-    <script src="views/assets/lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="views/assets/js/wow.min.js"></script>
+    <script src="views/assets/js/easing.min.js"></script>
+    <script src="views/assets/js/waypoints.min.js"></script>
+    <script src="views/assets/js/counterup.min.js"></script>
+    <script src="views/assets/js/owl.carousel.min.js"></script>
 
     <!-- Template Javascript -->
     <script src="views/assets/js/main.js"></script>
