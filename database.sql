@@ -49,22 +49,6 @@ CREATE TABLE IF NOT EXISTS `Stage` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ----------------------------------------------------------------
--- Table : Candidature
--- ----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `Candidature` (
-    `id`               INT          NOT NULL AUTO_INCREMENT,
-    `offre_id`         INT          NOT NULL,
-    `type_offre`       VARCHAR(20)  NOT NULL, -- 'travail' or 'stage'
-    `nom`              VARCHAR(100) NOT NULL,
-    `email`            VARCHAR(100) NOT NULL,
-    `telephone`        VARCHAR(20),
-    `niveau_etudes`    VARCHAR(50),
-    `motivation`       TEXT,
-    `cv_filename`      VARCHAR(255),
-    `date_candidature` DATETIME     DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------
 -- Données de test (optionnel)
@@ -80,9 +64,3 @@ INSERT INTO `Stage`
 VALUES
     ('3 mois', 'Stage en développement logiciel', 'Startup TN', 'Av. Habib Bourguiba', 'Tunis', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 90 DAY), 'Licence', 'contact@startup.tn', 'disponible'),
     ('6 mois', 'Stage en data science et IA', 'DataLab', 'Zone industrielle', 'Monastir', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 180 DAY), 'Master', 'rh@datalab.tn', 'disponible');
-
-INSERT INTO `Candidature`
-    (offre_id, type_offre, nom, email, telephone, niveau_etudes, motivation)
-VALUES
-    (1, 'travail', 'Ahmed Ben Ali', 'ahmed@email.com', '21612345678', 'Master', 'Passionné par le PHP...'),
-    (1, 'stage', 'Sonia Mansour', 'sonia@email.com', '21698765432', 'Licence', 'Curieuse de découvrir le milieu tech...');

@@ -9,14 +9,6 @@ $totalStage    = $pdo->query("SELECT COUNT(*) FROM Stage")->fetchColumn();
 $totalOffres   = $totalTravail + $totalStage;
 $stagesOuverts = $pdo->query("SELECT COUNT(*) FROM Stage WHERE statut='disponible'")->fetchColumn();
 
-// Statistiques Candidatures
-$totalCandidatures = $pdo->query("SELECT COUNT(*) FROM Candidature")->fetchColumn();
-$recentCandidatures = $pdo->query("SELECT c.*, 
-    CASE WHEN c.type_offre = 'travail' THEN t.titre ELSE s.nom_societe END as offre_titre
-    FROM Candidature c
-    LEFT JOIN OpportuniteTravail t ON c.offre_id = t.id AND c.type_offre = 'travail'
-    LEFT JOIN Stage s ON c.offre_id = s.id AND c.type_offre = 'stage'
-    ORDER BY c.date_candidature DESC LIMIT 5")->fetchAll();
 
 // Répartition par domaine (pour graphique - Jobs)
 $domainesResult = $pdo->query("SELECT domaine, COUNT(*) as total FROM OpportuniteTravail WHERE domaine IS NOT NULL AND domaine != '' GROUP BY domaine");
@@ -236,61 +228,8 @@ $villesData     = json_encode(array_column($villes, 'total'));
               </div>
             </div>
           </div>
-          <div class="col-sm-6 col-xl-3 mb-3">
-            <div class="card stat-card card-orange shadow-sm">
-              <div class="card-body d-flex align-items-center gap-3 py-3">
-                <i class="fas fa-paper-plane stat-icon"></i>
-                <div>
-                  <div class="fw-bold fs-4"><?= $totalCandidatures ?></div>
-                  <div class="small">Postulations</div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <!-- ========== RECENT CANDIDATURES ========== -->
-        <div class="row mb-4">
-          <div class="col-md-12">
-            <div class="card shadow-sm">
-              <div class="card-header bg-dark text-white">
-                <h4 class="card-title mb-0 text-white">📩 Candidatures Récentes</h4>
-              </div>
-              <div class="card-body p-0">
-                <div class="table-responsive">
-                  <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                      <tr>
-                        <th>Nom</th><th>Email</th><th>Poste / Offre</th><th>Date</th><th>CV</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <?php foreach ($recentCandidatures as $cand): ?>
-                      <tr>
-                        <td><strong><?= htmlspecialchars($cand['nom']) ?></strong></td>
-                        <td><?= htmlspecialchars($cand['email']) ?></td>
-                        <td>
-                          <span class="badge <?= $cand['type_offre'] == 'travail' ? 'bg-primary' : 'bg-info' ?>">
-                            <?= htmlspecialchars($cand['offre_titre'] ?? 'Offre supprimée') ?>
-                          </span>
-                        </td>
-                        <td><?= date('d/m/Y H:i', strtotime($cand['date_candidature'])) ?></td>
-                        <td>
-                          <?php if ($cand['cv_filename']): ?>
-                            <a href="../uploads/cv/<?= $cand['cv_filename'] ?>" target="_blank" class="btn btn-sm btn-link"><i class="fas fa-file-pdf"></i> Voir</a>
-                          <?php else: ?>
-                            <span class="text-muted small">Aucun</span>
-                          <?php endif; ?>
-                        </td>
-                      </tr>
-                      <?php endforeach; ?>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <!-- ========== CHARTS ========== -->
         <div class="row mb-4">
