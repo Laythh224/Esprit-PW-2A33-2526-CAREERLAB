@@ -67,6 +67,10 @@ switch ($action) {
         $controller = new OffreController();
         $controller->delete();
         break;
+    case 'viewOffre':
+        $controller = new OffreController();
+        $controller->show();
+        break;
 
 
     default:

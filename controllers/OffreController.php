@@ -1,47 +1,39 @@
 <?php
 require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../models/OpportuniteTravail.php';
-require_once __DIR__ . '/../models/Stage.php';
+require_once __DIR__ . '/../models/Experience.php';
 
 class OffreController extends BaseController {
 
-    public function index(): void {
-        $pdo = Database::getInstance()->getConnection();
+    private function getDb() {
+        return Database::getInstance()->getConnection();
+    }
 
-        // Filtre de recherche
-        $filtre = $_GET['filtre'] ?? 'all';
+    public function index(): void {
+        $pdo = $this->getDb();
         $search = trim($_GET['q'] ?? '');
 
-        // Offres de travail
-        $sqlTravail = "SELECT *, 'travail' AS type_offre FROM OpportuniteTravail WHERE 1=1";
-        if ($search) $sqlTravail .= " AND (titre LIKE :q OR entreprise LIKE :q OR domaine LIKE :q OR localisation LIKE :q)";
-        $sqlTravail .= " ORDER BY id DESC";
-
-        // Stages
-        $sqlStage = "SELECT *, 'stage' AS type_offre FROM Stage WHERE statut='disponible'";
-        if ($search) $sqlStage .= " AND (nom_societe LIKE :q OR ville LIKE :q OR description LIKE :q)";
-        $sqlStage .= " ORDER BY id DESC";
+        $sqlTravail = "SELECT t.*, e.niveau AS niveau_experience FROM OpportuniteTravail t LEFT JOIN Experience e ON t.experience_id = e.id WHERE 1=1";
+        if ($search) $sqlTravail .= " AND (t.titre LIKE :q OR t.entreprise LIKE :q OR t.domaine LIKE :q OR t.localisation LIKE :q)";
+        $sqlTravail .= " ORDER BY t.id DESC";
 
         $stmtT = $pdo->prepare($sqlTravail);
-        $stmtS = $pdo->prepare($sqlStage);
-        if ($search) {
-            $stmtT->bindValue(':q', "%$search%");
-            $stmtS->bindValue(':q', "%$search%");
-        }
+        if ($search) $stmtT->bindValue(':q', "%$search%");
         $stmtT->execute();
-        $stmtS->execute();
         $travaux = $stmtT->fetchAll();
-        $stages  = $stmtS->fetchAll();
+
+        // Expériences pour le dropdown
+        $stmtE = $pdo->query("SELECT * FROM Experience ORDER BY id ASC");
+        $experiences = $stmtE->fetchAll();
 
         $this->render('offres/list', [
             'action' => 'offres',
             'title'  => 'Les Offres - Career Lab',
             'travaux' => $travaux,
-            'stages'  => $stages,
-            'filtre'  => $filtre,
             'search'  => $search,
             'totalTravail' => count($travaux),
-            'totalStage'   => count($stages)
+            'experiences' => $experiences
         ]);
     }
 
@@ -52,132 +44,133 @@ class OffreController extends BaseController {
         }
 
         $type = $_POST['type_offre'] ?? '';
+        if ($type === 'travail') $this->publierTravail();
+        elseif ($type === 'experience') $this->publierExperience();
+        else $this->redirect('offres', ['error' => 'type_invalide']);
+    }
 
-        if ($type === 'travail') {
-            $this->publierTravail();
-        } elseif ($type === 'stage') {
-            $this->publierStage();
-        } else {
-            $this->redirect('offres', ['error' => 'type_invalide']);
-        }
+    private function publierExperience(): void {
+        $pdo = $this->getDb();
+        $niveau = $this->clean($_POST['niveau'] ?? '');
+        $description = $this->clean($_POST['description'] ?? '');
+
+        if (empty($niveau)) $this->redirect('offres', ['error' => 'niveau_requis']);
+
+        $sql = "INSERT INTO Experience (niveau, description) VALUES (:niveau, :description)";
+        $stmt = $pdo->prepare($sql);
+        $success = $stmt->execute([':niveau' => $niveau, ':description' => $description]);
+
+        if ($success) $this->redirect('offres', ['success' => 'experience']);
+        else $this->redirect('offres', ['error' => 'insertion_echouee']);
     }
 
     private function publierTravail(): void {
-        $model = new OpportuniteTravail();
+        $pdo = $this->getDb();
         $data = [
-            'titre'             => $this->clean($_POST['titre'] ?? ''),
-            'description'       => $this->clean($_POST['description'] ?? ''),
-            'entreprise'        => $this->clean($_POST['entreprise'] ?? ''),
-            'localisation'      => $this->clean($_POST['localisation'] ?? ''),
-            'type_contrat'      => $this->clean($_POST['type_contrat'] ?? ''),
-            'date_publication'  => $_POST['date_publication'] ?? date('Y-m-d'),
-            'date_expiration'   => $_POST['date_expiration'] ?? '',
-            'niveau_experience' => $this->clean($_POST['niveau_experience'] ?? ''),
-            'domaine'           => $this->clean($_POST['domaine'] ?? ''),
+            ':titre'           => $this->clean($_POST['titre'] ?? ''),
+            ':description'     => $this->clean($_POST['description'] ?? ''),
+            ':entreprise'      => $this->clean($_POST['entreprise'] ?? ''),
+            ':localisation'    => $this->clean($_POST['localisation'] ?? ''),
+            ':type_contrat'    => $this->clean($_POST['type_contrat'] ?? ''),
+            ':date_expiration' => !empty($_POST['date_expiration']) ? $_POST['date_expiration'] : null,
+            ':experience_id'   => (int)($_POST['experience_id'] ?? 0),
+            ':domaine'         => $this->clean($_POST['domaine'] ?? ''),
         ];
 
-        if (empty($data['titre'])) { $this->redirect('offres', ['error' => 'titre_requis']); }
+        if (empty($data[':titre'])) $this->redirect('offres', ['error' => 'titre_requis']);
 
-        if ($model->ajouter($data)) {
-            $this->redirect('offres', ['success' => 'travail']);
-        } else {
-            $this->redirect('offres', ['error' => 'insertion_echouee']);
-        }
-    }
-
-    private function publierStage(): void {
-        $model = new Stage();
-        $data = [
-            'nom_societe'    => $this->clean($_POST['nom_societe'] ?? ''),
-            'description'    => $this->clean($_POST['description'] ?? ''),
-            'adresse'        => $this->clean($_POST['adresse'] ?? ''),
-            'ville'          => $this->clean($_POST['ville'] ?? ''),
-            'duree'          => $this->clean($_POST['duree'] ?? ''),
-            'date_debut'     => $_POST['date_debut'] ?? '',
-            'date_fin'       => $_POST['date_fin'] ?? '',
-            'niveau_etude'   => $this->clean($_POST['niveau_etude'] ?? ''),
-            'statut'         => $this->clean($_POST['statut'] ?? 'disponible'),
-            'email_contact'  => $this->clean($_POST['email_contact'] ?? ''),
-            'telephone'      => $this->clean($_POST['telephone'] ?? ''),
-        ];
-
-        if (empty($data['nom_societe'])) { $this->redirect('offres', ['error' => 'societe_requise']); }
-
-        if ($model->ajouter($data)) {
-            $this->redirect('offres', ['success' => 'stage']);
-        } else {
-            $this->redirect('offres', ['error' => 'insertion_echouee']);
-        }
+        $sql = "INSERT INTO OpportuniteTravail 
+                    (titre, description, entreprise, localisation, type_contrat, date_expiration, experience_id, domaine)
+                VALUES 
+                    (:titre, :description, :entreprise, :localisation, :type_contrat, :date_expiration, :experience_id, :domaine)";
+        
+        $stmt = $pdo->prepare($sql);
+        if ($stmt->execute($data)) $this->redirect('offres', ['success' => 'travail']);
+        else $this->redirect('offres', ['error' => 'insertion_echouee']);
     }
 
     public function update(): void {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('offres');
-        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->redirect('offres');
 
+        $pdo = $this->getDb();
         $id = (int)($_POST['id'] ?? 0);
         $type = $_POST['type_offre'] ?? '';
+        if (!$id) $this->redirect('offres', ['error' => 'id_manquant']);
 
-        if (!$id) { $this->redirect('offres', ['error' => 'id_manquant']); }
-
+        $success = false;
         if ($type === 'travail') {
-            $model = new OpportuniteTravail();
-            $data = [
-                'titre'             => $this->clean($_POST['titre'] ?? ''),
-                'description'       => $this->clean($_POST['description'] ?? ''),
-                'entreprise'        => $this->clean($_POST['entreprise'] ?? ''),
-                'localisation'      => $this->clean($_POST['localisation'] ?? ''),
-                'type_contrat'      => $this->clean($_POST['type_contrat'] ?? ''),
-                'date_expiration'   => $_POST['date_expiration'] ?? '',
-                'niveau_experience' => $this->clean($_POST['niveau_experience'] ?? ''),
-                'domaine'           => $this->clean($_POST['domaine'] ?? ''),
-            ];
-            $success = $model->modifier($id, $data);
-        } elseif ($type === 'stage') {
-            $model = new Stage();
-            $data = [
-                'nom_societe'    => $this->clean($_POST['nom_societe'] ?? ''),
-                'description'    => $this->clean($_POST['description'] ?? ''),
-                'adresse'        => $this->clean($_POST['adresse'] ?? ''),
-                'ville'          => $this->clean($_POST['ville'] ?? ''),
-                'duree'          => $this->clean($_POST['duree'] ?? ''),
-                'date_debut'     => $_POST['date_debut'] ?? '',
-                'date_fin'       => $_POST['date_fin'] ?? '',
-                'niveau_etude'   => $this->clean($_POST['niveau_etude'] ?? ''),
-                'statut'         => $this->clean($_POST['statut'] ?? 'disponible'),
-                'email_contact'  => $this->clean($_POST['email_contact'] ?? ''),
-                'telephone'      => $this->clean($_POST['telephone'] ?? ''),
-            ];
-            $success = $model->modifier($id, $data);
-        } else {
-            $this->redirect('offres', ['error' => 'type_invalide']);
+            $sql = "UPDATE OpportuniteTravail SET titre=:titre, description=:description, entreprise=:entreprise, 
+                           localisation=:localisation, type_contrat=:type_contrat, date_expiration=:date_expiration, 
+                           experience_id=:experience_id, domaine=:domaine WHERE id=:id";
+            $stmt = $pdo->prepare($sql);
+            $success = $stmt->execute([
+                ':id'              => $id,
+                ':titre'           => $this->clean($_POST['titre'] ?? ''),
+                ':description'     => $this->clean($_POST['description'] ?? ''),
+                ':entreprise'      => $this->clean($_POST['entreprise'] ?? ''),
+                ':localisation'    => $this->clean($_POST['localisation'] ?? ''),
+                ':type_contrat'    => $this->clean($_POST['type_contrat'] ?? ''),
+                ':date_expiration' => !empty($_POST['date_expiration']) ? $_POST['date_expiration'] : null,
+                ':experience_id'   => (int)($_POST['experience_id'] ?? 0),
+                ':domaine'         => $this->clean($_POST['domaine'] ?? ''),
+            ]);
+        } elseif ($type === 'experience') {
+            $sql = "UPDATE Experience SET niveau=:niveau, description=:description WHERE id=:id";
+            $stmt = $pdo->prepare($sql);
+            $success = $stmt->execute([
+                ':id'          => $id,
+                ':niveau'      => $this->clean($_POST['niveau'] ?? ''),
+                ':description' => $this->clean($_POST['description'] ?? ''),
+            ]);
         }
 
-        if ($success) {
-            $this->redirect('offres', ['success' => 'update']);
-        } else {
-            $this->redirect('offres', ['error' => 'update_echoue']);
-        }
+        $redirect = $_POST['redirect'] ?? 'offres';
+        $location = ($redirect === 'tables') ? "tables/tables.php?success=update" : "index.php?action=offres&success=update";
+        if (!$success) $location = ($redirect === 'tables') ? "tables/tables.php?error=update" : "index.php?action=offres&error=update_echoue";
+        header("Location: $location");
+        exit();
     }
 
     public function delete(): void {
+        $pdo = $this->getDb();
         $id = (int)($_GET['id'] ?? 0);
         $type = $_GET['type'] ?? '';
+        if (!$id || !$type) $this->redirect('offres', ['error' => 'params_manquants']);
 
-        if (!$id || !$type) { $this->redirect('offres', ['error' => 'params_manquants']); }
+        $table = ($type === 'travail') ? 'OpportuniteTravail' : 'Experience';
+        $stmt = $pdo->prepare("DELETE FROM $table WHERE id = :id");
+        $success = $stmt->execute([':id' => $id]);
+
+        $redirect = $_GET['redirect'] ?? 'offres';
+        $location = ($redirect === 'tables') ? "tables/tables.php?success=deleted" : "index.php?action=offres&success=deleted";
+        if (!$success) $location = ($redirect === 'tables') ? "tables/tables.php?error=delete" : "index.php?action=offres&error=delete_echoue";
+        header("Location: $location");
+        exit();
+    }
+
+    public function show(): void {
+        $pdo = $this->getDb();
+        $id = (int)($_GET['id'] ?? 0);
+        $type = $_GET['type'] ?? '';
+        if (!$id || !$type) { $this->redirect('offres', ['error' => 'params_manquants']); return; }
 
         if ($type === 'travail') {
-            $model = new OpportuniteTravail();
-        } elseif ($type === 'stage') {
-            $model = new Stage();
+            $sql = "SELECT t.*, e.niveau AS niveau_experience FROM OpportuniteTravail t LEFT JOIN Experience e ON t.experience_id = e.id WHERE t.id = :id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([':id' => $id]);
+            $offre = $stmt->fetch();
+            $title = "Détails Emploi - Career Lab";
         } else {
-            $this->redirect('offres', ['error' => 'type_invalide']);
+            $stmt = $pdo->prepare("SELECT * FROM Experience WHERE id = :id");
+            $stmt->execute([':id' => $id]);
+            $offre = $stmt->fetch();
+            $title = "Détails Expérience - Career Lab";
+            if ($offre) { $offre['titre'] = $offre['niveau']; $offre['entreprise'] = 'Niveau de Carrière'; }
         }
 
-        if ($model->supprimer($id)) {
-            $this->redirect('offres', ['success' => 'deleted']);
-        } else {
-            $this->redirect('offres', ['error' => 'delete_echoue']);
-        }
+        if (!$offre) { $this->redirect('offres', ['error' => 'offre_introuvable']); return; }
+
+        $this->render('offres/detail', [ 'action' => 'offres', 'title'  => $title, 'offre'  => $offre, 'type'   => $type ]);
     }
 }
+?>

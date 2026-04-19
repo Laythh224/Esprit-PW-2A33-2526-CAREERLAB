@@ -1,77 +1,48 @@
 <?php
-require_once __DIR__ . '/../config/Database.php';
 
 class OpportuniteTravail {
-    private $pdo;
+    private $id;
+    private $titre;
+    private $entreprise;
+    private $description;
+    private $localisation;
+    private $type_contrat;
+    private $experience_id;
+    private $domaine;
+    private $date_expiration;
 
-    public function __construct() {
-        $this->pdo = Database::getInstance()->getConnection();
+    public function __construct(array $data = []) {
+        if (!empty($data['id'])) $this->id = (int)$data['id'];
+        if (!empty($data['titre'])) $this->titre = $data['titre'];
+        if (!empty($data['entreprise'])) $this->entreprise = $data['entreprise'];
+        if (!empty($data['description'])) $this->description = $data['description'];
+        if (!empty($data['localisation'])) $this->localisation = $data['localisation'];
+        if (!empty($data['type_contrat'])) $this->type_contrat = $data['type_contrat'];
+        if (!empty($data['experience_id'])) $this->experience_id = (int)$data['experience_id'];
+        if (!empty($data['domaine'])) $this->domaine = $data['domaine'];
+        if (!empty($data['date_expiration'])) $this->date_expiration = $data['date_expiration'];
     }
 
-    public function ajouter(array $data): bool {
-        $sql = "INSERT INTO OpportuniteTravail 
-                    (titre, description, entreprise, localisation, type_contrat, 
-                     date_publication, date_expiration, niveau_experience, domaine, travail_id)
-                VALUES 
-                    (:titre, :description, :entreprise, :localisation, :type_contrat,
-                     :date_publication, :date_expiration, :niveau_experience, :domaine, :travail_id)";
+    // Getters
+    public function getId(): ?int { return $this->id; }
+    public function getTitre(): ?string { return $this->titre; }
+    public function getEntreprise(): ?string { return $this->entreprise; }
+    public function getDescription(): ?string { return $this->description; }
+    public function getLocalisation(): ?string { return $this->localisation; }
+    public function getTypeContrat(): ?string { return $this->type_contrat; }
+    public function getExperienceId(): ?int { return $this->experience_id; }
+    public function getDomaine(): ?string { return $this->domaine; }
+    public function getDateExpiration(): ?string { return $this->date_expiration; }
 
-        $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute([
-            ':titre'             => $data['titre'],
-            ':description'       => $data['description'] ?? null,
-            ':entreprise'        => $data['entreprise'] ?? null,
-            ':localisation'      => $data['localisation'] ?? null,
-            ':type_contrat'      => $data['type_contrat'] ?? null,
-            ':date_publication'  => !empty($data['date_publication']) ? $data['date_publication'] : null,
-            ':date_expiration'   => !empty($data['date_expiration']) ? $data['date_expiration'] : null,
-            ':niveau_experience' => $data['niveau_experience'] ?? null,
-            ':domaine'           => $data['domaine'] ?? null,
-            ':travail_id'        => !empty($data['travail_id']) ? $data['travail_id'] : null,
-        ]);
-    }
-
-    public function listerTous(): array {
-        $stmt = $this->pdo->query("SELECT * FROM OpportuniteTravail ORDER BY id DESC");
-        return $stmt->fetchAll();
-    }
-
-    public function getById(int $id): ?array {
-        $stmt = $this->pdo->prepare("SELECT * FROM OpportuniteTravail WHERE id = :id");
-        $stmt->execute([':id' => $id]);
-        $res = $stmt->fetch();
-        return $res ?: null;
-    }
-
-    public function modifier(int $id, array $data): bool {
-        $sql = "UPDATE OpportuniteTravail SET 
-                    titre = :titre, 
-                    description = :description, 
-                    entreprise = :entreprise, 
-                    localisation = :localisation, 
-                    type_contrat = :type_contrat, 
-                    date_expiration = :date_expiration, 
-                    niveau_experience = :niveau_experience, 
-                    domaine = :domaine
-                WHERE id = :id";
-
-        $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute([
-            ':id'                => $id,
-            ':titre'             => $data['titre'],
-            ':description'       => $data['description'] ?? null,
-            ':entreprise'        => $data['entreprise'] ?? null,
-            ':localisation'      => $data['localisation'] ?? null,
-            ':type_contrat'      => $data['type_contrat'] ?? null,
-            ':date_expiration'   => !empty($data['date_expiration']) ? $data['date_expiration'] : null,
-            ':niveau_experience' => $data['niveau_experience'] ?? null,
-            ':domaine'           => $data['domaine'] ?? null,
-        ]);
-    }
-
-    public function supprimer(int $id): bool {
-        $stmt = $this->pdo->prepare("DELETE FROM OpportuniteTravail WHERE id = :id");
-        return $stmt->execute([':id' => $id]);
-    }
+    // Setters
+    public function setId(int $id): void { $this->id = $id; }
+    public function setTitre(string $titre): void { $this->titre = $titre; }
+    public function setEntreprise(?string $entreprise): void { $this->entreprise = $entreprise; }
+    public function setDescription(?string $description): void { $this->description = $description; }
+    public function setLocalisation(?string $localisation): void { $this->localisation = $localisation; }
+    public function setTypeContrat(?string $type_contrat): void { $this->type_contrat = $type_contrat; }
+    public function setExperienceId(?int $experience_id): void { $this->experience_id = $experience_id; }
+    public function setDomaine(?string $domaine): void { $this->domaine = $domaine; }
+    public function setDateExpiration(?string $date_expiration): void { $this->date_expiration = $date_expiration; }
 }
 ?>

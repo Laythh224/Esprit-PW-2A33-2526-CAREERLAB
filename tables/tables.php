@@ -5,10 +5,7 @@ $pdo = Database::getInstance()->getConnection();
 
 // Statistiques Offres
 $totalTravail  = $pdo->query("SELECT COUNT(*) FROM OpportuniteTravail")->fetchColumn();
-$totalStage    = $pdo->query("SELECT COUNT(*) FROM Stage")->fetchColumn();
-$totalOffres   = $totalTravail + $totalStage;
-$stagesOuverts = $pdo->query("SELECT COUNT(*) FROM Stage WHERE statut='disponible'")->fetchColumn();
-
+$totalOffres   = $totalTravail;
 
 // Répartition par domaine (pour graphique - Jobs)
 $domainesResult = $pdo->query("SELECT domaine, COUNT(*) as total FROM OpportuniteTravail WHERE domaine IS NOT NULL AND domaine != '' GROUP BY domaine");
@@ -18,27 +15,29 @@ $domaines = $domainesResult->fetchAll();
 $contratsResult = $pdo->query("SELECT type_contrat, COUNT(*) as total FROM OpportuniteTravail WHERE type_contrat IS NOT NULL AND type_contrat != '' GROUP BY type_contrat");
 $contrats = $contratsResult->fetchAll();
 
-// Répartition par Ville (pour graphique - Stages)
-$villesResult = $pdo->query("SELECT ville, COUNT(*) as total FROM Stage WHERE ville IS NOT NULL AND ville != '' GROUP BY ville");
-$villes = $villesResult->fetchAll();
-
 // Offres
-$travaux = $pdo->query("SELECT * FROM OpportuniteTravail ORDER BY id DESC")->fetchAll();
-$stages = $pdo->query("SELECT * FROM Stage ORDER BY id DESC")->fetchAll();
+$travaux = $pdo->query("SELECT t.*, e.niveau as niveau_experience FROM OpportuniteTravail t LEFT JOIN Experience e ON t.experience_id = e.id ORDER BY t.id DESC")->fetchAll();
+
+// Expériences
+$experiences = $pdo->query("SELECT * FROM Experience ORDER BY id ASC")->fetchAll();
 
 // JSON pour Chart.js
 $domainesLabels = json_encode(array_column($domaines, 'domaine'));
 $domainesData   = json_encode(array_column($domaines, 'total'));
 $contratsLabels = json_encode(array_column($contrats, 'type_contrat'));
 $contratsData   = json_encode(array_column($contrats, 'total'));
-$villesLabels   = json_encode(array_column($villes, 'ville'));
-$villesData     = json_encode(array_column($villes, 'total'));
+
+// Répartition par expérience
+$expStatsResult = $pdo->query("SELECT e.niveau, COUNT(t.id) as total FROM Experience e LEFT JOIN OpportuniteTravail t ON e.id = t.experience_id GROUP BY e.id, e.niveau");
+$expStats = $expStatsResult->fetchAll();
+$expLabels = json_encode(array_column($expStats, 'niveau'));
+$expData   = json_encode(array_column($expStats, 'total'));
 ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Les Offres – Backend | Career Lab</title>
+  <title>Gestion des Offres d'Emploi | Career Lab</title>
   <meta content="width=device-width, initial-scale=1.0, shrink-to-fit=no" name="viewport" />
   <link rel="icon" href="../assets/img/kaiadmin/favicon.ico" type="image/x-icon" />
 
@@ -70,7 +69,6 @@ $villesData     = json_encode(array_column($villes, 'total'));
     .card-green { background: linear-gradient(135deg, #10b981, #34d399); color: #fff; }
     .card-orange { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #fff; }
     .badge-travail { background: #6366f1; }
-    .badge-stage   { background: #0ea5e9; }
     .chart-container { position: relative; height: 300px; }
     .table-responsive { border-radius: 12px; }
   </style>
@@ -183,7 +181,12 @@ $villesData     = json_encode(array_column($villes, 'total'));
         <div id="notification" class="alert d-none mb-4 shadow-sm" style="border-radius: 12px; font-weight: 500;"></div>
         
         <div class="page-header">
-          <h4 class="page-title">Les Offres</h4>
+          <div class="d-flex align-items-center">
+            <h4 class="page-title">Les Offres</h4>
+            <a href="../index.php?action=offres&q=" class="btn btn-primary btn-round ms-3 shadow-sm" style="font-weight: 900; font-size: 1.2rem; min-width: 45px;">
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
           <ul class="breadcrumbs">
             <li class="nav-home"><a href="#"><i class="icon-home"></i></a></li>
             <li class="separator"><i class="icon-arrow-right"></i></li>
@@ -195,35 +198,24 @@ $villesData     = json_encode(array_column($villes, 'total'));
 
         <!-- ========== STAT CARDS ========== -->
         <div class="row mb-4">
-          <div class="col-sm-6 col-xl-3 mb-3">
+          <div class="col-sm-6 col-xl-4 mb-3">
             <div class="card stat-card card-purple shadow-sm">
               <div class="card-body d-flex align-items-center gap-3 py-3">
                 <i class="fas fa-briefcase stat-icon"></i>
                 <div>
                   <div class="fw-bold fs-4"><?= $totalOffres ?></div>
-                  <div class="small">Total Offres</div>
+                  <div class="small">Total Opportunités</div>
                 </div>
               </div>
             </div>
           </div>
-          <div class="col-sm-6 col-xl-3 mb-3">
+          <div class="col-sm-6 col-xl-4 mb-3">
             <div class="card stat-card card-blue shadow-sm">
               <div class="card-body d-flex align-items-center gap-3 py-3">
                 <i class="fas fa-user-tie stat-icon"></i>
                 <div>
                   <div class="fw-bold fs-4"><?= $totalTravail ?></div>
-                  <div class="small">Offres Emploi</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-6 col-xl-3 mb-3">
-            <div class="card stat-card card-green shadow-sm">
-              <div class="card-body d-flex align-items-center gap-3 py-3">
-                <i class="fas fa-graduation-cap stat-icon"></i>
-                <div>
-                  <div class="fw-bold fs-4"><?= $totalStage ?></div>
-                  <div class="small">Offres Stages</div>
+                  <div class="small">Offres Publiées</div>
                 </div>
               </div>
             </div>
@@ -235,7 +227,7 @@ $villesData     = json_encode(array_column($villes, 'total'));
         <div class="row mb-4">
           <div class="col-md-4 mb-3">
             <div class="card shadow-sm h-100">
-              <div class="card-header border-0 pb-0"><h6 class="card-title mb-0">Domaines d'Emploi</h6></div>
+              <div class="card-header border-0 pb-0"><h6 class="card-title mb-0">Répartition par Domaine</h6></div>
               <div class="card-body">
                 <div class="chart-container">
                   <canvas id="chartDomaines"></canvas>
@@ -255,10 +247,10 @@ $villesData     = json_encode(array_column($villes, 'total'));
           </div>
           <div class="col-md-4 mb-3">
             <div class="card shadow-sm h-100">
-              <div class="card-header border-0 pb-0"><h6 class="card-title mb-0">Villes de Stages</h6></div>
+              <div class="card-header border-0 pb-0"><h6 class="card-title mb-0">Niveaux d'Expérience</h6></div>
               <div class="card-body">
                 <div class="chart-container">
-                  <canvas id="chartVilles"></canvas>
+                  <canvas id="chartExperience"></canvas>
                 </div>
               </div>
             </div>
@@ -272,9 +264,6 @@ $villesData     = json_encode(array_column($villes, 'total'));
               <div class="card-header">
                 <div class="d-flex align-items-center">
                   <h4 class="card-title mb-0">📋 Opportunités de Travail</h4>
-                  <a href="../offres.php" class="btn btn-primary btn-round ms-auto btn-sm">
-                    <i class="fa fa-plus"></i> Ajouter
-                  </a>
                 </div>
               </div>
               <div class="card-body">
@@ -282,8 +271,8 @@ $villesData     = json_encode(array_column($villes, 'total'));
                   <table id="tbl-travail" class="display table table-striped table-hover">
                     <thead>
                       <tr>
-                        <th>ID</th><th>Titre</th><th>Entreprise</th><th>Type Contrat</th>
-                        <th>Domaine</th><th>Localisation</th><th>Date Publication</th><th>Statut</th>
+                        <th>ID</th><th>Titre</th><th>Entreprise</th><th>Contrat</th>
+                        <th>ID Expérience</th><th>Domaine</th><th>Statut</th>
                         <th style="width: 10%">Actions</th>
                       </tr>
                     </thead>
@@ -294,9 +283,8 @@ $villesData     = json_encode(array_column($villes, 'total'));
                         <td><?= htmlspecialchars($t['titre']) ?></td>
                         <td><?= htmlspecialchars($t['entreprise'] ?? '-') ?></td>
                         <td><?= htmlspecialchars($t['type_contrat'] ?? '-') ?></td>
+                        <td><span class="badge bg-info"><?= htmlspecialchars($t['niveau_experience'] ?? 'Non spécifié') ?></span></td>
                         <td><?= htmlspecialchars($t['domaine'] ?? '-') ?></td>
-                        <td><?= htmlspecialchars($t['localisation'] ?? '-') ?></td>
-                        <td><?= $t['date_publication'] ?? '-' ?></td>
                         <td>
                           <?php if (!empty($t['date_expiration']) && $t['date_expiration'] >= date('Y-m-d')): ?>
                             <span class="badge bg-success">Active</span>
@@ -306,9 +294,20 @@ $villesData     = json_encode(array_column($villes, 'total'));
                         </td>
                         <td>
                           <div class="form-button-action">
-                            <a href="../offres.php" class="btn btn-link btn-primary px-1" title="Modifier">
+                            <button type="button" class="btn btn-link btn-primary px-1" title="Modifier" 
+                                    data-bs-toggle="modal" data-bs-target="#editRowModal"
+                                    data-id="<?= $t['id'] ?>"
+                                    data-titre="<?= htmlspecialchars($t['titre']) ?>"
+                                    data-entreprise="<?= htmlspecialchars($t['entreprise'] ?? '') ?>"
+                                    data-description="<?= htmlspecialchars($t['description'] ?? '') ?>"
+                                    data-localisation="<?= htmlspecialchars($t['localisation'] ?? '') ?>"
+                                    data-type_contrat="<?= htmlspecialchars($t['type_contrat'] ?? '') ?>"
+                                    data-experience_id="<?= $t['experience_id'] ?? '' ?>"
+                                    data-domaine="<?= htmlspecialchars($t['domaine'] ?? '') ?>"
+                                    data-date_expiration="<?= $t['date_expiration'] ?? '' ?>"
+                                    data-niveau_experience="<?= htmlspecialchars($t['niveau_experience'] ?? '') ?>">
                               <i class="fa fa-edit"></i>
-                            </a>
+                            </button>
                             <button type="button" class="btn btn-link btn-danger px-1" title="Supprimer" onclick="confirmDelete(<?= $t['id'] ?>, 'travail')">
                               <i class="fa fa-times text-danger"></i>
                             </button>
@@ -316,71 +315,6 @@ $villesData     = json_encode(array_column($villes, 'total'));
                         </td>
                       </tr>
                       <?php endforeach; ?>
-                      <?php if (empty($travaux)): ?>
-                      <tr><td colspan="8" class="text-center text-muted py-4">Aucune offre d'emploi publiée.</td></tr>
-                      <?php endif; ?>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ========== TABLE STAGES ========== -->
-          <div class="col-md-12">
-            <div class="card shadow-sm">
-              <div class="card-header">
-                <div class="d-flex align-items-center">
-                  <h4 class="card-title mb-0">🎓 Stages</h4>
-                  <a href="../offres.php" class="btn btn-info btn-round ms-auto btn-sm text-white">
-                    <i class="fa fa-plus"></i> Ajouter
-                  </a>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="table-responsive">
-                  <table id="tbl-stage" class="display table table-striped table-hover">
-                    <thead>
-                      <tr>
-                        <th>ID</th><th>Société</th><th>Ville</th><th>Durée</th>
-                        <th>Niveau Étude</th><th>Date Début</th><th>Date Fin</th>
-                        <th>Email</th><th>Statut</th>
-                        <th style="width: 10%">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <?php foreach ($stages as $s): ?>
-                      <tr>
-                        <td><?= $s['id'] ?></td>
-                        <td><?= htmlspecialchars($s['nom_societe']) ?></td>
-                        <td><?= htmlspecialchars($s['ville'] ?? '-') ?></td>
-                        <td><?= htmlspecialchars($s['duree'] ?? '-') ?></td>
-                        <td><?= htmlspecialchars($s['niveau_etude'] ?? '-') ?></td>
-                        <td><?= $s['date_debut'] ?? '-' ?></td>
-                        <td><?= $s['date_fin'] ?? '-' ?></td>
-                        <td><?= htmlspecialchars($s['email_contact'] ?? '-') ?></td>
-                        <td>
-                          <?php if (($s['statut'] ?? 'disponible') === 'disponible'): ?>
-                            <span class="badge bg-success">Disponible</span>
-                          <?php else: ?>
-                            <span class="badge bg-danger">Fermé</span>
-                          <?php endif; ?>
-                        </td>
-                        <td>
-                          <div class="form-button-action">
-                            <a href="../offres.php" class="btn btn-link btn-info px-1" title="Modifier">
-                              <i class="fa fa-edit"></i>
-                            </a>
-                            <button type="button" class="btn btn-link btn-danger px-1" title="Supprimer" onclick="confirmDelete(<?= $s['id'] ?>, 'stage')">
-                              <i class="fa fa-times text-danger"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                      <?php endforeach; ?>
-                      <?php if (empty($stages)): ?>
-                      <tr><td colspan="9" class="text-center text-muted py-4">Aucun stage publié.</td></tr>
-                      <?php endif; ?>
                     </tbody>
                   </table>
                 </div>
@@ -389,10 +323,198 @@ $villesData     = json_encode(array_column($villes, 'total'));
           </div>
         </div><!-- end row -->
 
+        <!-- ========== TABLE EXPERIENCES ========== -->
+        <div class="row">
+          <div class="col-md-12 mb-4">
+            <div class="card shadow-sm">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0">🎓 Niveaux d'Expérience</h4>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="display table table-striped table-hover">
+                    <thead>
+                      <tr>
+                        <th>ID</th><th>Niveau</th><th>Description</th><th style="width: 10%">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php foreach ($experiences as $exp): ?>
+                      <tr>
+                        <td><?= $exp['id'] ?></td>
+                        <td><?= htmlspecialchars($exp['niveau']) ?></td>
+                        <td><?= htmlspecialchars($exp['description'] ?? '-') ?></td>
+                        <td>
+                          <div class="form-button-action">
+                            <button type="button" class="btn btn-link btn-primary px-1" title="Modifier" 
+                                    data-bs-toggle="modal" data-bs-target="#editExpModal"
+                                    data-id="<?= $exp['id'] ?>"
+                                    data-niveau="<?= htmlspecialchars($exp['niveau']) ?>"
+                                    data-description="<?= htmlspecialchars($exp['description'] ?? '') ?>">
+                              <i class="fa fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-link btn-danger px-1" title="Supprimer" onclick="confirmDelete(<?= $exp['id'] ?>, 'experience')">
+                              <i class="fa fa-times text-danger"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      <?php endforeach; ?>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div><!-- main-panel -->
 </div><!-- wrapper -->
+
+<!-- Modal Ajout Expérience -->
+<div class="modal fade" id="addExpModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">Ajouter un Niveau d'Expérience</h5>
+        <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
+      </div>
+      <form action="../index.php?action=publish" method="POST">
+        <input type="hidden" name="type_offre" value="experience">
+        <input type="hidden" name="redirect" value="tables">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Niveau</label>
+            <input type="text" name="niveau" class="form-control" placeholder="ex: Junior" required>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea name="description" class="form-control" placeholder="Description du niveau"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="submit" class="btn btn-primary">Ajouter</button>
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Fermer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Modal Modification Offre -->
+<div class="modal fade" id="editRowModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">
+          <span class="fw-mediumbold">Modifier</span>
+          <span class="fw-light"> l'opportunité</span>
+        </h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form action="../index.php?action=update" method="POST">
+        <div class="modal-body">
+          <input type="hidden" name="id" id="edit-id">
+          <input type="hidden" name="type_offre" value="travail">
+          <input type="hidden" name="redirect" value="tables">
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group form-group-default">
+                <label>Titre</label>
+                <input name="titre" id="edit-titre" type="text" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group form-group-default">
+                <label>Entreprise</label>
+                <input name="entreprise" id="edit-entreprise" type="text" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="form-group form-group-default">
+                <label>Description</label>
+                <textarea name="description" id="edit-description" class="form-control" rows="3" required></textarea>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group form-group-default">
+                <label>Localisation</label>
+                <input name="localisation" id="edit-localisation" type="text" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group form-group-default">
+                <label>Type de contrat</label>
+                <input name="type_contrat" id="edit-type_contrat" type="text" class="form-control">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group form-group-default">
+                <label>Domaine</label>
+                <input name="domaine" id="edit-domaine" type="text" class="form-control">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group form-group-default">
+                <label>ID Expérience</label>
+                <select name="experience_id" id="edit-experience_id" class="form-control" required>
+                    <?php foreach ($experiences as $exp): ?>
+                        <option value="<?= $exp['id'] ?>"><?= $exp['id'] ?> - <?= htmlspecialchars($exp['niveau']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group form-group-default">
+                <label>Date d'expiration</label>
+                <input name="date_expiration" id="edit-expiration" type="date" class="form-control">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Fermer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Modification Expérience -->
+<div class="modal fade" id="editExpModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">Modifier le Niveau d'Expérience</h5>
+        <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
+      </div>
+      <form action="../index.php?action=update" method="POST">
+        <input type="hidden" name="id" id="edit-exp-id">
+        <input type="hidden" name="type_offre" value="experience">
+        <input type="hidden" name="redirect" value="tables">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Niveau</label>
+            <input type="text" name="niveau" id="edit-exp-niveau" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea name="description" id="edit-exp-description" class="form-control" rows="4"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Fermer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 <!-- Core JS -->
 <script src="../assets/js/core/jquery-3.7.1.min.js"></script>
@@ -403,93 +525,144 @@ $villesData     = json_encode(array_column($villes, 'total'));
 <script src="../assets/js/plugin/datatables/datatables.min.js"></script>
 <script src="../assets/js/plugin/sweetalert/sweetalert.min.js"></script>
 <script src="../assets/js/kaiadmin.min.js"></script>
-<script src="../assets/js/setting-demo.js"></script>
-<script src="../assets/js/demo.js"></script>
 
 <script>
 $(document).ready(function () {
-  // DataTables
-  $('#tbl-travail').DataTable({ pageLength: 5 });
-  $('#tbl-stage').DataTable({ pageLength: 5 });
-
   // --- Graphique Domaines (Doughnut) ---
-  const domainesLabels = <?= $domainesLabels ?>;
-  const domainesData   = <?= $domainesData ?>;
-
-  if (domainesLabels.length > 0) {
-    new Chart(document.getElementById('chartDomaines'), {
-      type: 'doughnut',
-      data: {
-        labels: domainesLabels,
-        datasets: [{
-          data: domainesData,
-          backgroundColor: ['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'],
-          borderWidth: 2
-        }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
-    });
-  }
+  try {
+    var dLabels = <?= $domainesLabels ?>;
+    var dData   = <?= $domainesData ?>;
+    if (typeof Chart !== 'undefined' && dLabels && dLabels.length > 0) {
+      var ctxD = document.getElementById('chartDomaines');
+      if (ctxD) {
+        new Chart(ctxD, {
+          type: 'doughnut',
+          data: {
+            labels: dLabels,
+            datasets: [{
+              data: dData,
+              backgroundColor: ['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'],
+              borderWidth: 2
+            }]
+          },
+          options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            legend: { 
+              position: 'bottom', 
+              labels: { boxWidth: 12, padding: 10 } 
+            } 
+          }
+        });
+      }
+    }
+  } catch (e) { console.error("Error init Chart Domaines:", e); }
 
   // --- Graphique Contrats (Bar) ---
-  const contratsLabels = <?= $contratsLabels ?>;
-  const contratsData   = <?= $contratsData ?>;
-
-  if (contratsLabels.length > 0) {
-    new Chart(document.getElementById('chartContrats'), {
-      type: 'bar',
-      data: {
-        labels: contratsLabels,
-        datasets: [{
-          label: 'Offres Emploi',
-          data: contratsData,
-          backgroundColor: '#6366f1',
-          borderRadius: 6,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' }, grid: { drawBorder: false } }, x: { grid: { display: false } } }
+  try {
+    var cLabels = <?= $contratsLabels ?>;
+    var cData   = <?= $contratsData ?>;
+    if (typeof Chart !== 'undefined' && cLabels && cLabels.length > 0) {
+      var ctxC = document.getElementById('chartContrats');
+      if (ctxC) {
+        new Chart(ctxC, {
+          type: 'bar',
+          data: {
+            labels: cLabels,
+            datasets: [{
+              label: 'Offres Emploi',
+              data: cData,
+              backgroundColor: '#6366f1',
+              borderRadius: 6,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            legend: { display: false },
+            scales: { 
+              yAxes: [{ 
+                ticks: { beginAtZero: true, stepSize: 1, fontColor: '#94a3b8' }, 
+                gridLines: { drawBorder: false } 
+              }], 
+              xAxes: [{ gridLines: { display: false } }] 
+            }
+          }
+        });
       }
-    });
-  }
+    }
+  } catch (e) { console.error("Error init Chart Contrats:", e); }
+ 
+  // --- Graphique Expérience (Doughnut - Affichage des Niveaux) ---
+  try {
+    var eLabels = <?= $expLabels ?>;
+    var eDataReal = <?= $expData ?>; // Données réelles des offres
+    
+    // Création de parts égales (1 pour chaque niveau) pour que tout soit visible
+    var eDataConstant = eLabels.map(() => 1);
+    
+    if (typeof Chart !== 'undefined' && eLabels && eLabels.length > 0) {
+      var ctxE = document.getElementById('chartExperience');
+      if (ctxE) {
+        new Chart(ctxE, {
+          type: 'doughnut',
+          data: {
+            // Ajout du nombre d'offres dans le nom pour la légende
+            labels: eLabels.map((lbl, i) => lbl + " (" + eDataReal[i] + ")"), 
+            datasets: [{
+              data: eDataConstant, // Parts égales
+              backgroundColor: ['#6366f1','#f59e0b','#10b981','#ef4444','#0ea5e9','#8b5cf6','#ec4899'],
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10 } },
+            tooltips: {
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        var index = tooltipItem.index;
+                        var level = eLabels[index];
+                        var count = eDataReal[index];
+                        return level + " : " + count + " offre(s)";
+                    }
+                }
+            }
+          }
+        });
+      }
+    }
+  } catch (e) { console.error("Error init Chart Expérience:", e); }
 
-  // --- Graphique Villes Stages (PolarArea) ---
-  const villesLabels = <?= $villesLabels ?>;
-  const villesData   = <?= $villesData ?>;
-
-  if (villesLabels.length > 0) {
-    new Chart(document.getElementById('chartVilles'), {
-      type: 'polarArea',
-      data: {
-        labels: villesLabels,
-        datasets: [{
-          data: villesData,
-          backgroundColor: ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#ef4444'],
-          opacity: 0.8
-        }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
-    });
-  }
+  // --- DataTables ---
+  try {
+    if ($.fn.DataTable) {
+      $('#tbl-travail').DataTable({ pageLength: 10 });
+    }
+  } catch (e) { console.error("Error init DataTables:", e); }
 });
 
 function confirmDelete(id, type) {
-    swal({
-        title: "Êtes-vous sûr ?",
-        text: "Cette offre sera définitivement supprimée du système !",
-        icon: "warning",
-        buttons: {
-            cancel: { visible: true, text: "Annuler", className: "btn btn-danger" },
-            confirm: { text: "Oui, supprimer !", className: "btn btn-success" },
-        },
-    }).then((willDelete) => {
-        if (willDelete) {
+    if (typeof swal !== 'undefined') {
+        swal({
+            title: "Êtes-vous sûr ?",
+            text: "Cette offre sera définitivement supprimée !",
+            icon: "warning",
+            buttons: {
+                cancel: { visible: true, text: "Annuler", className: "btn btn-danger" },
+                confirm: { text: "Oui, supprimer !", className: "btn btn-success" },
+            },
+        }).then((willDelete) => {
+            if (willDelete) {
+                window.location.href = "../index.php?action=delete&id=" + id + "&type=" + type + "&redirect=tables";
+            }
+        });
+    } else {
+        if (confirm("Êtes-vous sûr de vouloir supprimer cette offre ?")) {
             window.location.href = "../index.php?action=delete&id=" + id + "&type=" + type + "&redirect=tables";
         }
-    });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -497,31 +670,45 @@ document.addEventListener('DOMContentLoaded', function() {
     const notif = document.getElementById('notification');
     
     const messages = {
-        'travail': '✅ Offre de travail publiée avec succès !',
-        'stage': '✅ Stage publié avec succès !',
+        'travail': '✅ Offre publiée avec succès !',
         'update': '✅ Modification enregistrée avec succès !',
         'deleted': '🗑️ Offre supprimée avec succès.',
-        'titre_requis': '❌ Le titre de l\'offre est obligatoire.',
-        'entreprise_requise': '❌ Le nom de l\'entreprise est obligatoire.',
-        'description_requise': '❌ La description est trop courte (min. 10 caractères).',
-        'email_invalide': '❌ L\'adresse email saisie est invalide.',
-        'tel_invalide': '❌ Le numéro de téléphone doit être numérique.',
-        'dates_invalides': '❌ La date de fin doit être postérieure au début.',
-        'localisation_requise': '❌ La ville ou localisation est obligatoire.',
-        'error': '❌ Une erreur est survenue lors de l\'opération.'
+        'error': '❌ Une erreur est survenue.'
     };
 
     if (params.has('success')) {
         const key = params.get('success');
-        notif.textContent = messages[key] || messages['success'] || 'Opération réussie !';
+        notif.textContent = messages[key] || 'Opération réussie !';
         notif.classList.remove('d-none');
         notif.classList.add('alert-success');
     } else if (params.has('error')) {
-        const key = params.get('error');
-        notif.textContent = messages[key] || messages['error'] || 'Une erreur est survenue.';
+        notif.textContent = messages['error'];
         notif.classList.remove('d-none');
         notif.classList.add('alert-danger');
     }
+});
+
+// Logic pour remplir le modal de modification
+$(document).ready(function() {
+    $('#editRowModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        $('#edit-id').val(button.data('id'));
+        $('#edit-titre').val(button.data('titre'));
+        $('#edit-entreprise').val(button.data('entreprise'));
+        $('#edit-description').val(button.data('description'));
+        $('#edit-localisation').val(button.data('localisation'));
+        $('#edit-type_contrat').val(button.data('type_contrat'));
+        $('#edit-domaine').val(button.data('domaine'));
+        $('#edit-experience_id').val(button.data('experience_id'));
+        $('#edit-expiration').val(button.data('date_expiration'));
+    });
+
+    $('#editExpModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        $('#edit-exp-id').val(button.data('id'));
+        $('#edit-exp-niveau').val(button.data('niveau'));
+        $('#edit-exp-description').val(button.data('description'));
+    });
 });
 </script>
 </body>
