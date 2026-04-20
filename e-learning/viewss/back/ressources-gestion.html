@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Planning_Option — Administration | CareerLab</title>
+    <link rel="stylesheet" href="../css/back-layout.css" />
+  </head>
+  <body>
+    <div class="back-shell">
+      <aside class="back-sidebar" aria-label="Navigation administration">
+        <div class="back-sidebar__brand">
+          <strong>CareerLab</strong>
+          <small>Back office · e_learning</small>
+        </div>
+        <ul class="back-nav">
+          <li><a href="index.html">Tableau de bord</a></li>
+          <li><a href="formations-gestion.html">Optionn</a></li>
+          <li><a href="planning-gestion.html">Planning</a></li>
+          <li><a href="ressources-gestion.html" class="is-active">Planning_Option</a></li>
+          <li><a href="certifications-gestion.html">Structure SQL</a></li>
+          <li><a href="index.html">Main page</a></li>
+        </ul>
+      </aside>
+      <div class="back-main">
+        <header class="back-topbar">
+          <h1>Table planning_option</h1>
+          <span style="font-size: 0.875rem; color: #64748b">Liaison id_planning ↔ id_option</span>
+        </header>
+        <div class="back-content">
+          <div class="back-card">
+            <h2 class="back-card__title">Ajouter une liaison</h2>
+            <form id="planning-option-back-form">
+              <input id="po_original_id_planning" type="hidden" />
+              <input id="po_original_id_option" type="hidden" />
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="po_id_planning">id_planning</label>
+                  <select id="po_id_planning"></select>
+                </div>
+                <div class="form-group">
+                  <label for="po_id_option">id_option</label>
+                  <select id="po_id_option"></select>
+                </div>
+              </div>
+              <div class="actions-row">
+                <button type="submit" class="btn-primary">Enregistrer</button>
+                <button id="po-cancel-btn" type="button" class="btn-secondary">Annuler</button>
+              </div>
+            </form>
+          </div>
+          <div class="back-card">
+            <h2 class="back-card__title">Liste des liaisons</h2>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>id_planning</th>
+                    <th>nom_de_formation</th>
+                    <th>id_option</th>
+                    <th>nom_option</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="planning-option-back-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="../js/optionn-crud.js"></script>
+  </body>
+</html>
+
+
+
