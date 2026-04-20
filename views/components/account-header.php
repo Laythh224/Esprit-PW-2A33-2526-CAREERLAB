@@ -1,7 +1,7 @@
 <div class="main-header">
     <div class="main-header-logo">
         <div class="logo-header" data-background-color="dark">
-            <a href="index.php?page=dashboard-admin" class="logo">
+            <a href="index.php?r=admin&view=dashboard" class="logo">
                 <img src="views/assets/img/image_2026-04-11_005109464-removebg-preview.png" alt="navbar brand" class="navbar-brand" height="20" />
             </a>
             <div class="nav-toggle">

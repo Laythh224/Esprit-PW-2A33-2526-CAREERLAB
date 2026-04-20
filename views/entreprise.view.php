@@ -1,4 +1,7 @@
-
+<?php
+$old = $old ?? [];
+$fieldErrors = $fieldErrors ?? [];
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -25,67 +28,64 @@
                             <h4 class="mb-0">Inscription Entreprise</h4>
                         </div>
                         <div class="card-body">
-                                <?php if ($serverError !== ''): ?>
-                                    <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($serverError); ?></div>
-                                <?php endif; ?>
                             <form id="companySignupForm" method="POST" novalidate>
                                 <div class="mb-3">
                                     <label for="nomEntreprise" class="form-label">Nom de l'entreprise</label>
-                                    <input type="text" class="form-control" id="nomEntreprise" name="nom" placeholder="Nom de l'entreprise" />
-                                    <div class="small text-danger d-block" id="nomEntrepriseError"></div>
+                                    <input type="text" class="form-control <?php echo ($fieldErrors['nom'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="nomEntreprise" name="nom" placeholder="Nom de l'entreprise" value="<?php echo htmlspecialchars((string) ($old['nom'] ?? '')); ?>" />
+                                    <div class="small text-danger d-block" id="nomEntrepriseError"><?php echo htmlspecialchars((string) ($fieldErrors['nom'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="email" class="form-label">Email</label>
-                                    <input type="text" class="form-control" id="email" name="email" placeholder="contact@entreprise.com" />
-                                    <div class="small text-danger d-block" id="emailError"></div>
+                                    <input type="text" class="form-control <?php echo ($fieldErrors['email'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="email" name="email" placeholder="contact@entreprise.com" value="<?php echo htmlspecialchars((string) ($old['email'] ?? '')); ?>" />
+                                    <div class="small text-danger d-block" id="emailError"><?php echo htmlspecialchars((string) ($fieldErrors['email'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="password" class="form-label">Mot de passe</label>
-                                    <input type="password" class="form-control" id="password" name="password" placeholder="********" />
-                                    <div class="small text-danger d-block" id="passwordError"></div>
+                                    <input type="password" class="form-control <?php echo ($fieldErrors['password'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="password" name="password" placeholder="********" value="<?php echo htmlspecialchars((string) ($old['password'] ?? '')); ?>" />
+                                    <div class="small text-danger d-block" id="passwordError"><?php echo htmlspecialchars((string) ($fieldErrors['password'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="confirmPassword" class="form-label">Confirmer le mot de passe</label>
-                                    <input type="password" class="form-control" id="confirmPassword" placeholder="********" />
-                                    <div class="small text-danger d-block" id="confirmPasswordError"></div>
+                                    <input type="password" class="form-control <?php echo ($fieldErrors['confirm_password'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="confirmPassword" name="confirm_password" placeholder="********" value="<?php echo htmlspecialchars((string) ($old['confirm_password'] ?? '')); ?>" />
+                                    <div class="small text-danger d-block" id="confirmPasswordError"><?php echo htmlspecialchars((string) ($fieldErrors['confirm_password'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="telephone" class="form-label">Téléphone</label>
-                                    <input type="text" class="form-control" id="telephone" name="telephone" placeholder="Téléphone de l'entreprise" />
-                                    <div class="small text-danger d-block" id="telephoneError"></div>
+                                    <input type="text" class="form-control <?php echo ($fieldErrors['telephone'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="telephone" name="telephone" placeholder="Téléphone de l'entreprise" value="<?php echo htmlspecialchars((string) ($old['telephone'] ?? '')); ?>" />
+                                    <div class="small text-danger d-block" id="telephoneError"><?php echo htmlspecialchars((string) ($fieldErrors['telephone'] ?? '')); ?></div>
                                 </div>
                                 <hr />
                                 <h6 class="mb-3">Informations professionnelles</h6>
                                 <div class="mb-3">
                                     <label for="adresse" class="form-label">Adresse</label>
-                                    <input type="text" class="form-control" id="adresse" name="adresse" placeholder="Adresse complète" />
-                                    <div class="small text-danger d-block" id="adresseError"></div>
+                                    <input type="text" class="form-control <?php echo ($fieldErrors['adresse'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="adresse" name="adresse" placeholder="Adresse complète" value="<?php echo htmlspecialchars((string) ($old['adresse'] ?? '')); ?>" />
+                                    <div class="small text-danger d-block" id="adresseError"><?php echo htmlspecialchars((string) ($fieldErrors['adresse'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="ville" class="form-label">Ville</label>
-                                    <input type="text" class="form-control" id="ville" name="ville" placeholder="Ville" />
-                                    <div class="small text-danger d-block" id="villeError"></div>
+                                    <input type="text" class="form-control <?php echo ($fieldErrors['ville'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="ville" name="ville" placeholder="Ville" value="<?php echo htmlspecialchars((string) ($old['ville'] ?? '')); ?>" />
+                                    <div class="small text-danger d-block" id="villeError"><?php echo htmlspecialchars((string) ($fieldErrors['ville'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="secteur" class="form-label">Secteur d'activité</label>
-                                    <select class="form-select" id="secteur" name="secteur">
-                                        <option value="" selected disabled>Choisissez un secteur</option>
-                                        <option value="Informatique">Informatique</option>
-                                        <option value="Finance">Finance</option>
-                                        <option value="Industrie">Industrie</option>
-                                        <option value="Autre">Autre</option>
+                                    <select class="form-select <?php echo ($fieldErrors['secteur'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="secteur" name="secteur">
+                                        <option value="" <?php echo ($old['secteur'] ?? '') === '' ? 'selected' : ''; ?> disabled>Choisissez un secteur</option>
+                                        <option value="Informatique" <?php echo ($old['secteur'] ?? '') === 'Informatique' ? 'selected' : ''; ?>>Informatique</option>
+                                        <option value="Finance" <?php echo ($old['secteur'] ?? '') === 'Finance' ? 'selected' : ''; ?>>Finance</option>
+                                        <option value="Industrie" <?php echo ($old['secteur'] ?? '') === 'Industrie' ? 'selected' : ''; ?>>Industrie</option>
+                                        <option value="Autre" <?php echo ($old['secteur'] ?? '') === 'Autre' ? 'selected' : ''; ?>>Autre</option>
                                     </select>
-                                    <div class="small text-danger d-block" id="secteurError"></div>
+                                    <div class="small text-danger d-block" id="secteurError"><?php echo htmlspecialchars((string) ($fieldErrors['secteur'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="description" class="form-label">Description</label>
-                                    <textarea class="form-control" id="description" name="description" rows="3" placeholder="Présentation de l'entreprise"></textarea>
-                                    <div class="small text-danger d-block" id="descriptionError"></div>
+                                    <textarea class="form-control <?php echo ($fieldErrors['description'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="description" name="description" rows="3" placeholder="Présentation de l'entreprise"><?php echo htmlspecialchars((string) ($old['description'] ?? '')); ?></textarea>
+                                    <div class="small text-danger d-block" id="descriptionError"><?php echo htmlspecialchars((string) ($fieldErrors['description'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="siteWeb" class="form-label">Site web (optionnel)</label>
-                                    <input type="text" class="form-control" id="siteWeb" name="site" placeholder="https://votre-site.com" />
-                                    <div class="small text-danger d-block" id="siteWebError"></div>
+                                    <input type="text" class="form-control <?php echo ($fieldErrors['site'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="siteWeb" name="site" placeholder="https://votre-site.com" value="<?php echo htmlspecialchars((string) ($old['site'] ?? '')); ?>" />
+                                    <div class="small text-danger d-block" id="siteWebError"><?php echo htmlspecialchars((string) ($fieldErrors['site'] ?? '')); ?></div>
                                 </div>
                                 <div id="validationPopups" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
                                 <div id="formMessage" class="alert d-none" role="alert"></div>
@@ -248,6 +248,12 @@
                         if (emailInput.value.trim() && !isValidEmail(emailInput.value.trim())) {
                             setFieldError("email", "Veuillez saisir une adresse email valide.");
                             showPopup("Veuillez saisir une adresse email valide.");
+                            hasError = true;
+                        }
+
+                        if (telephoneInput.value.trim() && !/^\d{8}$/.test(telephoneInput.value.trim())) {
+                            setFieldError("telephone", "Le téléphone doit contenir 8 chiffres.");
+                            showPopup("Le téléphone doit contenir 8 chiffres.");
                             hasError = true;
                         }
 

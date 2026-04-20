@@ -21,14 +21,14 @@
                                 <h4 class="card-title" id="formTitle">Ajouter un formateur</h4>
                                 <form id="trainerForm" novalidate>
                                     <input type="hidden" id="editId" />
-                                    <div class="mb-3"><label for="nom" class="form-label">Nom</label><input id="nom" class="form-control" type="text" /></div>
-                                    <div class="mb-3"><label for="prenom" class="form-label">Prenom</label><input id="prenom" class="form-control" type="text" /></div>
-                                    <div class="mb-3"><label for="email" class="form-label">Email</label><input id="email" class="form-control" type="text" /></div>
-                                    <div class="mb-3"><label for="telephone" class="form-label">Telephone</label><input id="telephone" class="form-control" type="text" /></div>
-                                    <div class="mb-3"><label for="specialite" class="form-label">Specialite</label><input id="specialite" class="form-control" type="text" /></div>
-                                    <div class="mb-3"><label for="diplomes" class="form-label">Diplomes</label><input id="diplomes" class="form-control" type="text" /></div>
-                                    <div class="mb-3"><label for="experience" class="form-label">Experience</label><textarea id="experience" class="form-control" rows="3"></textarea></div>
-                                    <div class="mb-3"><label for="password" class="form-label">Mot de passe (obligatoire a la creation)</label><input id="password" class="form-control" type="password" /></div>
+                                    <div class="mb-3"><label for="nom" class="form-label">Nom</label><input id="nom" class="form-control" type="text" /><div class="small text-danger d-block" id="nomError"></div></div>
+                                    <div class="mb-3"><label for="prenom" class="form-label">Prenom</label><input id="prenom" class="form-control" type="text" /><div class="small text-danger d-block" id="prenomError"></div></div>
+                                    <div class="mb-3"><label for="email" class="form-label">Email</label><input id="email" class="form-control" type="text" /><div class="small text-danger d-block" id="emailError"></div></div>
+                                    <div class="mb-3"><label for="telephone" class="form-label">Telephone</label><input id="telephone" class="form-control" type="text" /><div class="small text-danger d-block" id="telephoneError"></div></div>
+                                    <div class="mb-3"><label for="specialite" class="form-label">Specialite</label><input id="specialite" class="form-control" type="text" /><div class="small text-danger d-block" id="specialiteError"></div></div>
+                                    <div class="mb-3"><label for="diplomes" class="form-label">Diplomes</label><input id="diplomes" class="form-control" type="text" /><div class="small text-danger d-block" id="diplomesError"></div></div>
+                                    <div class="mb-3"><label for="experience" class="form-label">Experience</label><textarea id="experience" class="form-control" rows="3"></textarea><div class="small text-danger d-block" id="experienceError"></div></div>
+                                    <div class="mb-3"><label for="password" class="form-label">Mot de passe (obligatoire a la creation)</label><input id="password" class="form-control" type="password" /><div class="small text-danger d-block" id="passwordError"></div></div>
                                     <div class="d-flex gap-2">
                                         <button class="btn btn-primary" type="submit">Enregistrer</button>
                                         <button class="btn btn-outline-secondary" type="button" id="cancelBtn">Annuler</button>
@@ -87,6 +87,26 @@
         const message = document.getElementById("message");
         const trainersBody = document.getElementById("trainersBody");
         const formTitle = document.getElementById("formTitle");
+        const fieldErrors = {
+            nom: document.getElementById("nomError"),
+            prenom: document.getElementById("prenomError"),
+            email: document.getElementById("emailError"),
+            telephone: document.getElementById("telephoneError"),
+            specialite: document.getElementById("specialiteError"),
+            diplomes: document.getElementById("diplomesError"),
+            experience: document.getElementById("experienceError"),
+            password: document.getElementById("passwordError")
+        };
+        const fieldInputs = {
+            nom: nomInput,
+            prenom: prenomInput,
+            email: emailInput,
+            telephone: telephoneInput,
+            specialite: specialiteInput,
+            diplomes: diplomesInput,
+            experience: experienceInput,
+            password: passwordInput
+        };
 
         function escapeHtml(value) {
             const div = document.createElement("div");
@@ -103,11 +123,33 @@
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         }
 
+        function clearFieldErrors() {
+            Object.keys(fieldErrors).forEach((key) => {
+                if (fieldErrors[key]) {
+                    fieldErrors[key].textContent = "";
+                }
+                if (fieldInputs[key]) {
+                    fieldInputs[key].classList.remove("is-invalid");
+                }
+            });
+        }
+
+        function setFieldError(key, text) {
+            if (fieldErrors[key]) {
+                fieldErrors[key].textContent = text;
+            }
+            if (fieldInputs[key]) {
+                fieldInputs[key].classList.add("is-invalid");
+                fieldInputs[key].value = "";
+            }
+        }
+
         function resetForm() {
             trainerForm.reset();
             editId.value = "";
             formTitle.textContent = "Ajouter un formateur";
             message.textContent = "";
+            clearFieldErrors();
         }
 
         function renderTable() {
@@ -158,13 +200,35 @@
 
         trainerForm.addEventListener("submit", async function (event) {
             event.preventDefault();
+            clearFieldErrors();
 
-            if (!nomInput.value.trim() || !prenomInput.value.trim() || !emailInput.value.trim()) {
-                showMessage("Nom, prenom et email sont obligatoires.", "error");
-                return;
+            let hasError = false;
+
+            if (!nomInput.value.trim()) {
+                setFieldError("nom", "Le nom est obligatoire.");
+                hasError = true;
             }
-            if (!isValidEmail(emailInput.value.trim())) {
-                showMessage("Email invalide.", "error");
+            if (!prenomInput.value.trim()) {
+                setFieldError("prenom", "Le prenom est obligatoire.");
+                hasError = true;
+            }
+            if (!emailInput.value.trim()) {
+                setFieldError("email", "L'email est obligatoire.");
+                hasError = true;
+            }
+
+            if (emailInput.value.trim() && !isValidEmail(emailInput.value.trim())) {
+                setFieldError("email", "Email invalide.");
+                hasError = true;
+            }
+
+            if (!editId.value && !passwordInput.value) {
+                setFieldError("password", "Le mot de passe est obligatoire a la creation.");
+                hasError = true;
+            }
+
+            if (hasError) {
+                showMessage("Veuillez corriger les champs invalides.", "error");
                 return;
             }
 
@@ -184,10 +248,6 @@
                     await sendAction({ action: "update", id: Number(editId.value), ...payload });
                     showMessage("Formateur modifie.", "ok");
                 } else {
-                    if (!payload.password) {
-                        showMessage("Le mot de passe est obligatoire a la creation.", "error");
-                        return;
-                    }
                     await sendAction({ action: "create", ...payload });
                     showMessage("Formateur ajoute.", "ok");
                 }
@@ -200,6 +260,15 @@
         });
 
         cancelBtn.addEventListener("click", resetForm);
+
+        Object.keys(fieldInputs).forEach((key) => {
+            fieldInputs[key].addEventListener("input", function () {
+                if (fieldErrors[key]) {
+                    fieldErrors[key].textContent = "";
+                }
+                fieldInputs[key].classList.remove("is-invalid");
+            });
+        });
 
         trainersBody.addEventListener("click", async function (event) {
             const button = event.target.closest("button[data-action]");

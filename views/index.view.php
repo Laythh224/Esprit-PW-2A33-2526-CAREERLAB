@@ -48,7 +48,7 @@
         <div class="sidebar-logo">
           <!-- Logo Header -->
           <div class="logo-header" data-background-color="dark">
-            <a href="index.php?page=dashboard-admin" class="logo text-white fw-bold text-decoration-none">Career Lab</a>
+            <a href="index.php?r=admin&view=dashboard" class="logo text-white fw-bold text-decoration-none">Career Lab</a>
             <div class="nav-toggle">
               <button class="btn btn-toggle toggle-sidebar">
                 <i class="gg-menu-right"></i>
@@ -75,7 +75,7 @@
                 <div class="collapse" id="dashboard">
                   <ul class="nav nav-collapse">
                     <li>
-                      <a href="index.php?page=dashboard-admin">
+                      <a href="index.php?r=admin&view=dashboard">
                         <span class="sub-item">Dashboard 1</span>
                       </a>
                     </li>
@@ -97,17 +97,17 @@
                 <div class="collapse" id="base">
                   <ul class="nav nav-collapse">
                     <li>
-                      <a href="index.php?page=gestion-utilisateurs">
+                      <a href="index.php?r=admin&view=users">
                         <span class="sub-item">Comptes Utilisateur</span>
                       </a>
                     </li>
                     <li>
-                      <a href="index.php?page=gestion-formateurs">
+                      <a href="index.php?r=admin&view=formateurs">
                         <span class="sub-item">Comptes Formateur</span>
                       </a>
                     </li>
                     <li>
-                      <a href="index.php?page=gestion-entreprises">
+                      <a href="index.php?r=admin&view=entreprises">
                         <span class="sub-item">Comptes Entreprise</span>
                       </a>
                     </li>
@@ -115,7 +115,7 @@
                 </div>
               </li>
               <li class="nav-item">
-                <a href="index.php?page=accueil">
+                <a href="index.php?r=main">
                   <i class="fas fa-globe"></i>
                   <p>Front</p>
                 </a>
@@ -131,7 +131,7 @@
           <div class="main-header-logo">
             <!-- Logo Header -->
             <div class="logo-header" data-background-color="dark">
-              <a href="index.php?page=dashboard-admin" class="logo">
+              <a href="index.php?r=admin&view=dashboard" class="logo">
                 <img
                   src="views/assets/img/image_2026-04-11_005109464-removebg-preview.png"
                   alt="navbar brand"

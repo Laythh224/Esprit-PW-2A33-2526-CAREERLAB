@@ -34,18 +34,12 @@
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email</label>
                                 <input type="text" class="form-control <?php echo $errors['email'] !== '' ? 'is-invalid' : ''; ?>" id="email" name="email" placeholder="votre@email.com" value="<?php echo htmlspecialchars($emailValue); ?>">
-                                <?php if ($errors['email'] !== ''): ?>
-                                    <div class="small text-danger d-block"><?php echo htmlspecialchars($errors['email']); ?></div>
-                                <?php endif; ?>
-                                <div class="small text-danger d-block" id="emailError"></div>
+                                <div class="small text-danger d-block" id="emailError"><?php echo htmlspecialchars($errors['email']); ?></div>
                             </div>
                             <div class="mb-3">
                                 <label for="password" class="form-label">Mot de passe</label>
-                                <input type="password" class="form-control <?php echo $errors['password'] !== '' ? 'is-invalid' : ''; ?>" id="password" name="password" placeholder="********">
-                                <?php if ($errors['password'] !== ''): ?>
-                                    <div class="small text-danger d-block"><?php echo htmlspecialchars($errors['password']); ?></div>
-                                <?php endif; ?>
-                                <div class="small text-danger d-block" id="passwordError"></div>
+                                <input type="password" class="form-control <?php echo $errors['password'] !== '' ? 'is-invalid' : ''; ?>" id="password" name="password" placeholder="********" value="<?php echo htmlspecialchars($passwordValue ?? ''); ?>">
+                                <div class="small text-danger d-block" id="passwordError"><?php echo htmlspecialchars($errors['password']); ?></div>
                             </div>
                             <div id="validationPopups" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
                             <div class="d-grid">

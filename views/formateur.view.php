@@ -1,4 +1,7 @@
-
+<?php
+$old = $old ?? [];
+$fieldErrors = $fieldErrors ?? [];
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -25,61 +28,58 @@
                             <h4 class="mb-0">Inscription Formateur</h4>
                         </div>
                         <div class="card-body">
-                                <?php if ($serverError !== ''): ?>
-                                    <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($serverError); ?></div>
-                                <?php endif; ?>
                             <form id="trainerSignupForm" method="POST" enctype="multipart/form-data" novalidate>
                                 <div class="mb-3">
                                     <label for="nom" class="form-label">Nom</label>
-                                    <input type="text" class="form-control" id="nom" name="nom" placeholder="Votre nom" />
-                                    <div class="small text-danger d-block" id="nomError"></div>
+                                    <input type="text" class="form-control <?php echo ($fieldErrors['nom'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="nom" name="nom" placeholder="Votre nom" value="<?php echo htmlspecialchars((string) ($old['nom'] ?? '')); ?>" />
+                                    <div class="small text-danger d-block" id="nomError"><?php echo htmlspecialchars((string) ($fieldErrors['nom'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="prenom" class="form-label">Prénom</label>
-                                    <input type="text" class="form-control" id="prenom" name="prenom" placeholder="Votre prénom" />
-                                    <div class="small text-danger d-block" id="prenomError"></div>
+                                    <input type="text" class="form-control <?php echo ($fieldErrors['prenom'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="prenom" name="prenom" placeholder="Votre prénom" value="<?php echo htmlspecialchars((string) ($old['prenom'] ?? '')); ?>" />
+                                    <div class="small text-danger d-block" id="prenomError"><?php echo htmlspecialchars((string) ($fieldErrors['prenom'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="email" class="form-label">Email</label>
-                                    <input type="text" class="form-control" id="email" name="email" placeholder="votre@email.com" />
-                                    <div class="small text-danger d-block" id="emailError"></div>
+                                    <input type="text" class="form-control <?php echo ($fieldErrors['email'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="email" name="email" placeholder="votre@email.com" value="<?php echo htmlspecialchars((string) ($old['email'] ?? '')); ?>" />
+                                    <div class="small text-danger d-block" id="emailError"><?php echo htmlspecialchars((string) ($fieldErrors['email'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="password" class="form-label">Mot de passe</label>
-                                    <input type="password" class="form-control" id="password" name="password" placeholder="********" />
-                                    <div class="small text-danger d-block" id="passwordError"></div>
+                                    <input type="password" class="form-control <?php echo ($fieldErrors['password'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="password" name="password" placeholder="********" value="<?php echo htmlspecialchars((string) ($old['password'] ?? '')); ?>" />
+                                    <div class="small text-danger d-block" id="passwordError"><?php echo htmlspecialchars((string) ($fieldErrors['password'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="confirmPassword" class="form-label">Confirmer le mot de passe</label>
-                                    <input type="password" class="form-control" id="confirmPassword" placeholder="********" />
-                                    <div class="small text-danger d-block" id="confirmPasswordError"></div>
+                                    <input type="password" class="form-control <?php echo ($fieldErrors['confirm_password'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="confirmPassword" name="confirm_password" placeholder="********" value="<?php echo htmlspecialchars((string) ($old['confirm_password'] ?? '')); ?>" />
+                                    <div class="small text-danger d-block" id="confirmPasswordError"><?php echo htmlspecialchars((string) ($fieldErrors['confirm_password'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="telephone" class="form-label">Téléphone</label>
-                                    <input type="text" class="form-control" id="telephone" name="telephone" placeholder="Votre téléphone" />
-                                    <div class="small text-danger d-block" id="telephoneError"></div>
+                                    <input type="text" class="form-control <?php echo ($fieldErrors['telephone'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="telephone" name="telephone" placeholder="Votre téléphone" value="<?php echo htmlspecialchars((string) ($old['telephone'] ?? '')); ?>" />
+                                    <div class="small text-danger d-block" id="telephoneError"><?php echo htmlspecialchars((string) ($fieldErrors['telephone'] ?? '')); ?></div>
                                 </div>
                                 <hr />
                                 <h6 class="mb-3">Informations professionnelles</h6>
                                 <div class="mb-3">
                                     <label for="specialite" class="form-label">Spécialité</label>
-                                    <input type="text" class="form-control" id="specialite" name="specialite" placeholder="Ex : Développement Web" />
-                                    <div class="small text-danger d-block" id="specialiteError"></div>
+                                    <input type="text" class="form-control <?php echo ($fieldErrors['specialite'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="specialite" name="specialite" placeholder="Ex : Développement Web" value="<?php echo htmlspecialchars((string) ($old['specialite'] ?? '')); ?>" />
+                                    <div class="small text-danger d-block" id="specialiteError"><?php echo htmlspecialchars((string) ($fieldErrors['specialite'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="diplomes" class="form-label">Diplômes</label>
-                                    <textarea class="form-control" id="diplomes" name="diplomes" rows="3" placeholder="Ex : Master Informatique"></textarea>
-                                    <div class="small text-danger d-block" id="diplomesError"></div>
+                                    <textarea class="form-control <?php echo ($fieldErrors['diplomes'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="diplomes" name="diplomes" rows="3" placeholder="Ex : Master Informatique"><?php echo htmlspecialchars((string) ($old['diplomes'] ?? '')); ?></textarea>
+                                    <div class="small text-danger d-block" id="diplomesError"><?php echo htmlspecialchars((string) ($fieldErrors['diplomes'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="experience" class="form-label">Expérience</label>
-                                    <textarea class="form-control" id="experience" name="experience" rows="3" placeholder="Ex : 3 ans d'enseignement"></textarea>
-                                    <div class="small text-danger d-block" id="experienceError"></div>
+                                    <textarea class="form-control <?php echo ($fieldErrors['experience'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="experience" name="experience" rows="3" placeholder="Ex : 3 ans d'enseignement"><?php echo htmlspecialchars((string) ($old['experience'] ?? '')); ?></textarea>
+                                    <div class="small text-danger d-block" id="experienceError"><?php echo htmlspecialchars((string) ($fieldErrors['experience'] ?? '')); ?></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="cv" class="form-label">CV (PDF)</label>
-                                    <input type="file" class="form-control" id="cv" name="cv" accept="application/pdf,.pdf" />
-                                    <div class="small text-danger d-block" id="cvError"></div>
+                                    <input type="file" class="form-control <?php echo ($fieldErrors['cv'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="cv" name="cv" accept="application/pdf,.pdf" />
+                                    <div class="small text-danger d-block" id="cvError"><?php echo htmlspecialchars((string) ($fieldErrors['cv'] ?? '')); ?></div>
                                 </div>
                                 <div id="validationPopups" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
                                 <div id="formMessage" class="alert d-none" role="alert"></div>
@@ -118,7 +118,7 @@
                     { key: "email", input: emailInput, text: "L'email est obligatoire." },
                     { key: "password", input: passwordInput, text: "Le mot de passe est obligatoire." },
                     { key: "confirmPassword", input: confirmPasswordInput, text: "La confirmation du mot de passe est obligatoire." },
-                    { key: "telephone", input: telephoneInput, text: "Le téléphone est obligatoire." },
+                        { key: "telephone", input: telephoneInput, text: "Le téléphone est obligatoire." },
                     { key: "specialite", input: specialiteInput, text: "La spécialité est obligatoire." },
                     { key: "diplomes", input: diplomesInput, text: "Les diplômes sont obligatoires." },
                     { key: "experience", input: experienceInput, text: "L'expérience est obligatoire." },
@@ -260,6 +260,12 @@
                         if (emailInput.value.trim() && !isValidEmail(emailInput.value.trim())) {
                             setFieldError("email", "Veuillez saisir une adresse email valide.");
                             showPopup("Veuillez saisir une adresse email valide.");
+                            hasError = true;
+                        }
+
+                        if (telephoneInput.value.trim() && !/^\d{8}$/.test(telephoneInput.value.trim())) {
+                            setFieldError("telephone", "Le téléphone doit contenir 8 chiffres.");
+                            showPopup("Le téléphone doit contenir 8 chiffres.");
                             hasError = true;
                         }
 

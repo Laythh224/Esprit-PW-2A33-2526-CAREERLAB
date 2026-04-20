@@ -21,15 +21,15 @@
                                 <h4 class="card-title" id="formTitle">Ajouter une entreprise</h4>
                                 <form id="companyForm" novalidate>
                                     <input type="hidden" id="editId" />
-                                    <div class="mb-3"><label for="nomEntreprise" class="form-label">Nom entreprise</label><input id="nomEntreprise" class="form-control" type="text" /></div>
-                                    <div class="mb-3"><label for="email" class="form-label">Email</label><input id="email" class="form-control" type="text" /></div>
-                                    <div class="mb-3"><label for="telephone" class="form-label">Telephone</label><input id="telephone" class="form-control" type="text" /></div>
-                                    <div class="mb-3"><label for="adresse" class="form-label">Adresse</label><input id="adresse" class="form-control" type="text" /></div>
-                                    <div class="mb-3"><label for="ville" class="form-label">Ville</label><input id="ville" class="form-control" type="text" /></div>
-                                    <div class="mb-3"><label for="secteur" class="form-label">Secteur</label><input id="secteur" class="form-control" type="text" /></div>
-                                    <div class="mb-3"><label for="siteWeb" class="form-label">Site web</label><input id="siteWeb" class="form-control" type="text" /></div>
-                                    <div class="mb-3"><label for="description" class="form-label">Description</label><textarea id="description" class="form-control" rows="3"></textarea></div>
-                                    <div class="mb-3"><label for="password" class="form-label">Mot de passe (obligatoire a la creation)</label><input id="password" class="form-control" type="password" /></div>
+                                    <div class="mb-3"><label for="nomEntreprise" class="form-label">Nom entreprise</label><input id="nomEntreprise" class="form-control" type="text" /><div class="small text-danger d-block" id="nomEntrepriseError"></div></div>
+                                    <div class="mb-3"><label for="email" class="form-label">Email</label><input id="email" class="form-control" type="text" /><div class="small text-danger d-block" id="emailError"></div></div>
+                                    <div class="mb-3"><label for="telephone" class="form-label">Telephone</label><input id="telephone" class="form-control" type="text" /><div class="small text-danger d-block" id="telephoneError"></div></div>
+                                    <div class="mb-3"><label for="adresse" class="form-label">Adresse</label><input id="adresse" class="form-control" type="text" /><div class="small text-danger d-block" id="adresseError"></div></div>
+                                    <div class="mb-3"><label for="ville" class="form-label">Ville</label><input id="ville" class="form-control" type="text" /><div class="small text-danger d-block" id="villeError"></div></div>
+                                    <div class="mb-3"><label for="secteur" class="form-label">Secteur</label><input id="secteur" class="form-control" type="text" /><div class="small text-danger d-block" id="secteurError"></div></div>
+                                    <div class="mb-3"><label for="siteWeb" class="form-label">Site web</label><input id="siteWeb" class="form-control" type="text" /><div class="small text-danger d-block" id="siteWebError"></div></div>
+                                    <div class="mb-3"><label for="description" class="form-label">Description</label><textarea id="description" class="form-control" rows="3"></textarea><div class="small text-danger d-block" id="descriptionError"></div></div>
+                                    <div class="mb-3"><label for="password" class="form-label">Mot de passe (obligatoire a la creation)</label><input id="password" class="form-control" type="password" /><div class="small text-danger d-block" id="passwordError"></div></div>
                                     <div class="d-flex gap-2">
                                         <button class="btn btn-primary" type="submit">Enregistrer</button>
                                         <button class="btn btn-outline-secondary" type="button" id="cancelBtn">Annuler</button>
@@ -89,6 +89,28 @@
         const message = document.getElementById("message");
         const companiesBody = document.getElementById("companiesBody");
         const formTitle = document.getElementById("formTitle");
+        const fieldErrors = {
+            nom_entreprise: document.getElementById("nomEntrepriseError"),
+            email: document.getElementById("emailError"),
+            telephone: document.getElementById("telephoneError"),
+            adresse: document.getElementById("adresseError"),
+            ville: document.getElementById("villeError"),
+            secteur: document.getElementById("secteurError"),
+            site_web: document.getElementById("siteWebError"),
+            description: document.getElementById("descriptionError"),
+            password: document.getElementById("passwordError")
+        };
+        const fieldInputs = {
+            nom_entreprise: nomEntrepriseInput,
+            email: emailInput,
+            telephone: telephoneInput,
+            adresse: adresseInput,
+            ville: villeInput,
+            secteur: secteurInput,
+            site_web: siteWebInput,
+            description: descriptionInput,
+            password: passwordInput
+        };
 
         function escapeHtml(value) {
             const div = document.createElement("div");
@@ -105,11 +127,42 @@
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         }
 
+        function isValidUrl(url) {
+            try {
+                const parsed = new URL(url);
+                return parsed.protocol === "http:" || parsed.protocol === "https:";
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function clearFieldErrors() {
+            Object.keys(fieldErrors).forEach((key) => {
+                if (fieldErrors[key]) {
+                    fieldErrors[key].textContent = "";
+                }
+                if (fieldInputs[key]) {
+                    fieldInputs[key].classList.remove("is-invalid");
+                }
+            });
+        }
+
+        function setFieldError(key, text) {
+            if (fieldErrors[key]) {
+                fieldErrors[key].textContent = text;
+            }
+            if (fieldInputs[key]) {
+                fieldInputs[key].classList.add("is-invalid");
+                fieldInputs[key].value = "";
+            }
+        }
+
         function resetForm() {
             companyForm.reset();
             editId.value = "";
             formTitle.textContent = "Ajouter une entreprise";
             message.textContent = "";
+            clearFieldErrors();
         }
 
         function renderTable() {
@@ -160,13 +213,36 @@
 
         companyForm.addEventListener("submit", async function (event) {
             event.preventDefault();
+            clearFieldErrors();
 
-            if (!nomEntrepriseInput.value.trim() || !emailInput.value.trim()) {
-                showMessage("Nom entreprise et email sont obligatoires.", "error");
-                return;
+            let hasError = false;
+
+            if (!nomEntrepriseInput.value.trim()) {
+                setFieldError("nom_entreprise", "Le nom de l'entreprise est obligatoire.");
+                hasError = true;
             }
-            if (!isValidEmail(emailInput.value.trim())) {
-                showMessage("Email invalide.", "error");
+            if (!emailInput.value.trim()) {
+                setFieldError("email", "L'email est obligatoire.");
+                hasError = true;
+            }
+
+            if (emailInput.value.trim() && !isValidEmail(emailInput.value.trim())) {
+                setFieldError("email", "Email invalide.");
+                hasError = true;
+            }
+
+            if (siteWebInput.value.trim() && !isValidUrl(siteWebInput.value.trim())) {
+                setFieldError("site_web", "Le site web doit etre une URL valide (http/https).");
+                hasError = true;
+            }
+
+            if (!editId.value && !passwordInput.value) {
+                setFieldError("password", "Le mot de passe est obligatoire a la creation.");
+                hasError = true;
+            }
+
+            if (hasError) {
+                showMessage("Veuillez corriger les champs invalides.", "error");
                 return;
             }
 
@@ -187,10 +263,6 @@
                     await sendAction({ action: "update", id: Number(editId.value), ...payload });
                     showMessage("Entreprise modifiee.", "ok");
                 } else {
-                    if (!payload.password) {
-                        showMessage("Le mot de passe est obligatoire a la creation.", "error");
-                        return;
-                    }
                     await sendAction({ action: "create", ...payload });
                     showMessage("Entreprise ajoutee.", "ok");
                 }
@@ -203,6 +275,15 @@
         });
 
         cancelBtn.addEventListener("click", resetForm);
+
+        Object.keys(fieldInputs).forEach((key) => {
+            fieldInputs[key].addEventListener("input", function () {
+                if (fieldErrors[key]) {
+                    fieldErrors[key].textContent = "";
+                }
+                fieldInputs[key].classList.remove("is-invalid");
+            });
+        });
 
         companiesBody.addEventListener("click", async function (event) {
             const button = event.target.closest("button[data-action]");

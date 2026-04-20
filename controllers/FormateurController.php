@@ -11,19 +11,134 @@ class FormateurController
 
     public function signup(): void
     {
-        $serverError = '';
+        $formState = $this->createInitialSignupState();
 
         if (isset($_POST['submit'])) {
-            try {
-                $this->model->registerFromSignup($_POST, $_FILES);
-                header('Location: index.php?page=login');
-                exit;
-            } catch (Throwable $exception) {
-                $serverError = $exception->getMessage();
+            $entity = $this->hydrateEntityFromPost($_POST);
+            $formState['values'] = $this->extractValuesFromEntity($entity);
+            $formState['errors'] = $this->model->validateSignup($entity, $_FILES);
+            $this->clearInvalidFields($formState);
+
+            if (!$this->hasSignupErrors($formState)) {
+                try {
+                    $this->model->registerFromEntity($entity, $_FILES);
+                    header('Location: index.php');
+                    exit;
+                } catch (Throwable $exception) {
+                    $this->mapSignupExceptionToFieldError($formState, $exception);
+                    $this->clearInvalidFields($formState);
+                }
             }
         }
 
+        $serverError = $formState['message'];
+        $old = $formState['values'];
+        $fieldErrors = $formState['errors'];
+
         require_once __DIR__ . '/../views/formateur.view.php';
+    }
+
+    private function createInitialSignupState(): array
+    {
+        return [
+            'message' => '',
+            'values' => [
+                'nom' => '',
+                'prenom' => '',
+                'email' => '',
+                'telephone' => '',
+                'password' => '',
+                'confirm_password' => '',
+                'specialite' => '',
+                'diplomes' => '',
+                'experience' => '',
+            ],
+            'errors' => [
+                'nom' => '',
+                'prenom' => '',
+                'email' => '',
+                'telephone' => '',
+                'password' => '',
+                'confirm_password' => '',
+                'specialite' => '',
+                'diplomes' => '',
+                'experience' => '',
+                'cv' => '',
+            ],
+        ];
+    }
+
+    private function hydrateEntityFromPost(array $post): FormateurEntity
+    {
+        $entity = new FormateurEntity();
+
+        $entity
+            ->setNom(trim((string) ($post['nom'] ?? '')))
+            ->setPrenom(trim((string) ($post['prenom'] ?? '')))
+            ->setEmail(trim((string) ($post['email'] ?? '')))
+            ->setTelephone(trim((string) ($post['telephone'] ?? '')))
+            ->setPassword((string) ($post['password'] ?? ''))
+            ->setConfirmPassword((string) ($post['confirm_password'] ?? ''))
+            ->setSpecialite(trim((string) ($post['specialite'] ?? '')))
+            ->setDiplomes(trim((string) ($post['diplomes'] ?? '')))
+            ->setExperience(trim((string) ($post['experience'] ?? '')));
+
+        return $entity;
+    }
+
+    private function extractValuesFromEntity(FormateurEntity $entity): array
+    {
+        return [
+            'nom' => $entity->getNom(),
+            'prenom' => $entity->getPrenom(),
+            'email' => $entity->getEmail(),
+            'telephone' => $entity->getTelephone(),
+            'password' => $entity->getPassword(),
+            'confirm_password' => $entity->getConfirmPassword(),
+            'specialite' => $entity->getSpecialite(),
+            'diplomes' => $entity->getDiplomes(),
+            'experience' => $entity->getExperience(),
+        ];
+    }
+
+    private function hasSignupErrors(array $formState): bool
+    {
+        foreach ($formState['errors'] as $error) {
+            if ($error !== '') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function clearInvalidFields(array &$formState): void
+    {
+        foreach ($formState['errors'] as $field => $error) {
+            if ($error === '' || !array_key_exists($field, $formState['values'])) {
+                continue;
+            }
+
+            $formState['values'][$field] = '';
+        }
+    }
+
+    private function mapSignupExceptionToFieldError(array &$formState, Throwable $exception): void
+    {
+        $message = $exception->getMessage();
+        $lowerMessage = mb_strtolower($message);
+
+        if (str_contains($lowerMessage, 'email') && (str_contains($lowerMessage, 'utilise') || str_contains($lowerMessage, 'existe'))) {
+            $formState['errors']['email'] = 'Cet email est deja utilise.';
+            return;
+        }
+
+        if (str_contains($lowerMessage, 'cv') || str_contains($lowerMessage, 'pdf')) {
+            $formState['errors']['cv'] = $message;
+            return;
+        }
+
+        $formState['message'] = $message;
     }
 
     public function api(): void

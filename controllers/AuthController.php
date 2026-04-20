@@ -24,8 +24,13 @@ class AuthController
         $email = trim((string) ($_POST['email'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
         $state['emailValue'] = $email;
+        $state['passwordValue'] = $password;
 
         $this->fillCredentialErrors($state, $email, $password);
+
+        // Keep only valid fields after submit; invalid ones are cleared.
+        $this->clearInvalidFieldValues($state);
+
         if ($this->hasCredentialErrors($state)) {
             return $state;
         }
@@ -56,7 +61,7 @@ class AuthController
 
         session_destroy();
 
-        header('Location: index.php?page=login');
+        header('Location: index.php');
         exit;
     }
 
@@ -69,7 +74,19 @@ class AuthController
                 'password' => '',
             ],
             'emailValue' => '',
+            'passwordValue' => '',
         ];
+    }
+
+    private function clearInvalidFieldValues(array &$state): void
+    {
+        if (($state['errors']['email'] ?? '') !== '') {
+            $state['emailValue'] = '';
+        }
+
+        if (($state['errors']['password'] ?? '') !== '') {
+            $state['passwordValue'] = '';
+        }
     }
 
     private function fillCredentialErrors(array &$state, string $email, string $password): void
@@ -118,7 +135,7 @@ class AuthController
 
     private function storeAuthenticatedSession(string $role, array $account): void
     {
-        $_SESSION['role'] = $role;
+        $_SESSION['role'] = $account['role'] ?? $role;
         $_SESSION['user_email'] = $account['email'];
         $_SESSION['user_id'] = $account['id'] ?? null;
 
@@ -132,7 +149,7 @@ class AuthController
 
     private function redirectToDashboard(): void
     {
-        header('Location: index.php?page=dashboard');
+        header('Location: index.php');
         exit;
     }
 
@@ -141,6 +158,7 @@ class AuthController
         $message = $loginState['message'];
         $errors = $loginState['errors'];
         $emailValue = $loginState['emailValue'];
+        $passwordValue = $loginState['passwordValue'];
 
         require_once __DIR__ . '/../views/login.view.php';
     }

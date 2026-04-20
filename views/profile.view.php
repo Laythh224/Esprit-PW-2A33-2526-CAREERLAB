@@ -16,7 +16,7 @@
             <div class="card-body p-5 text-center">
               <h1 class="mb-3">Profil</h1>
               <p class="text-muted mb-4">Cette page est maintenant servie en PHP pour rester cohérente avec le reste du site.</p>
-              <a href="index.php?page=dashboard-admin" class="btn btn-primary">Retour au tableau de bord</a>
+              <a href="index.php?r=admin&view=dashboard" class="btn btn-primary">Retour au tableau de bord</a>
             </div>
           </div>
         </div>
