@@ -35,7 +35,7 @@ class FormateurController
         $old = $formState['values'];
         $fieldErrors = $formState['errors'];
 
-        require_once __DIR__ . '/../views/formateur.view.php';
+        require_once __DIR__ . '/../Views/formateur.view.php';
     }
 
     private function createInitialSignupState(): array
@@ -51,6 +51,7 @@ class FormateurController
                 'confirm_password' => '',
                 'specialite' => '',
                 'diplomes' => '',
+                'diplome_count' => '',
                 'experience' => '',
             ],
             'errors' => [
@@ -80,7 +81,7 @@ class FormateurController
             ->setPassword((string) ($post['password'] ?? ''))
             ->setConfirmPassword((string) ($post['confirm_password'] ?? ''))
             ->setSpecialite(trim((string) ($post['specialite'] ?? '')))
-            ->setDiplomes(trim((string) ($post['diplomes'] ?? '')))
+            ->setDiplomeCount((int) ($post['diplome_count'] ?? 0))
             ->setExperience(trim((string) ($post['experience'] ?? '')));
 
         return $entity;
@@ -97,6 +98,7 @@ class FormateurController
             'confirm_password' => $entity->getConfirmPassword(),
             'specialite' => $entity->getSpecialite(),
             'diplomes' => $entity->getDiplomes(),
+            'diplome_count' => $entity->getDiplomeCount() > 0 ? (string) $entity->getDiplomeCount() : '',
             'experience' => $entity->getExperience(),
         ];
     }
@@ -130,6 +132,11 @@ class FormateurController
 
         if (str_contains($lowerMessage, 'email') && (str_contains($lowerMessage, 'utilise') || str_contains($lowerMessage, 'existe'))) {
             $formState['errors']['email'] = 'Cet email est deja utilise.';
+            return;
+        }
+
+        if (str_contains($lowerMessage, 'diplome')) {
+            $formState['errors']['diplomes'] = $message;
             return;
         }
 
@@ -185,3 +192,4 @@ class FormateurController
         }
     }
 }
+

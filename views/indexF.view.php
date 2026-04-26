@@ -1,3 +1,8 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -21,14 +26,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
 
     <!-- Libraries Stylesheet -->
-    <link href="views/assets/css/owl.carousel.min.css" rel="stylesheet">
-    <link href="views/assets/css/animate.min.css" rel="stylesheet">
+    <link href="Views/assets/css/owl.carousel.min.css" rel="stylesheet">
+    <link href="Views/assets/css/animate.min.css" rel="stylesheet">
 
     <!-- Customized Bootstrap Stylesheet -->
-    <link href="views/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="Views/assets/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Template Stylesheet -->
-    <link href="views/assets/css/style.css" rel="stylesheet">
+    <link href="Views/assets/css/style.css" rel="stylesheet">
 </head>
 
 <body>
@@ -67,7 +72,7 @@
     <div class="container-fluid position-relative p-0">
         <nav class="navbar navbar-expand-lg navbar-dark px-5 py-3 py-lg-0">
             <a href="index.php?page=accueil" class="navbar-brand p-0">
-                <img src="views/assets/img/image_2026-04-11_005109464-removebg-preview.png" alt="CareerLab" style="height: 52px; max-width: 100%;" />
+                <img src="Views/assets/img/image_2026-04-11_005109464-removebg-preview.png" alt="CareerLab" style="height: 52px; max-width: 100%;" />
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
                 <span class="fa fa-bars"></span>
@@ -87,9 +92,16 @@
                     <a href="index.php?page=service" class="nav-item nav-link">Services</a>
                     <a href="index.php?page=contact" class="nav-item nav-link">Contact</a>
                 </div>
+                <?php if (isset($_SESSION['nom']) && $_SESSION['nom'] !== ''): ?>
+                    <span class="text-white ms-lg-3 me-2"><?php echo htmlspecialchars($_SESSION['nom'], ENT_QUOTES, 'UTF-8'); ?></span>
+                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                        <a href="index.php?page=dashboard-admin" class="btn btn-warning py-2 px-3 me-2">BackOffice</a>
+                    <?php endif; ?>
+                    <a href="index.php?page=logout" class="btn btn-outline-light py-2 px-3">Se déconnecter</a>
+                <?php else: ?>
                 <a href="index.php?page=login" class="btn btn-outline-light py-2 px-3 ms-lg-3 me-2">Se connecter</a>
                 <a href="index.php?page=creer-compte" class="btn btn-primary py-2 px-3">Créer un compte</a>
-                <a href="index.php?page=dashboard-admin" class="btn btn-warning py-2 px-3 ms-2">Backoffice</a>
+                <?php endif; ?>
                 <butaton type="button" class="btn text-primary ms-3" data-bs-toggle="modal" data-bs-target="#searchModal"><i class="fa fa-search"></i></butaton>
 
             </div>
@@ -98,7 +110,7 @@
         <div id="header-carousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
             <div class="carousel-inner">
                 <div class="carousel-item active">
-                    <img class="w-100" src="views/assets/img/carousel-1.jpg" alt="Image">
+                    <img class="w-100" src="Views/assets/img/carousel-1.jpg" alt="Image">
                     <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
                         <div class="p-3" style="max-width: 900px;">
                             <h5 class="text-white text-uppercase mb-3 animated slideInDown">Creative & Innovative</h5>
@@ -109,7 +121,7 @@
                     </div>
                 </div>
                 <div class="carousel-item">
-                    <img class="w-100" src="views/assets/img/carousel-2.jpg" alt="Image">
+                    <img class="w-100" src="Views/assets/img/carousel-2.jpg" alt="Image">
                     <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
                         <div class="p-3" style="max-width: 900px;">
                             <h5 class="text-white text-uppercase mb-3 animated slideInDown">Creative & Innovative</h5>
@@ -230,7 +242,7 @@
                 </div>
                 <div class="col-lg-5" style="min-height: 500px;">
                     <div class="position-relative h-100">
-                        <img class="position-absolute w-100 h-100 rounded wow zoomIn" data-wow-delay="0.9s" src="views/assets/img/about.jpg" style="object-fit: cover;">
+                        <img class="position-absolute w-100 h-100 rounded wow zoomIn" data-wow-delay="0.9s" src="Views/assets/img/about.jpg" style="object-fit: cover;">
                     </div>
                 </div>
             </div>
@@ -267,7 +279,7 @@
                 </div>
                 <div class="col-lg-4  wow zoomIn" data-wow-delay="0.9s" style="min-height: 350px;">
                     <div class="position-relative h-100">
-                        <img class="position-absolute w-100 h-100 rounded wow zoomIn" data-wow-delay="0.1s" src="views/assets/img/feature.jpg" style="object-fit: cover;">
+                        <img class="position-absolute w-100 h-100 rounded wow zoomIn" data-wow-delay="0.1s" src="Views/assets/img/feature.jpg" style="object-fit: cover;">
                     </div>
                 </div>
                 <div class="col-lg-4">
@@ -482,7 +494,7 @@
                                     <input type="text" class="form-control bg-light border-0" placeholder="Your Name" style="height: 55px;">
                                 </div>
                                 <div class="col-12">
-                                    <input type="email" class="form-control bg-light border-0" placeholder="Your Email" style="height: 55px;">
+                                    <input type="text" class="form-control bg-light border-0" placeholder="Your Email" style="height: 55px;">
                                 </div>
                                 <div class="col-12">
                                     <select class="form-select bg-light border-0" style="height: 55px;">
@@ -518,7 +530,7 @@
             <div class="owl-carousel testimonial-carousel wow fadeInUp" data-wow-delay="0.6s">
                 <div class="testimonial-item bg-light my-4">
                     <div class="d-flex align-items-center border-bottom pt-5 pb-4 px-5">
-                        <img class="img-fluid rounded" src="views/assets/img/testimonial-1.jpg" style="width: 60px; height: 60px;" >
+                        <img class="img-fluid rounded" src="Views/assets/img/testimonial-1.jpg" style="width: 60px; height: 60px;" >
                         <div class="ps-4">
                             <h4 class="text-primary mb-1">Client Name</h4>
                             <small class="text-uppercase">Profession</small>
@@ -530,7 +542,7 @@
                 </div>
                 <div class="testimonial-item bg-light my-4">
                     <div class="d-flex align-items-center border-bottom pt-5 pb-4 px-5">
-                        <img class="img-fluid rounded" src="views/assets/img/testimonial-2.jpg" style="width: 60px; height: 60px;" >
+                        <img class="img-fluid rounded" src="Views/assets/img/testimonial-2.jpg" style="width: 60px; height: 60px;" >
                         <div class="ps-4">
                             <h4 class="text-primary mb-1">Client Name</h4>
                             <small class="text-uppercase">Profession</small>
@@ -542,7 +554,7 @@
                 </div>
                 <div class="testimonial-item bg-light my-4">
                     <div class="d-flex align-items-center border-bottom pt-5 pb-4 px-5">
-                        <img class="img-fluid rounded" src="views/assets/img/testimonial-3.jpg" style="width: 60px; height: 60px;" >
+                        <img class="img-fluid rounded" src="Views/assets/img/testimonial-3.jpg" style="width: 60px; height: 60px;" >
                         <div class="ps-4">
                             <h4 class="text-primary mb-1">Client Name</h4>
                             <small class="text-uppercase">Profession</small>
@@ -554,7 +566,7 @@
                 </div>
                 <div class="testimonial-item bg-light my-4">
                     <div class="d-flex align-items-center border-bottom pt-5 pb-4 px-5">
-                        <img class="img-fluid rounded" src="views/assets/img/testimonial-4.jpg" style="width: 60px; height: 60px;" >
+                        <img class="img-fluid rounded" src="Views/assets/img/testimonial-4.jpg" style="width: 60px; height: 60px;" >
                         <div class="ps-4">
                             <h4 class="text-primary mb-1">Client Name</h4>
                             <small class="text-uppercase">Profession</small>
@@ -581,7 +593,7 @@
                 <div class="col-lg-4 wow slideInUp" data-wow-delay="0.3s">
                     <div class="team-item bg-light rounded overflow-hidden">
                         <div class="team-img position-relative overflow-hidden">
-                            <img class="img-fluid w-100" src="views/assets/img/team-1.jpg" alt="">
+                            <img class="img-fluid w-100" src="Views/assets/img/team-1.jpg" alt="">
                             <div class="team-social">
                                 <a class="btn btn-lg btn-primary btn-lg-square rounded" href=""><i class="fab fa-twitter fw-normal"></i></a>
                                 <a class="btn btn-lg btn-primary btn-lg-square rounded" href=""><i class="fab fa-facebook-f fw-normal"></i></a>
@@ -598,7 +610,7 @@
                 <div class="col-lg-4 wow slideInUp" data-wow-delay="0.6s">
                     <div class="team-item bg-light rounded overflow-hidden">
                         <div class="team-img position-relative overflow-hidden">
-                            <img class="img-fluid w-100" src="views/assets/img/team-2.jpg" alt="">
+                            <img class="img-fluid w-100" src="Views/assets/img/team-2.jpg" alt="">
                             <div class="team-social">
                                 <a class="btn btn-lg btn-primary btn-lg-square rounded" href=""><i class="fab fa-twitter fw-normal"></i></a>
                                 <a class="btn btn-lg btn-primary btn-lg-square rounded" href=""><i class="fab fa-facebook-f fw-normal"></i></a>
@@ -615,7 +627,7 @@
                 <div class="col-lg-4 wow slideInUp" data-wow-delay="0.9s">
                     <div class="team-item bg-light rounded overflow-hidden">
                         <div class="team-img position-relative overflow-hidden">
-                            <img class="img-fluid w-100" src="views/assets/img/team-3.jpg" alt="">
+                            <img class="img-fluid w-100" src="Views/assets/img/team-3.jpg" alt="">
                             <div class="team-social">
                                 <a class="btn btn-lg btn-primary btn-lg-square rounded" href=""><i class="fab fa-twitter fw-normal"></i></a>
                                 <a class="btn btn-lg btn-primary btn-lg-square rounded" href=""><i class="fab fa-facebook-f fw-normal"></i></a>
@@ -646,7 +658,7 @@
                 <div class="col-lg-4 wow slideInUp" data-wow-delay="0.3s">
                     <div class="blog-item bg-light rounded overflow-hidden">
                         <div class="blog-img position-relative overflow-hidden">
-                            <img class="img-fluid" src="views/assets/img/blog-1.jpg" alt="">
+                            <img class="img-fluid" src="Views/assets/img/blog-1.jpg" alt="">
                             <a class="position-absolute top-0 start-0 bg-primary text-white rounded-end mt-5 py-2 px-4" href="">Web Design</a>
                         </div>
                         <div class="p-4">
@@ -663,7 +675,7 @@
                 <div class="col-lg-4 wow slideInUp" data-wow-delay="0.6s">
                     <div class="blog-item bg-light rounded overflow-hidden">
                         <div class="blog-img position-relative overflow-hidden">
-                            <img class="img-fluid" src="views/assets/img/blog-2.jpg" alt="">
+                            <img class="img-fluid" src="Views/assets/img/blog-2.jpg" alt="">
                             <a class="position-absolute top-0 start-0 bg-primary text-white rounded-end mt-5 py-2 px-4" href="">Web Design</a>
                         </div>
                         <div class="p-4">
@@ -680,7 +692,7 @@
                 <div class="col-lg-4 wow slideInUp" data-wow-delay="0.9s">
                     <div class="blog-item bg-light rounded overflow-hidden">
                         <div class="blog-img position-relative overflow-hidden">
-                            <img class="img-fluid" src="views/assets/img/blog-3.jpg" alt="">
+                            <img class="img-fluid" src="Views/assets/img/blog-3.jpg" alt="">
                             <a class="position-absolute top-0 start-0 bg-primary text-white rounded-end mt-5 py-2 px-4" href="">Web Design</a>
                         </div>
                         <div class="p-4">
@@ -705,15 +717,15 @@
         <div class="container py-5 mb-5">
             <div class="bg-white">
                 <div class="owl-carousel vendor-carousel">
-                    <img src="views/assets/img/vendor-1.jpg" alt="">
-                    <img src="views/assets/img/vendor-2.jpg" alt="">
-                    <img src="views/assets/img/vendor-3.jpg" alt="">
-                    <img src="views/assets/img/vendor-4.jpg" alt="">
-                    <img src="views/assets/img/vendor-5.jpg" alt="">
-                    <img src="views/assets/img/vendor-6.jpg" alt="">
-                    <img src="views/assets/img/vendor-7.jpg" alt="">
-                    <img src="views/assets/img/vendor-8.jpg" alt="">
-                    <img src="views/assets/img/vendor-9.jpg" alt="">
+                    <img src="Views/assets/img/vendor-1.jpg" alt="">
+                    <img src="Views/assets/img/vendor-2.jpg" alt="">
+                    <img src="Views/assets/img/vendor-3.jpg" alt="">
+                    <img src="Views/assets/img/vendor-4.jpg" alt="">
+                    <img src="Views/assets/img/vendor-5.jpg" alt="">
+                    <img src="Views/assets/img/vendor-6.jpg" alt="">
+                    <img src="Views/assets/img/vendor-7.jpg" alt="">
+                    <img src="Views/assets/img/vendor-8.jpg" alt="">
+                    <img src="Views/assets/img/vendor-9.jpg" alt="">
                 </div>
             </div>
         </div>
@@ -820,17 +832,18 @@
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="views/assets/js/wow.min.js"></script>
-    <script src="views/assets/js/easing.min.js"></script>
-    <script src="views/assets/js/waypoints.min.js"></script>
-    <script src="views/assets/js/counterup.min.js"></script>
-    <script src="views/assets/js/owl.carousel.min.js"></script>
+    <script src="Views/assets/js/wow.min.js"></script>
+    <script src="Views/assets/js/easing.min.js"></script>
+    <script src="Views/assets/js/waypoints.min.js"></script>
+    <script src="Views/assets/js/counterup.min.js"></script>
+    <script src="Views/assets/js/owl.carousel.min.js"></script>
 
     <!-- Template Javascript -->
-    <script src="views/assets/js/main.js"></script>
+    <script src="Views/assets/js/main.js"></script>
 </body>
 
 </html>
+
 
 
 

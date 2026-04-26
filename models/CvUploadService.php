@@ -5,7 +5,7 @@ class CvUploadService
     private string $uploadDir;
     private string $publicBasePath;
 
-    public function __construct(?string $uploadDir = null, string $publicBasePath = 'views/assets/uploads/cv')
+    public function __construct(?string $uploadDir = null, string $publicBasePath = 'Views/assets/uploads/cv')
     {
         $this->uploadDir = $uploadDir ?? dirname(__DIR__) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv';
         $this->publicBasePath = trim($publicBasePath, '/');

@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html lang="fr">
+<?php if (!defined('BASE_URL')) define('BASE_URL', '/mon_site/'); ?>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion</title>
-    <link rel="stylesheet" href="views/assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="views/assets/css/plugins.min.css">
-    <link rel="stylesheet" href="views/assets/css/kaiadmin.min.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/plugins.min.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/kaiadmin.min.css">
 </head>
 <body>
     <div class="container py-5">
         <div class="row justify-content-center mb-4">
             <div class="col-auto text-center">
                 <a href="index.php?page=accueil">
-                    <img src="views/assets/img/image_2026-04-11_005109464-removebg-preview.png" alt="CareerLab" style="height: 56px; max-width: 100%;" />
+                    <img src="<?= BASE_URL ?>Views/assets/img/image_2026-04-11_005109464-removebg-preview.png" alt="CareerLab" style="height: 56px; max-width: 100%;" />
                 </a>
             </div>
         </div>
@@ -122,3 +123,4 @@
     </script>
 </body>
 </html>
+

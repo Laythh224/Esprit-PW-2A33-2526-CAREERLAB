@@ -9,12 +9,12 @@
     />
     <link
       rel="icon"
-      href="views/assets/img/favicon.ico"
+      href="Views/assets/img/favicon.ico"
       type="image/x-icon"
     />
 
     <!-- Fonts and icons -->
-    <script src="views/assets/js/webfont.min.js"></script>
+    <script src="Views/assets/js/webfont.min.js"></script>
     <script>
       WebFont.load({
         google: { families: ["Public Sans:300,400,500,600,700"] },
@@ -25,7 +25,7 @@
             "Font Awesome 5 Brands",
             "simple-line-icons",
           ],
-          urls: ["views/assets/css/fonts.min.css"],
+          urls: ["Views/assets/css/fonts.min.css"],
         },
         active: function () {
           sessionStorage.fonts = true;
@@ -34,12 +34,12 @@
     </script>
 
     <!-- CSS Files -->
-    <link rel="stylesheet" href="views/assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="views/assets/css/plugins.min.css" />
-    <link rel="stylesheet" href="views/assets/css/kaiadmin.min.css" />
+    <link rel="stylesheet" href="Views/assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="Views/assets/css/plugins.min.css" />
+    <link rel="stylesheet" href="Views/assets/css/kaiadmin.min.css" />
 
     <!-- CSS Just for demo purpose, don't include it in your project -->
-    <link rel="stylesheet" href="views/assets/css/demo.css" />
+    <link rel="stylesheet" href="Views/assets/css/demo.css" />
   </head>
   <body>
     <div class="wrapper">
@@ -133,7 +133,7 @@
             <div class="logo-header" data-background-color="dark">
               <a href="index.php?r=admin&view=dashboard" class="logo">
                 <img
-                  src="views/assets/img/image_2026-04-11_005109464-removebg-preview.png"
+                  src="Views/assets/img/image_2026-04-11_005109464-removebg-preview.png"
                   alt="navbar brand"
                   class="navbar-brand"
                   height="20"
@@ -231,7 +231,7 @@
                           <a href="#">
                             <div class="notif-img">
                               <img
-                                src="views/assets/img/jm_denis.jpg"
+                                src="Views/assets/img/jm_denis.jpg"
                                 alt="Img Profile"
                               />
                             </div>
@@ -244,7 +244,7 @@
                           <a href="#">
                             <div class="notif-img">
                               <img
-                                src="views/assets/img/chadengle.jpg"
+                                src="Views/assets/img/chadengle.jpg"
                                 alt="Img Profile"
                               />
                             </div>
@@ -257,7 +257,7 @@
                           <a href="#">
                             <div class="notif-img">
                               <img
-                                src="views/assets/img/mlane.jpg"
+                                src="Views/assets/img/mlane.jpg"
                                 alt="Img Profile"
                               />
                             </div>
@@ -272,7 +272,7 @@
                           <a href="#">
                             <div class="notif-img">
                               <img
-                                src="views/assets/img/talha.jpg"
+                                src="Views/assets/img/talha.jpg"
                                 alt="Img Profile"
                               />
                             </div>
@@ -340,7 +340,7 @@
                           <a href="#">
                             <div class="notif-img">
                               <img
-                                src="views/assets/img/profile2.jpg"
+                                src="Views/assets/img/profile2.jpg"
                                 alt="Img Profile"
                               />
                             </div>
@@ -458,7 +458,7 @@
                   >
                     <div class="avatar-sm">
                       <img
-                        src="views/assets/img/profile.jpg"
+                        src="Views/assets/img/profile.jpg"
                         alt="..."
                         class="avatar-img rounded-circle"
                       />
@@ -474,7 +474,7 @@
                         <div class="user-box">
                           <div class="avatar-lg">
                             <img
-                              src="views/assets/img/profile.jpg"
+                              src="Views/assets/img/profile.jpg"
                               alt="image profile"
                               class="avatar-img rounded"
                             />
@@ -1192,16 +1192,16 @@
       <!-- End Custom template -->
     </div>
     <!--   Core JS Files   -->
-    <script src="views/assets/js/jquery-3.7.1.min.js"></script>
-    <script src="views/assets/js/popper.min.js"></script>
-    <script src="views/assets/js/bootstrap.min.js"></script>
+    <script src="Views/assets/js/jquery-3.7.1.min.js"></script>
+    <script src="Views/assets/js/popper.min.js"></script>
+    <script src="Views/assets/js/bootstrap.min.js"></script>
 
     <!-- jQuery Scrollbar -->
-    <script src="views/assets/js/jquery.scrollbar.min.js"></script>
+    <script src="Views/assets/js/jquery.scrollbar.min.js"></script>
     <!-- Kaiadmin JS -->
-    <script src="views/assets/js/kaiadmin.min.js"></script>
+    <script src="Views/assets/js/kaiadmin.min.js"></script>
     <!-- Kaiadmin DEMO methods, don't include it in your project! -->
-    <script src="views/assets/js/setting-demo2.js"></script>
+    <script src="Views/assets/js/setting-demo2.js"></script>
     <script>
       $("#displayNotif").on("click", function () {
         var placementFrom = $("#notify_placement_from option:selected").val();
@@ -1233,6 +1233,7 @@
     </script>
   </body>
 </html>
+
 
 
 

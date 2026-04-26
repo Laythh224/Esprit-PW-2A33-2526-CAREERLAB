@@ -1,6 +1,11 @@
 <?php
 session_start();
 
+$vendorAutoload = __DIR__ . '/../vendor/autoload.php';
+if (is_file($vendorAutoload)) {
+    require_once $vendorAutoload;
+}
+
 spl_autoload_register(function (string $className): void {
     $paths = [
         __DIR__ . '/../models/' . $className . '.php',
@@ -60,8 +65,7 @@ $renderHtmlError = static function (int $statusCode, string $title, string $mess
         header('Content-Type: text/html; charset=utf-8');
     }
 
-    echo '<h1>' . htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</h1>';
-    echo '<p>' . htmlspecialchars($message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</p>';
+    require __DIR__ . '/../Views/error.view.php';
 };
 
 $renderJsonError = static function (int $statusCode, string $error, ?string $details = null): void {
@@ -83,12 +87,12 @@ $renderJsonError = static function (int $statusCode, string $error, ?string $det
 };
 
 $viewRoutes = [
-    'admin' => __DIR__ . '/../views/admin.php',
-    'dashboard-admin' => __DIR__ . '/../views/index.view.php',
-    'gestion-utilisateurs' => __DIR__ . '/../views/components/utilisateur.php',
-    'gestion-formateurs' => __DIR__ . '/../views/components/formateur.php',
-    'gestion-entreprises' => __DIR__ . '/../views/components/entreprise.php',
-    'profile' => __DIR__ . '/../views/profile.view.php',
+    'admin' => __DIR__ . '/../Views/admin.php',
+    'dashboard-admin' => __DIR__ . '/../Views/index.view.php',
+    'gestion-utilisateurs' => __DIR__ . '/../Views/components/utilisateur.php',
+    'gestion-formateurs' => __DIR__ . '/../Views/components/formateur.php',
+    'gestion-entreprises' => __DIR__ . '/../Views/components/entreprise.php',
+    'profile' => __DIR__ . '/../Views/profile.view.php',
 ];
 
 $homeRoutes = [
@@ -113,6 +117,13 @@ try {
     $formateurController = new FormateurController($formateurModel);
     $entrepriseController = new EntrepriseController($entrepriseModel);
 
+    // Nouvelles entités de jointure
+    $inscEntrepriseModel = new InscriptionEntrepriseModel($conn);
+    $inscFormateurModel = new InscriptionFormateurModel($conn);
+    
+    $inscEntrepriseController = new InscriptionEntrepriseController($inscEntrepriseModel, $userModel, $entrepriseModel);
+    $inscFormateurController = new InscriptionFormateurController($inscFormateurModel, $userModel, $formateurModel);
+
     $controllerRoutes = [
         'login' => [$authController, 'login'],
         'logout' => [$authController, 'logout'],
@@ -123,6 +134,10 @@ try {
         'api-utilisateurs' => [$userController, 'api'],
         'api-formateurs' => [$formateurController, 'api'],
         'api-entreprises' => [$entrepriseController, 'api'],
+        
+        // Routes Actions des Inscriptions (Affiche la vue et gère le POST CRUD)
+        'inscription-entreprise' => [$inscEntrepriseController, 'index'],
+        'inscription-formateur' => [$inscFormateurController, 'index'],
     ];
 
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $page)) {
@@ -152,3 +167,4 @@ try {
         $renderHtmlError($statusCode, 'Erreur serveur', 'Une erreur inattendue est survenue. Veuillez reessayer plus tard.');
     }
 }
+

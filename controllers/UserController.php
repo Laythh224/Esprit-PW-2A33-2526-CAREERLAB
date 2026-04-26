@@ -35,7 +35,7 @@ class UserController
         $old = $formState['values'];
         $fieldErrors = $formState['errors'];
 
-        require_once __DIR__ . '/../views/utilisateur.view.php';
+        require_once __DIR__ . '/../Views/utilisateur.view.php';
     }
 
     private function createInitialSignupState(): array
@@ -184,3 +184,4 @@ class UserController
         }
     }
 }
+

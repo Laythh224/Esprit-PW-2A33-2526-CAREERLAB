@@ -11,14 +11,16 @@ class EntrepriseModel
 
     public function all(): array
     {
-        $stmt = $this->conn->query('SELECT id, nom_entreprise, email, telephone, adresse, ville, secteur, description, site_web FROM entreprise ORDER BY id DESC');
+        $stmt = $this->conn->prepare('SELECT id, nom_entreprise, email, telephone, adresse, ville, secteur, description, site_web FROM entreprise ORDER BY id DESC');
+        $stmt->execute();
 
         return $stmt->fetchAll() ?: [];
     }
 
     public function count(): int
     {
-        $stmt = $this->conn->query('SELECT COUNT(*) AS total FROM entreprise');
+        $stmt = $this->conn->prepare('SELECT COUNT(*) AS total FROM entreprise');
+        $stmt->execute();
 
         return (int) ($stmt->fetchColumn() ?: 0);
     }

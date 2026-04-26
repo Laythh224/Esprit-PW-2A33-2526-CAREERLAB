@@ -10,6 +10,7 @@ class FormateurEntity
     private string $confirmPassword = '';
     private string $specialite = '';
     private string $diplomes = '';
+    private int $diplomeCount = 0;
     private string $experience = '';
 
     public function getNom(): string
@@ -100,6 +101,17 @@ class FormateurEntity
         return $this;
     }
 
+    public function getDiplomeCount(): int
+    {
+        return $this->diplomeCount;
+    }
+
+    public function setDiplomeCount(int $diplomeCount): self
+    {
+        $this->diplomeCount = $diplomeCount;
+        return $this;
+    }
+
     public function getExperience(): string
     {
         return $this->experience;
@@ -111,3 +123,4 @@ class FormateurEntity
         return $this;
     }
 }
+

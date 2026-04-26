@@ -35,7 +35,7 @@ class EntrepriseController
         $old = $formState['values'];
         $fieldErrors = $formState['errors'];
 
-        require_once __DIR__ . '/../views/entreprise.view.php';
+        require_once __DIR__ . '/../Views/entreprise.view.php';
     }
 
     private function createInitialSignupState(): array
@@ -51,6 +51,7 @@ class EntrepriseController
                 'secteur' => '',
                 'description' => '',
                 'site' => '',
+                'code_fiscal' => '',
                 'password' => '',
                 'confirm_password' => '',
             ],
@@ -63,6 +64,7 @@ class EntrepriseController
                 'secteur' => '',
                 'description' => '',
                 'site' => '',
+                'code_fiscal' => '',
                 'password' => '',
                 'confirm_password' => '',
             ],
@@ -82,6 +84,7 @@ class EntrepriseController
             ->setSecteur(trim((string) ($post['secteur'] ?? '')))
             ->setDescription(trim((string) ($post['description'] ?? '')))
             ->setSite(trim((string) ($post['site'] ?? '')))
+            ->setCodeFiscal(trim((string) ($post['code_fiscal'] ?? '')))
             ->setPassword((string) ($post['password'] ?? ''))
             ->setConfirmPassword((string) ($post['confirm_password'] ?? ''));
 
@@ -99,6 +102,7 @@ class EntrepriseController
             'secteur' => $entity->getSecteur(),
             'description' => $entity->getDescription(),
             'site' => $entity->getSite(),
+            'code_fiscal' => $entity->getCodeFiscal(),
             'password' => $entity->getPassword(),
             'confirm_password' => $entity->getConfirmPassword(),
         ];
@@ -193,3 +197,4 @@ class EntrepriseController
         }
     }
 }
+

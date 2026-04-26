@@ -28,3 +28,4 @@ class AdminController
         return $this->viewAliases[$viewKey] ?? $fallback;
     }
 }
+

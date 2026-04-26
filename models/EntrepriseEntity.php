@@ -10,6 +10,7 @@ class EntrepriseEntity
     private string $secteur = '';
     private string $description = '';
     private string $site = '';
+    private string $codeFiscal = '';
     private string $password = '';
     private string $confirmPassword = '';
 
@@ -101,6 +102,17 @@ class EntrepriseEntity
         return $this;
     }
 
+    public function getCodeFiscal(): string
+    {
+        return $this->codeFiscal;
+    }
+
+    public function setCodeFiscal(string $codeFiscal): self
+    {
+        $this->codeFiscal = $codeFiscal;
+        return $this;
+    }
+
     public function getPassword(): string
     {
         return $this->password;
@@ -123,3 +135,4 @@ class EntrepriseEntity
         return $this;
     }
 }
+

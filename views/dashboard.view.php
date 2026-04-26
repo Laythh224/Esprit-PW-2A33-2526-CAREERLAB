@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord</title>
-    <link rel="stylesheet" href="views/assets/css/bootstrap.min.css">
+    <?php if (!defined('BASE_URL')) define('BASE_URL', '/mon_site/'); ?>
+    <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/bootstrap.min.css">
     <style>
         body {
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 45%, #334155 100%);
@@ -95,3 +96,4 @@
     </div>
 </body>
 </html>
+

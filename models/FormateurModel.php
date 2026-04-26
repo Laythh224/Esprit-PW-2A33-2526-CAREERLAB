@@ -13,14 +13,16 @@ class FormateurModel
 
     public function all(): array
     {
-        $stmt = $this->conn->query('SELECT id, nom, prenom, email, telephone, specialite, diplomes, experience FROM formateur ORDER BY id DESC');
+        $stmt = $this->conn->prepare('SELECT id, nom, prenom, email, telephone, specialite, diplomes, experience FROM formateur ORDER BY id DESC');
+        $stmt->execute();
 
         return $stmt->fetchAll() ?: [];
     }
 
     public function count(): int
     {
-        $stmt = $this->conn->query('SELECT COUNT(*) AS total FROM formateur');
+        $stmt = $this->conn->prepare('SELECT COUNT(*) AS total FROM formateur');
+        $stmt->execute();
 
         return (int) ($stmt->fetchColumn() ?: 0);
     }

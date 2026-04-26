@@ -14,6 +14,7 @@ class HomeController
 
     private function renderView(string $viewFile): void
     {
-        require_once __DIR__ . '/../views/' . $viewFile;
+        require_once __DIR__ . '/../Views/' . $viewFile;
     }
 }
+

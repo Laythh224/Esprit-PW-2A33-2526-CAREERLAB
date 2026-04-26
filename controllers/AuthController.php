@@ -15,6 +15,7 @@ class AuthController
 
     public function processLogin(): array
     {
+        $this->ensureSessionStarted();
         $state = $this->createInitialLoginState();
 
         if (!isset($_POST['login'])) {
@@ -52,7 +53,9 @@ class AuthController
 
     public function logout(): void
     {
+        $this->ensureSessionStarted();
         $_SESSION = [];
+        session_unset();
 
         if (ini_get('session.use_cookies')) {
             $params = session_get_cookie_params();
@@ -135,20 +138,31 @@ class AuthController
 
     private function storeAuthenticatedSession(string $role, array $account): void
     {
-        $_SESSION['role'] = $account['role'] ?? $role;
+        $this->ensureSessionStarted();
+        $sessionRole = strtolower(trim((string) ($account['role'] ?? '')));
+        if ($sessionRole === '') {
+            $sessionRole = $role === 'admin' ? 'admin' : 'user';
+        }
+
+        $_SESSION['role'] = $sessionRole;
         $_SESSION['user_email'] = $account['email'];
         $_SESSION['user_id'] = $account['id'] ?? null;
+        $_SESSION['is_logged_in'] = true;
 
         if ($role === 'entreprise') {
             $_SESSION['user_name'] = $account['nom_entreprise'] ?? $account['nom'] ?? $account['email'];
+            $_SESSION['nom'] = $_SESSION['user_name'];
+            $this->forceSessionCookie();
             return;
         }
 
         $_SESSION['user_name'] = trim(($account['prenom'] ?? '') . ' ' . ($account['nom'] ?? '')) ?: $account['email'];
+        $_SESSION['nom'] = $_SESSION['user_name'];
     }
 
     private function redirectToDashboard(): void
     {
+        session_write_close();
         header('Location: index.php');
         exit;
     }
@@ -160,6 +174,14 @@ class AuthController
         $emailValue = $loginState['emailValue'];
         $passwordValue = $loginState['passwordValue'];
 
-        require_once __DIR__ . '/../views/login.view.php';
+        require_once __DIR__ . '/../Views/login.view.php';
+    }
+
+    private function ensureSessionStarted(): void
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
     }
 }
+

@@ -36,16 +36,45 @@ class MainController
         }
 
         if (isset($this->controllerRoutes[$page])) {
+            $this->ensureAdminAccessIfNeeded($page);
             [$controller, $action] = $this->controllerRoutes[$page];
             $controller->$action();
             return true;
         }
 
         if (isset($this->viewRoutes[$page])) {
+            $this->ensureAdminAccessIfNeeded($page);
             require_once $this->viewRoutes[$page];
             return true;
         }
 
         return false;
     }
+
+    private function ensureAdminAccessIfNeeded(string $page): void
+    {
+        $adminPages = [
+            'admin',
+            'dashboard-admin',
+            'gestion-utilisateurs',
+            'gestion-formateurs',
+            'gestion-entreprises',
+            'inscription-entreprise',
+            'inscription-formateur',
+        ];
+
+        if (!in_array($page, $adminPages, true)) {
+            return;
+        }
+
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (($_SESSION['role'] ?? '') !== 'admin') {
+            header('Location: index.php?page=login');
+            exit;
+        }
+    }
 }
+

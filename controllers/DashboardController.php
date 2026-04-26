@@ -48,6 +48,7 @@ class DashboardController
         $nom = $dashboardData['nom'];
         $role = $dashboardData['role'];
 
-        require_once __DIR__ . '/../views/dashboard.view.php';
+        require_once __DIR__ . '/../Views/dashboard.view.php';
     }
 }
+

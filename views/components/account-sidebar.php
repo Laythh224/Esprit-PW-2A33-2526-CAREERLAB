@@ -22,9 +22,11 @@ $activeAccountPage = $activeAccountPage ?? '';
                     <a data-bs-toggle="collapse" href="#base"><i class="fas fa-layer-group"></i><p>Gestion des comptes</p><span class="caret"></span></a>
                     <div class="collapse show" id="base">
                         <ul class="nav nav-collapse">
-                            <li class="<?php echo $activeAccountPage === 'utilisateur' ? 'active' : ''; ?>"><a href="index.php?r=admin&view=users"><span class="sub-item">Comptes Utilisateur</span></a></li>
-                            <li class="<?php echo $activeAccountPage === 'formateur' ? 'active' : ''; ?>"><a href="index.php?r=admin&view=formateurs"><span class="sub-item">Comptes Formateur</span></a></li>
-                            <li class="<?php echo $activeAccountPage === 'entreprise' ? 'active' : ''; ?>"><a href="index.php?r=admin&view=entreprises"><span class="sub-item">Comptes Entreprise</span></a></li>
+                            <li class="<?php echo $activeAccountPage === 'utilisateur' ? 'active' : ''; ?>"><a href="index.php?page=gestion-utilisateurs"><span class="sub-item">Comptes Utilisateur</span></a></li>
+                            <li class="<?php echo $activeAccountPage === 'formateur' ? 'active' : ''; ?>"><a href="index.php?page=gestion-formateurs"><span class="sub-item">Comptes Formateur</span></a></li>
+                            <li class="<?php echo $activeAccountPage === 'entreprise' ? 'active' : ''; ?>"><a href="index.php?page=gestion-entreprises"><span class="sub-item">Comptes Entreprise</span></a></li>
+                            <li class="<?php echo $activeAccountPage === 'inscription-entreprise' ? 'active' : ''; ?>"><a href="index.php?page=inscription-entreprise"><span class="sub-item">Inscriptions Entreprises</span></a></li>
+                            <li class="<?php echo $activeAccountPage === 'inscription-formateur' ? 'active' : ''; ?>"><a href="index.php?page=inscription-formateur"><span class="sub-item">Inscriptions Formateurs</span></a></li>
                         </ul>
                     </div>
                 </li>

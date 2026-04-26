@@ -13,14 +13,16 @@ class UserModel
 
     public function all(): array
     {
-        $stmt = $this->conn->query('SELECT id, nom, prenom, email, telephone, niveau_etude, domaine FROM utilisateur ORDER BY id DESC');
+        $stmt = $this->conn->prepare('SELECT id, nom, prenom, email, telephone, niveau_etude, domaine FROM utilisateur ORDER BY id DESC');
+        $stmt->execute();
 
         return $stmt->fetchAll() ?: [];
     }
 
     public function count(): int
     {
-        $stmt = $this->conn->query('SELECT COUNT(*) AS total FROM utilisateur');
+        $stmt = $this->conn->prepare('SELECT COUNT(*) AS total FROM utilisateur');
+        $stmt->execute();
 
         return (int) ($stmt->fetchColumn() ?: 0);
     }
