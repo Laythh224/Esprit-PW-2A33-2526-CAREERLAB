@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/BaseController.php';
-require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../models/Database.php';
 require_once __DIR__ . '/../models/OpportuniteTravail.php';
 require_once __DIR__ . '/../models/Experience.php';
 
@@ -125,8 +125,8 @@ class OffreController extends BaseController {
         }
 
         $redirect = $_POST['redirect'] ?? 'offres';
-        $location = ($redirect === 'tables') ? "tables/tables.php?success=update" : "index.php?action=offres&success=update";
-        if (!$success) $location = ($redirect === 'tables') ? "tables/tables.php?error=update" : "index.php?action=offres&error=update_echoue";
+        $location = ($redirect === 'tables') ? "admin.php?success=update" : "index.php?action=offres&success=update";
+        if (!$success) $location = ($redirect === 'tables') ? "admin.php?error=update" : "index.php?action=offres&error=update_echoue";
         header("Location: $location");
         exit();
     }
@@ -142,8 +142,8 @@ class OffreController extends BaseController {
         $success = $stmt->execute([':id' => $id]);
 
         $redirect = $_GET['redirect'] ?? 'offres';
-        $location = ($redirect === 'tables') ? "tables/tables.php?success=deleted" : "index.php?action=offres&success=deleted";
-        if (!$success) $location = ($redirect === 'tables') ? "tables/tables.php?error=delete" : "index.php?action=offres&error=delete_echoue";
+        $location = ($redirect === 'tables') ? "admin.php?success=deleted" : "index.php?action=offres&success=deleted";
+        if (!$success) $location = ($redirect === 'tables') ? "admin.php?error=delete" : "index.php?action=offres&error=delete_echoue";
         header("Location: $location");
         exit();
     }
@@ -171,6 +171,38 @@ class OffreController extends BaseController {
         if (!$offre) { $this->redirect('offres', ['error' => 'offre_introuvable']); return; }
 
         $this->render('offres/detail', [ 'action' => 'offres', 'title'  => $title, 'offre'  => $offre, 'type'   => $type ]);
+    }
+
+    public function apply(): void {
+        $pdo = $this->getDb();
+        $id = (int)($_GET['id'] ?? 0);
+        if (!$id) { $this->redirect('offres', ['error' => 'id_manquant']); return; }
+
+        // Create table if not exists
+        $pdo->exec("CREATE TABLE IF NOT EXISTS Candidature (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            offre_id INT NOT NULL,
+            date_postulation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )");
+
+        $sql = "INSERT INTO Candidature (offre_id) VALUES (:id)";
+        $stmt = $pdo->prepare($sql);
+        $success = $stmt->execute([':id' => $id]);
+
+        if ($success) $this->redirect('offres', ['success' => 'postule']);
+        else $this->redirect('offres', ['error' => 'postulation_echouee']);
+    }
+
+    public function deleteCandidature(): void {
+        $pdo = $this->getDb();
+        $id = (int)($_GET['id'] ?? 0);
+        if (!$id) { header("Location: admin_about.php?error=id_manquant"); exit(); }
+
+        $stmt = $pdo->prepare("DELETE FROM Candidature WHERE id = :id");
+        $success = $stmt->execute([':id' => $id]);
+
+        header("Location: admin_about.php?success=" . ($success ? "deleted" : "error"));
+        exit();
     }
 }
 ?>

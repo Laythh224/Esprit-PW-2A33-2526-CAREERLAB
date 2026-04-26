@@ -1,5 +1,5 @@
 <?php
-require_once '../models/Database.php';
+require_once '../../models/Database.php';
 
 $pdo = Database::getInstance()->getConnection();
 
@@ -32,9 +32,6 @@ $expStatsResult = $pdo->query("SELECT e.niveau, COUNT(t.id) as total FROM Experi
 $expStats = $expStatsResult->fetchAll();
 $expLabels = json_encode(array_column($expStats, 'niveau'));
 $expData   = json_encode(array_column($expStats, 'total'));
-
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
-$baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -42,26 +39,26 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>Gestion des Offres d'Emploi | Career Lab</title>
   <meta content="width=device-width, initial-scale=1.0, shrink-to-fit=no" name="viewport" />
-  <link rel="icon" href="../assets/img/kaiadmin/favicon.ico" type="image/x-icon" />
+  <link rel="icon" href="../../assets/img/kaiadmin/favicon.ico" type="image/x-icon" />
 
   <!-- Fonts and icons -->
-  <script src="../assets/js/plugin/webfont/webfont.min.js"></script>
+  <script src="../../assets/js/plugin/webfont/webfont.min.js"></script>
   <script>
     WebFont.load({
       google: { families: ["Public Sans:300,400,500,600,700"] },
       custom: {
         families: ["Font Awesome 5 Solid","Font Awesome 5 Regular","Font Awesome 5 Brands","simple-line-icons"],
-        urls: ["../assets/css/fonts.min.css"],
+        urls: ["../../assets/css/fonts.min.css"],
       },
       active: function () { sessionStorage.fonts = true; },
     });
   </script>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="../assets/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="../assets/css/plugins.min.css" />
-  <link rel="stylesheet" href="../assets/css/kaiadmin.min.css" />
-  <link rel="stylesheet" href="../assets/css/demo.css" />
+  <link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="../../assets/css/plugins.min.css" />
+  <link rel="stylesheet" href="../../assets/css/kaiadmin.min.css" />
+  <link rel="stylesheet" href="../../assets/css/demo.css" />
 
   <style>
     .stat-card { border-radius: 16px; border: none; transition: transform 0.2s, box-shadow 0.2s; }
@@ -83,7 +80,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
   <div class="sidebar" data-background-color="dark">
     <div class="sidebar-logo">
       <div class="logo-header" data-background-color="dark">
-        <a href="../index.php?action=offres">
+        <a href="../../../index.php?action=offres">
           <span class="sub-item">Career Lab</span>
         </a>
         <div class="nav-toggle">
@@ -107,33 +104,12 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
             <div class="collapse show" id="tables">
               <ul class="nav nav-collapse">
                 <li class="active"><a href="tables.php"><span class="sub-item">les offres</span></a></li>
-                <li><a href="../admin_about.php"><span class="sub-item">à propos</span></a></li>
               </ul>
             </div>
           </li>
           <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-graduation-cap"></i><p>E-learning</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-user-tie"></i><p>Métiers</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-newspaper"></i><p>Blog</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-users"></i><p>Utilisateurs</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-clipboard-check"></i><p>Evaluation</p>
+            <a href="../../../index.php?action=offres">
+              <i class="fas fa-arrow-left"></i><p>Retour au Site</p>
             </a>
           </li>
         </ul>
@@ -152,12 +128,12 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
         <div class="page-header">
           <div class="d-flex align-items-center">
             <h4 class="page-title">Les Offres</h4>
-            <a href="../index.php?action=offres&q=" class="btn btn-primary btn-round ms-3 shadow-sm" style="font-weight: 900; font-size: 1.2rem; min-width: 45px;">
+            <a href="../../../index.php?action=offres&q=" class="btn btn-primary btn-round ms-3 shadow-sm" style="font-weight: 900; font-size: 1.2rem; min-width: 45px;">
               <i class="fas fa-arrow-right"></i>
             </a>
           </div>
           <ul class="breadcrumbs">
-            <li class="nav-home"><a href="../index.php?action=offres"><i class="icon-home"></i></a></li>
+            <li class="nav-home"><a href="../../../index.php?action=offres"><i class="icon-home"></i></a></li>
             <li class="separator"><i class="icon-arrow-right"></i></li>
             <li class="nav-item"><a href="#">Admin</a></li>
             <li class="separator"><i class="icon-arrow-right"></i></li>
@@ -350,7 +326,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
         <h5 class="modal-title">Ajouter un Niveau d'Expérience</h5>
         <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
       </div>
-      <form action="../index.php?action=publish" method="POST">
+      <form action="../../../index.php?action=publish" method="POST">
         <input type="hidden" name="type_offre" value="experience">
         <input type="hidden" name="redirect" value="tables">
         <div class="modal-body">
@@ -384,7 +360,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <form action="../index.php?action=update" method="POST">
+      <form action="../../index.php?action=update" method="POST">
         <div class="modal-body">
           <input type="hidden" name="id" id="edit-id">
           <input type="hidden" name="type_offre" value="travail">
@@ -462,7 +438,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
         <h5 class="modal-title">Modifier le Niveau d'Expérience</h5>
         <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
       </div>
-      <form action="../index.php?action=update" method="POST">
+      <form action="../../index.php?action=update" method="POST">
         <input type="hidden" name="id" id="edit-exp-id">
         <input type="hidden" name="type_offre" value="experience">
         <input type="hidden" name="redirect" value="tables">
@@ -486,14 +462,14 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
 </div>
 
 <!-- Core JS -->
-<script src="../assets/js/core/jquery-3.7.1.min.js"></script>
-<script src="../assets/js/core/popper.min.js"></script>
-<script src="../assets/js/core/bootstrap.min.js"></script>
-<script src="../assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
-<script src="../assets/js/plugin/chart.js/chart.min.js"></script>
-<script src="../assets/js/plugin/datatables/datatables.min.js"></script>
-<script src="../assets/js/plugin/sweetalert/sweetalert.min.js"></script>
-<script src="../assets/js/kaiadmin.min.js"></script>
+<script src="../../assets/js/core/jquery-3.7.1.min.js"></script>
+<script src="../../assets/js/core/popper.min.js"></script>
+<script src="../../assets/js/core/bootstrap.min.js"></script>
+<script src="../../assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+<script src="../../assets/js/plugin/chart.js/chart.min.js"></script>
+<script src="../../assets/js/plugin/datatables/datatables.min.js"></script>
+<script src="../../assets/js/plugin/sweetalert/sweetalert.min.js"></script>
+<script src="../../assets/js/kaiadmin.min.js"></script>
 
 <script>
 $(document).ready(function () {
@@ -624,12 +600,12 @@ function confirmDelete(id, type) {
             },
         }).then((willDelete) => {
             if (willDelete) {
-                window.location.href = "../index.php?action=delete&id=" + id + "&type=" + type + "&redirect=tables";
+                window.location.href = "../../../index.php?action=delete&id=" + id + "&type=" + type + "&redirect=tables";
             }
         });
     } else {
         if (confirm("Êtes-vous sûr de vouloir supprimer cette offre ?")) {
-            window.location.href = "../index.php?action=delete&id=" + id + "&type=" + type + "&redirect=tables";
+            window.location.href = "../../../index.php?action=delete&id=" + id + "&type=" + type + "&redirect=tables";
         }
     }
 }

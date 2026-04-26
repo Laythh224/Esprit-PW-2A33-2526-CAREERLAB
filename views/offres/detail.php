@@ -170,6 +170,14 @@
                 <div class="detail-description">
                     <?= nl2br(htmlspecialchars($offre['description'])) ?>
                 </div>
+
+                <?php if ($type === 'travail'): ?>
+                <div class="mt-5 text-center">
+                    <a href="index.php?action=apply&id=<?= $offre['id'] ?>" class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-lg fw-bold" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); border: none;">
+                        <i class="fas fa-paper-plane me-2"></i> Postuler maintenant
+                    </a>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

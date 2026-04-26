@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^tables/tables\.php$ views/admin/tables.php [L]

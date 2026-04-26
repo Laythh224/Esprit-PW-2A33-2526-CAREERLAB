@@ -9,7 +9,7 @@ require_once __DIR__ . '/controllers/BaseController.php';
 require_once __DIR__ . '/controllers/PageController.php';
 require_once __DIR__ . '/controllers/OffreController.php';
 
-$action = $_GET['action'] ?? 'home';
+$action = $_GET['action'] ?? 'offres';
 
 switch ($action) {
     // Static Pages (PageController)
@@ -17,13 +17,9 @@ switch ($action) {
         $controller = new PageController();
         $controller->home();
         break;
-    case 'about':
+    case 'price':
         $controller = new PageController();
-        $controller->about();
-        break;
-    case 'contact':
-        $controller = new PageController();
-        $controller->contact();
+        $controller->price();
         break;
     case 'feature':
         $controller = new PageController();
@@ -33,21 +29,17 @@ switch ($action) {
         $controller = new PageController();
         $controller->team();
         break;
-    case 'price':
-        $controller = new PageController();
-        $controller->price();
-        break;
-    case 'blog':
-        $controller = new PageController();
-        $controller->blog();
-        break;
-    case 'detail':
-        $controller = new PageController();
-        $controller->detail();
-        break;
     case 'quote':
         $controller = new PageController();
         $controller->quote();
+        break;
+    case 'about':
+        $controller = new PageController();
+        $controller->about();
+        break;
+    case 'contact':
+        $controller = new PageController();
+        $controller->contact();
         break;
 
     // Offers logic (OffreController)
@@ -71,13 +63,21 @@ switch ($action) {
         $controller = new OffreController();
         $controller->show();
         break;
-
+    case 'apply':
+        $controller = new OffreController();
+        $controller->apply();
+        break;
+    case 'deleteCandidature':
+        $controller = new OffreController();
+        $controller->deleteCandidature();
+        break;
 
     default:
-        // Si aucune action reconnue, retour à l'accueil
-        $controller = new PageController();
-        $controller->home();
+        // Si aucune action reconnue, retour à la liste des offres
+        $controller = new OffreController();
+        $controller->index();
         break;
 }
 
 ?>
+

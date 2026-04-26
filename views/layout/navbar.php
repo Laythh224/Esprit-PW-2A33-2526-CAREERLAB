@@ -10,23 +10,16 @@
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto py-0">
                 <a href="index.php?action=home" class="nav-item nav-link <?php echo ($action === 'home') ? 'active' : ''; ?>">Home</a>
-                <a href="index.php?action=about" class="nav-item nav-link <?php echo ($action === 'about') ? 'active' : ''; ?>">About</a>
-
+                <a href="index.php?action=about" class="nav-item nav-link <?php echo ($action === 'about') ? 'active' : ''; ?>">À propos</a>
+                
                 <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Blog</a>
-                    <div class="dropdown-menu m-0">
-                        <a href="index.php?action=blog" class="dropdown-item">Blog Grid</a>
-                        <a href="index.php?action=detail" class="dropdown-item">Blog Detail</a>
-                    </div>
-                </div>
-                <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle <?php echo in_array($action, ['price', 'feature', 'team', 'offres', 'quote']) ? 'active' : ''; ?>" data-bs-toggle="dropdown">Services</a>
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Services</a>
                     <div class="dropdown-menu m-0">
                         <a href="index.php?action=price" class="dropdown-item">Utilisateur</a>
                         <a href="index.php?action=feature" class="dropdown-item">Métiers</a>
                         <a href="index.php?action=team" class="dropdown-item">Evaluation</a>
                         <a href="index.php?action=offres" class="dropdown-item">Les offres</a>
-                        <a href="index.php?action=quote" class="dropdown-item">E-learning</a>
+                        <a href="index.php?action=quote" class="dropdown-item">E_learning</a>
                     </div>
                 </div>
                 <a href="index.php?action=contact" class="nav-item nav-link <?php echo ($action === 'contact') ? 'active' : ''; ?>">Contact</a>
