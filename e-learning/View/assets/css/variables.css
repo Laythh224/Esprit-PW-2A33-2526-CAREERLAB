@@ -1,0 +1,14 @@
+/* CareerLab charte graphique */
+:root {
+  --bleu-principal: #3381ff;
+  --bleu-secondaire: #659ffe;
+  --violet: #836599;
+  --noir-texte: #1a1a2e;
+  --gris-fond: #f4f6fa;
+  --gris-bordure: #e2e8f0;
+  --blanc: #ffffff;
+  --radius: 12px;
+  --shadow: 0 4px 24px rgba(51, 129, 255, 0.08);
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+

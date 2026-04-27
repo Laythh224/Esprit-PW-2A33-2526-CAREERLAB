@@ -2,5 +2,6 @@
 
 declare(strict_types=1);
 
-// Serve the front-office landing page at /careerlabb/.
-readfile(__DIR__ . '/indexF.html');
+// Redirect to the MVC back office dashboard.
+header('Location: /careerlabb/e-learning/index.php?r=back/formations', true, 302);
+exit;
