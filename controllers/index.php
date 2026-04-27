@@ -88,7 +88,6 @@ $renderJsonError = static function (int $statusCode, string $error, ?string $det
 
 $viewRoutes = [
     'admin' => __DIR__ . '/../Views/admin.php',
-    'dashboard-admin' => __DIR__ . '/../Views/index.view.php',
     'gestion-utilisateurs' => __DIR__ . '/../Views/components/utilisateur.php',
     'gestion-formateurs' => __DIR__ . '/../Views/components/formateur.php',
     'gestion-entreprises' => __DIR__ . '/../Views/components/entreprise.php',
@@ -124,6 +123,10 @@ try {
     $inscEntrepriseController = new InscriptionEntrepriseController($inscEntrepriseModel, $userModel, $entrepriseModel);
     $inscFormateurController = new InscriptionFormateurController($inscFormateurModel, $userModel, $formateurModel);
 
+
+    require_once __DIR__ . '/StatisticsController.php';
+    $statisticsController = new StatisticsController();
+
     $controllerRoutes = [
         'login' => [$authController, 'login'],
         'logout' => [$authController, 'logout'],
@@ -134,10 +137,12 @@ try {
         'api-utilisateurs' => [$userController, 'api'],
         'api-formateurs' => [$formateurController, 'api'],
         'api-entreprises' => [$entrepriseController, 'api'],
-        
         // Routes Actions des Inscriptions (Affiche la vue et gère le POST CRUD)
         'inscription-entreprise' => [$inscEntrepriseController, 'index'],
         'inscription-formateur' => [$inscFormateurController, 'index'],
+        // Route pour les statistiques avancées
+        'statistiques' => [$statisticsController, 'index'],
+        'dashboard-admin' => [$statisticsController, 'dashboardAdmin'],
     ];
 
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $page)) {
