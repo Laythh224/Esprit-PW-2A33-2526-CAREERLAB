@@ -34,6 +34,7 @@ $e = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES, '
     <div class="container-fluid bg-primary py-5 bg-header">
         <div class="row py-5">
             <div class="col-12 text-center">
+                <img src="img/career_lab.png" alt="Career Lab" style="height: 46px; width: auto; background: #ffffff; padding: 4px 8px; border-radius: 8px; margin-bottom: 14px;">
                 <h1 class="display-6 text-white">Resultat du quiz</h1>
             </div>
         </div>

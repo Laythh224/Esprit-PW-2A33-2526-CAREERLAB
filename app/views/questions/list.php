@@ -2,8 +2,7 @@
 $pageTitle = 'Evaluation - Liste des questions';
 $pageSubtitle = 'Gestion des questions';
 $activeAction = 'list';
-$loadDataTables = true;
-$dataTableSelector = '#questionsTable';
+$loadDataTables = false;
 $flashByCode = [
     'added' => 'Question ajoutee avec succes.',
     'updated' => 'Question mise a jour avec succes.',
@@ -38,6 +37,54 @@ require __DIR__ . '/partials/header.php';
                 <?php if ($flashMessage !== ''): ?>
                     <div class="alert alert-info"><?= htmlspecialchars((string) $flashMessage, ENT_QUOTES, 'UTF-8'); ?></div>
                 <?php endif; ?>
+
+                <?php if (!empty($searchErrors)): ?>
+                    <div class="alert alert-warning">
+                        <ul class="mb-0">
+                            <?php foreach ($searchErrors as $searchError): ?>
+                                <li><?= htmlspecialchars((string) $searchError, ENT_QUOTES, 'UTF-8'); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+
+                <form class="row g-3 mb-3" method="get" action="index.php" novalidate>
+                    <input type="hidden" name="route" value="evaluation">
+                    <div class="col-md-4">
+                        <label for="q" class="form-label">Recherche mot-cle (texte_question)</label>
+                        <input type="text" class="form-control" id="q" name="q" value="<?= htmlspecialchars((string) ($keyword ?? ''), ENT_QUOTES, 'UTF-8'); ?>" placeholder="Ex: securite, design...">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="search_id" class="form-label">Recherche par id</label>
+                        <input type="text" class="form-control" id="search_id" name="search_id" value="<?= htmlspecialchars((string) ($searchIdInput ?? ''), ENT_QUOTES, 'UTF-8'); ?>" placeholder="Ex: 12">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="sort" class="form-label">Tri</label>
+                        <select class="form-select" id="sort" name="sort">
+                            <option value="id_desc" <?= (($sort ?? 'id_desc') === 'id_desc') ? 'selected' : ''; ?>>id DESC</option>
+                            <option value="id_asc" <?= (($sort ?? '') === 'id_asc') ? 'selected' : ''; ?>>id ASC</option>
+                            <option value="id_metier_asc" <?= (($sort ?? '') === 'id_metier_asc') ? 'selected' : ''; ?>>id_metier ASC</option>
+                            <option value="id_metier_desc" <?= (($sort ?? '') === 'id_metier_desc') ? 'selected' : ''; ?>>id_metier DESC</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary">Appliquer</button>
+                        <a class="btn btn-outline-secondary" href="index.php?route=evaluation">Reinitialiser</a>
+                    </div>
+                </form>
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="card card-stats card-round">
+                            <div class="card-body">
+                                <div class="numbers">
+                                    <p class="card-category">Nombre total de questions</p>
+                                    <h4 class="card-title mb-0"><?= (int) ($totalQuestions ?? 0); ?></h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="table-responsive">
                     <table id="questionsTable" class="display table table-striped table-hover">

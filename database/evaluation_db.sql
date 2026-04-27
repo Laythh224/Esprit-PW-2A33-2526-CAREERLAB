@@ -19,3 +19,26 @@ CREATE TABLE IF NOT EXISTS reponses (
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS reponses_utilisateurs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_question INT NOT NULL,
+    id_reponse INT NOT NULL,
+    attempt_token VARCHAR(64) NOT NULL DEFAULT '',
+    est_correcte BOOLEAN NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_rep_user_question (id_question),
+    KEY idx_rep_user_reponse (id_reponse),
+    KEY idx_rep_user_correct (est_correcte),
+    KEY idx_rep_user_attempt (attempt_token),
+    CONSTRAINT fk_rep_user_question
+        FOREIGN KEY (id_question)
+        REFERENCES questions(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CONSTRAINT fk_rep_user_reponse
+        FOREIGN KEY (id_reponse)
+        REFERENCES reponses(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);

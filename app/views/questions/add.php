@@ -2,7 +2,6 @@
 $pageTitle = 'Evaluation - Ajouter une question';
 $pageSubtitle = 'Ajouter une question';
 $activeAction = 'add';
-$loadValidationJs = true;
 require __DIR__ . '/partials/header.php';
 ?>
 
@@ -28,15 +27,15 @@ require __DIR__ . '/partials/header.php';
                     </div>
                 <?php endif; ?>
 
-                <form method="post" action="index.php?route=evaluation&action=add" onsubmit="return validateQuestion();">
+                <form method="post" action="index.php?route=evaluation&action=add" novalidate>
                     <div class="form-group">
                         <label for="question">Texte de la question</label>
-                        <textarea class="form-control" id="question" name="question" rows="4" required><?= htmlspecialchars((string) ($texte ?? ''), ENT_QUOTES, 'UTF-8'); ?></textarea>
+                        <textarea class="form-control" id="question" name="question" rows="4"><?= htmlspecialchars((string) ($texte ?? ''), ENT_QUOTES, 'UTF-8'); ?></textarea>
                     </div>
 
                     <div class="form-group">
                         <label for="id_metier">id_metier</label>
-                        <input class="form-control" type="number" id="id_metier" name="id_metier" min="1" required value="<?= htmlspecialchars((string) ($idMetier ?? 1), ENT_QUOTES, 'UTF-8'); ?>">
+                        <input class="form-control" type="text" id="id_metier" name="id_metier" value="<?= htmlspecialchars((string) ($idMetierInput ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
                     </div>
 
                     <div class="card-action p-0 pt-2">

@@ -48,9 +48,9 @@
         <div class="sidebar-logo">
           <!-- Logo Header -->
           <div class="logo-header" data-background-color="dark">
-            <a href="index.php?route=users">
-                        <span class="sub-item">Career Lab</span>
-                      </a>
+            <a href="index.php?route=dashboard" class="d-inline-block" style="padding: 2px 0;">
+              <img src="img/career_lab.png" alt="Career Lab" style="height: 34px; width: auto; background: #ffffff; padding: 3px 6px; border-radius: 6px;" />
+            </a>
             <div class="nav-toggle">
               <button class="btn btn-toggle toggle-sidebar">
                 <i class="gg-menu-right"></i>
@@ -213,10 +213,10 @@
             <div class="logo-header" data-background-color="dark">
               <a href="index.php?route=dashboard" class="logo">
                 <img
-                  src="assets/img/ Carrer Lab /logo_light.svg"
-                  alt="navbar brand"
+                  src="img/career_lab.png"
+                  alt="Career Lab"
                   class="navbar-brand"
-                  height="20"
+                  style="height: 34px; width: auto; background: #ffffff; padding: 3px 6px; border-radius: 6px;"
                 />
               </a>
               <div class="nav-toggle">

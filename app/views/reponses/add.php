@@ -2,7 +2,6 @@
 $pageTitle = 'Evaluation - Ajouter une reponse';
 $pageSubtitle = 'Ajouter une reponse';
 $activeAction = 'list';
-$loadValidationJs = true;
 require __DIR__ . '/../questions/partials/header.php';
 ?>
 
@@ -28,18 +27,18 @@ require __DIR__ . '/../questions/partials/header.php';
                     </div>
                 <?php endif; ?>
 
-                <form method="post" action="index.php?route=evaluation&entity=reponse&action=add" onsubmit="return validateReponse();">
+                <form method="post" action="index.php?route=evaluation&entity=reponse&action=add" novalidate>
                     <div class="form-group">
                         <label for="texte">Texte de la reponse</label>
-                        <textarea class="form-control" id="texte" name="texte" rows="3" required><?= htmlspecialchars((string) ($texte ?? ''), ENT_QUOTES, 'UTF-8'); ?></textarea>
+                        <textarea class="form-control" id="texte" name="texte" rows="3"><?= htmlspecialchars((string) ($texte ?? ''), ENT_QUOTES, 'UTF-8'); ?></textarea>
                     </div>
 
                     <div class="form-group">
                         <label for="id_question">Question associee (id_question)</label>
-                        <select class="form-select" id="id_question" name="id_question" required>
+                        <select class="form-select" id="id_question" name="id_question">
                             <option value="">Choisir une question</option>
                             <?php foreach (($questions ?? []) as $question): ?>
-                                <option value="<?= (int) $question->getId(); ?>" <?= ((int) ($idQuestion ?? 0) === (int) $question->getId()) ? 'selected' : ''; ?>>
+                                <option value="<?= (int) $question->getId(); ?>" <?= ((string) ($idQuestionInput ?? '') === (string) $question->getId()) ? 'selected' : ''; ?>>
                                     #<?= (int) $question->getId(); ?> - <?= htmlspecialchars((string) $question->getTexte(), ENT_QUOTES, 'UTF-8'); ?>
                                 </option>
                             <?php endforeach; ?>

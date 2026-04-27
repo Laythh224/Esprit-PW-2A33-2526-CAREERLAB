@@ -61,15 +61,17 @@ final class QuestionController extends Controller
     {
         $errors = [];
         $texte = '';
-        $idMetier = 1;
+        $idMetierInput = '';
         $dbError = null;
 
         if (($this->requestMethod()) === 'POST') {
             $texte = trim((string) ($_POST['question'] ?? ''));
-            $idMetier = (int) ($_POST['id_metier'] ?? 0);
-            $errors = $this->validateInput($texte, $idMetier);
+            $idMetierInput = trim((string) ($_POST['id_metier'] ?? ''));
+            $validation = $this->validateInput($texte, $idMetierInput);
+            $errors = $validation['errors'];
+            $idMetier = $validation['idMetier'];
 
-            if ($errors === []) {
+            if ($errors === [] && $idMetier !== null) {
                 try {
                     $pdo = $this->getConnection();
                     $stmt = $pdo->prepare('INSERT INTO questions (texte, id_metier) VALUES (:texte, :id_metier)');
@@ -88,7 +90,7 @@ final class QuestionController extends Controller
         $this->renderStandalone('questions/add', [
             'errors' => $errors,
             'texte' => $texte,
-            'idMetier' => $idMetier,
+            'idMetierInput' => $idMetierInput,
             'dbError' => $dbError,
         ]);
     }
@@ -97,12 +99,50 @@ final class QuestionController extends Controller
     {
         $questions = [];
         $reponsesByQuestion = [];
+        $totalQuestions = 0;
+        $questionsByMetier = [];
         $dbError = null;
         $message = (string) ($_GET['msg'] ?? '');
+        $keyword = trim((string) ($_GET['q'] ?? ''));
+        $searchIdInput = trim((string) ($_GET['search_id'] ?? ''));
+        $sort = $this->resolveSort((string) ($_GET['sort'] ?? 'id_desc'));
+        $searchErrors = [];
+        $searchId = null;
+
+        if ($searchIdInput !== '') {
+            $validatedId = filter_var($searchIdInput, FILTER_VALIDATE_INT);
+
+            if ($validatedId === false || (int) $validatedId <= 0) {
+                $searchErrors[] = 'Le critere id doit etre un entier valide.';
+            } else {
+                $searchId = (int) $validatedId;
+            }
+        }
 
         try {
             $pdo = $this->getConnection();
-            $stmtQuestions = $pdo->query('SELECT id, texte, id_metier FROM questions ORDER BY id DESC');
+            $sql = 'SELECT id, texte, id_metier FROM questions';
+            $conditions = [];
+            $params = [];
+
+            if ($keyword !== '') {
+                $conditions[] = 'texte LIKE :keyword';
+                $params[':keyword'] = '%' . $keyword . '%';
+            }
+
+            if ($searchId !== null) {
+                $conditions[] = 'id = :search_id';
+                $params[':search_id'] = $searchId;
+            }
+
+            if ($conditions !== []) {
+                $sql .= ' WHERE ' . implode(' AND ', $conditions);
+            }
+
+            $sql .= ' ORDER BY ' . $this->sortToOrderBy($sort);
+
+            $stmtQuestions = $pdo->prepare($sql);
+            $stmtQuestions->execute($params);
 
             foreach ($stmtQuestions->fetchAll(PDO::FETCH_ASSOC) as $row) {
                 $questions[] = new Question(
@@ -128,6 +168,19 @@ final class QuestionController extends Controller
                     $questionId
                 );
             }
+
+            $totalQuestionsResult = $pdo->query('SELECT COUNT(*) FROM questions');
+
+            if ($totalQuestionsResult !== false) {
+                $totalQuestions = (int) $totalQuestionsResult->fetchColumn();
+            }
+
+            $stmtByMetier = $pdo->query('SELECT id_metier, COUNT(*) AS total FROM questions GROUP BY id_metier ORDER BY id_metier ASC');
+
+            foreach ($stmtByMetier->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $metierId = (int) ($row['id_metier'] ?? 0);
+                $questionsByMetier[$metierId] = (int) ($row['total'] ?? 0);
+            }
         } catch (PDOException $e) {
             $dbError = 'Erreur base de donnees: ' . $e->getMessage();
         }
@@ -135,6 +188,12 @@ final class QuestionController extends Controller
         $this->renderStandalone('questions/list', [
             'questions' => $questions,
             'reponsesByQuestion' => $reponsesByQuestion,
+            'totalQuestions' => $totalQuestions,
+            'questionsByMetier' => $questionsByMetier,
+            'keyword' => $keyword,
+            'searchIdInput' => $searchIdInput,
+            'sort' => $sort,
+            'searchErrors' => $searchErrors,
             'dbError' => $dbError,
             'message' => $message,
         ]);
@@ -154,10 +213,12 @@ final class QuestionController extends Controller
 
         if (($this->requestMethod()) === 'POST') {
             $texte = trim((string) ($_POST['question'] ?? ''));
-            $idMetier = (int) ($_POST['id_metier'] ?? 0);
-            $errors = $this->validateInput($texte, $idMetier);
+            $idMetierInput = trim((string) ($_POST['id_metier'] ?? ''));
+            $validation = $this->validateInput($texte, $idMetierInput);
+            $errors = $validation['errors'];
+            $idMetier = $validation['idMetier'];
 
-            if ($errors === []) {
+            if ($errors === [] && $idMetier !== null) {
                 try {
                     $pdo = $this->getConnection();
                     $stmt = $pdo->prepare('UPDATE questions SET texte = :texte, id_metier = :id_metier WHERE id = :id');
@@ -173,7 +234,7 @@ final class QuestionController extends Controller
                 }
             }
 
-            $question = new Question($id, $texte, $idMetier);
+            $question = new Question($id, $texte, $idMetier ?? 0);
         }
 
         if ($question === null) {
@@ -215,25 +276,62 @@ final class QuestionController extends Controller
     }
 
     /**
-     * @return array<int, string>
+     * @return array{errors: array<int, string>, idMetier: ?int}
      */
-    private function validateInput(string $texte, int $idMetier): array
+    private function validateInput(string $texte, string $idMetierInput): array
     {
         $errors = [];
+        $idMetier = null;
+        $texteSansEspaces = rtrim($texte);
 
         if ($texte === '') {
             $errors[] = 'La question ne doit pas etre vide.';
         }
 
-        if ($texte !== '' && !str_ends_with($texte, '?')) {
-            $errors[] = 'La question doit se terminer par ?';
+        if ($texteSansEspaces !== '' && !str_ends_with($texteSansEspaces, '?')) {
+            $errors[] = 'La question doit se terminer par un point d\'interrogation (?).';
         }
 
-        if ($idMetier <= 0) {
-            $errors[] = 'id_metier doit etre un entier positif.';
+        if ($idMetierInput === '') {
+            $errors[] = 'id_metier ne doit pas etre vide.';
+        } else {
+            $validatedId = filter_var($idMetierInput, FILTER_VALIDATE_INT);
+
+            if ($validatedId === false || (int) $validatedId <= 0) {
+                $errors[] = 'id_metier doit etre un entier valide.';
+            } else {
+                $idMetier = (int) $validatedId;
+            }
         }
 
-        return $errors;
+        return [
+            'errors' => $errors,
+            'idMetier' => $idMetier,
+        ];
+    }
+
+    private function resolveSort(string $sort): string
+    {
+        $normalizedSort = strtolower(trim($sort));
+        $allowedSorts = ['id_asc', 'id_desc', 'id_metier_asc', 'id_metier_desc'];
+
+        if (!in_array($normalizedSort, $allowedSorts, true)) {
+            return 'id_desc';
+        }
+
+        return $normalizedSort;
+    }
+
+    private function sortToOrderBy(string $sort): string
+    {
+        $map = [
+            'id_asc' => 'id ASC',
+            'id_desc' => 'id DESC',
+            'id_metier_asc' => 'id_metier ASC, id ASC',
+            'id_metier_desc' => 'id_metier DESC, id DESC',
+        ];
+
+        return $map[$sort] ?? $map['id_desc'];
     }
 
     private function findQuestionById(int $id): ?Question

@@ -39,7 +39,7 @@ $e = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES, '
     <div class="container-fluid position-relative p-0">
         <nav class="navbar navbar-expand-lg navbar-dark px-5 py-3 py-lg-0">
             <a href="index.php?route=team" class="navbar-brand p-0">
-                <h1 class="m-0"><i class="fa fa-user-tie me-2"></i>Career Lab</h1>
+                <img src="img/career_lab.png" alt="Career Lab" style="height: 44px; width: auto; background: #ffffff; padding: 4px 8px; border-radius: 8px;">
             </a>
             <div class="navbar-nav ms-auto py-0">
                 <a href="index.php?route=team" class="nav-item nav-link">Choix metier</a>

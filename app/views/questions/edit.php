@@ -2,7 +2,6 @@
 $pageTitle = 'Evaluation - Modifier une question';
 $pageSubtitle = 'Modifier une question';
 $activeAction = 'edit';
-$loadValidationJs = true;
 require __DIR__ . '/partials/header.php';
 ?>
 
@@ -28,17 +27,17 @@ require __DIR__ . '/partials/header.php';
                     </div>
                 <?php endif; ?>
 
-                <form method="post" action="index.php?route=evaluation&action=edit&id=<?= (int) $question->getId(); ?>" onsubmit="return validateQuestion();">
+                <form method="post" action="index.php?route=evaluation&action=edit&id=<?= (int) $question->getId(); ?>" novalidate>
                     <input type="hidden" name="id" value="<?= (int) $question->getId(); ?>">
 
                     <div class="form-group">
                         <label for="question">Texte de la question</label>
-                        <textarea class="form-control" id="question" name="question" rows="4" required><?= htmlspecialchars((string) $question->getTexte(), ENT_QUOTES, 'UTF-8'); ?></textarea>
+                        <textarea class="form-control" id="question" name="question" rows="4"><?= htmlspecialchars((string) $question->getTexte(), ENT_QUOTES, 'UTF-8'); ?></textarea>
                     </div>
 
                     <div class="form-group">
                         <label for="id_metier">id_metier</label>
-                        <input class="form-control" type="number" id="id_metier" name="id_metier" min="1" required value="<?= htmlspecialchars((string) $question->getIdMetier(), ENT_QUOTES, 'UTF-8'); ?>">
+                        <input class="form-control" type="text" id="id_metier" name="id_metier" value="<?= htmlspecialchars((string) $question->getIdMetier(), ENT_QUOTES, 'UTF-8'); ?>">
                         <small class="form-text text-muted">Exemples: 1 = medecin, 2 = developpeur, 3 = designer.</small>
                     </div>
 

@@ -35,7 +35,9 @@
       <div class="sidebar" data-background-color="dark">
         <div class="sidebar-logo">
           <div class="logo-header" data-background-color="dark">
-            <a href="index.php?route=dashboard"><span class="sub-item">Career Lab</span></a>
+            <a href="index.php?route=dashboard" class="d-inline-block" style="padding: 2px 0;">
+              <img src="img/career_lab.png" alt="Career Lab" style="height: 34px; width: auto; background: #ffffff; padding: 3px 6px; border-radius: 6px;" />
+            </a>
             <div class="nav-toggle">
               <button class="btn btn-toggle toggle-sidebar"><i class="gg-menu-right"></i></button>
               <button class="btn btn-toggle sidenav-toggler"><i class="gg-menu-left"></i></button>
@@ -78,7 +80,7 @@
           <div class="main-header-logo">
             <div class="logo-header" data-background-color="dark">
               <a href="index.php?route=dashboard" class="logo">
-                <img src="assets/img/kaiadmin/logo_light.svg" alt="logo" class="navbar-brand" />
+                <img src="img/career_lab.png" alt="Career Lab" style="height: 34px; width: auto; background: #ffffff; padding: 3px 6px; border-radius: 6px;" />
               </a>
               <div class="nav-toggle">
                 <button class="btn btn-toggle toggle-sidebar"><i class="gg-menu-right"></i></button>

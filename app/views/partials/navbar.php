@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark px-5 py-3 py-lg-0">
     <a href="index.php?route=front" class="navbar-brand p-0">
-        <h1 class="m-0"><i class="fa fa-user-tie me-2"></i><?= htmlspecialchars((string) $company['name'], ENT_QUOTES, 'UTF-8'); ?></h1>
+        <img src="img/career_lab.png" alt="<?= htmlspecialchars((string) $company['name'], ENT_QUOTES, 'UTF-8'); ?>" style="height: 44px; width: auto; background: #ffffff; padding: 4px 8px; border-radius: 8px;">
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
         <span class="fa fa-bars"></span>

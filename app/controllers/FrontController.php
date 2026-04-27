@@ -145,6 +145,8 @@ final class FrontController extends Controller
                 }
             }
 
+            $this->storeUserAnswers($pdo, $questionIds, $answers, $correctByQuestion);
+
             $this->renderStandalone('front/resultat', [
                 'score' => $score,
                 'totalQuestions' => count($questionIds),
@@ -225,6 +227,95 @@ final class FrontController extends Controller
         }
 
         return 'Expert';
+    }
+
+    /**
+     * @param array<int, int> $questionIds
+     * @param array<int, int> $answers
+     * @param array<int, int> $correctByQuestion
+     */
+    private function storeUserAnswers(PDO $pdo, array $questionIds, array $answers, array $correctByQuestion): void
+    {
+        $this->ensureUserAnswersTable($pdo);
+        $attemptToken = $this->generateAttemptToken();
+
+        $pdo->beginTransaction();
+
+        try {
+            $stmt = $pdo->prepare(
+                'INSERT INTO reponses_utilisateurs (id_question, id_reponse, attempt_token, est_correcte)
+                 VALUES (:id_question, :id_reponse, :attempt_token, :est_correcte)'
+            );
+
+            foreach ($questionIds as $questionId) {
+                $selectedReponseId = $answers[$questionId] ?? 0;
+
+                if ($selectedReponseId <= 0) {
+                    continue;
+                }
+
+                $isCorrect = ((int) ($correctByQuestion[$questionId] ?? -1) === $selectedReponseId) ? 1 : 0;
+
+                $stmt->execute([
+                    ':id_question' => $questionId,
+                    ':id_reponse' => $selectedReponseId,
+                    ':attempt_token' => $attemptToken,
+                    ':est_correcte' => $isCorrect,
+                ]);
+            }
+
+            $pdo->commit();
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+
+            throw $e;
+        }
+    }
+
+    private function ensureUserAnswersTable(PDO $pdo): void
+    {
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS reponses_utilisateurs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                id_question INT NOT NULL,
+                id_reponse INT NOT NULL,
+                attempt_token VARCHAR(64) NOT NULL DEFAULT "",
+                est_correcte BOOLEAN NOT NULL,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                KEY idx_rep_user_question (id_question),
+                KEY idx_rep_user_correct (est_correcte),
+                KEY idx_rep_user_reponse (id_reponse),
+                KEY idx_rep_user_attempt (attempt_token),
+                CONSTRAINT fk_rep_user_question
+                    FOREIGN KEY (id_question)
+                    REFERENCES questions(id)
+                    ON DELETE CASCADE
+                    ON UPDATE CASCADE,
+                CONSTRAINT fk_rep_user_reponse
+                    FOREIGN KEY (id_reponse)
+                    REFERENCES reponses(id)
+                    ON DELETE CASCADE
+                    ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci'
+        );
+
+        $stmtColumn = $pdo->query("SHOW COLUMNS FROM reponses_utilisateurs LIKE 'attempt_token'");
+        $hasAttemptToken = $stmtColumn !== false && $stmtColumn->fetch(PDO::FETCH_ASSOC) !== false;
+
+        if (!$hasAttemptToken) {
+            $pdo->exec(
+                'ALTER TABLE reponses_utilisateurs
+                 ADD COLUMN attempt_token VARCHAR(64) NOT NULL DEFAULT "" AFTER id_reponse,
+                 ADD KEY idx_rep_user_attempt (attempt_token)'
+            );
+        }
+    }
+
+    private function generateAttemptToken(): string
+    {
+        return str_replace('.', '', uniqid('attempt_', true));
     }
 
     private function requestMethod(): string
