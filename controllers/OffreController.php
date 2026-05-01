@@ -13,10 +13,29 @@ class OffreController extends BaseController {
     public function index(): void {
         $pdo = $this->getDb();
         $search = trim($_GET['q'] ?? '');
+        $sort = $_GET['sort'] ?? 'newest';
 
         $sqlTravail = "SELECT t.*, e.niveau AS niveau_experience FROM OpportuniteTravail t LEFT JOIN Experience e ON t.experience_id = e.id WHERE 1=1";
         if ($search) $sqlTravail .= " AND (t.titre LIKE :q OR t.entreprise LIKE :q OR t.domaine LIKE :q OR t.localisation LIKE :q)";
-        $sqlTravail .= " ORDER BY t.id DESC";
+        
+        switch ($sort) {
+            case 'exp_title':
+                $sqlTravail .= " ORDER BY FIELD(e.niveau, 'Junior', 'Intermédiaire', 'Confirmé', 'Senior', 'Expert') ASC, t.titre ASC";
+                break;
+            case 'title_asc':
+                $sqlTravail .= " ORDER BY t.titre ASC";
+                break;
+            case 'exp_asc':
+                $sqlTravail .= " ORDER BY FIELD(e.niveau, 'Junior', 'Intermédiaire', 'Confirmé', 'Senior', 'Expert') ASC";
+                break;
+            case 'oldest':
+                $sqlTravail .= " ORDER BY t.id ASC";
+                break;
+            case 'newest':
+            default:
+                $sqlTravail .= " ORDER BY t.id DESC";
+                break;
+        }
 
         $stmtT = $pdo->prepare($sqlTravail);
         if ($search) $stmtT->bindValue(':q', "%$search%");
@@ -32,9 +51,33 @@ class OffreController extends BaseController {
             'title'  => 'Les Offres - Career Lab',
             'travaux' => $travaux,
             'search'  => $search,
+            'sort'    => $sort,
             'totalTravail' => count($travaux),
-            'experiences' => $experiences
+            'experiences' => $experiences,
+            'entreprise_nom' => $_SESSION['entreprise_nom'] ?? null
         ]);
+    }
+
+    public function loginEntreprise(): void {
+        $this->render('offres/login_entreprise', [
+            'action' => 'loginEntreprise',
+            'title'  => 'Connexion Entreprise - Career Lab'
+        ]);
+    }
+
+    public function handleLogin(): void {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nom = $this->clean($_POST['nom_entreprise'] ?? '');
+            $email = $this->clean($_POST['email_entreprise'] ?? '');
+            $password = $_POST['password_entreprise'] ?? '';
+
+            if (!empty($nom) && !empty($email)) {
+                $_SESSION['entreprise_nom'] = $nom;
+                $this->redirect('offres');
+                return;
+            }
+        }
+        $this->redirect('loginEntreprise', ['error' => 'invalid_credentials']);
     }
 
     public function publish(): void {
@@ -51,14 +94,21 @@ class OffreController extends BaseController {
 
     private function publierExperience(): void {
         $pdo = $this->getDb();
+        $nom = $this->clean($_POST['nom'] ?? '');
+        $prenom = $this->clean($_POST['prenom'] ?? '');
         $niveau = $this->clean($_POST['niveau'] ?? '');
         $description = $this->clean($_POST['description'] ?? '');
 
         if (empty($niveau)) $this->redirect('offres', ['error' => 'niveau_requis']);
 
-        $sql = "INSERT INTO Experience (niveau, description) VALUES (:niveau, :description)";
+        $sql = "INSERT INTO Experience (nom, prenom, niveau, description) VALUES (:nom, :prenom, :niveau, :description)";
         $stmt = $pdo->prepare($sql);
-        $success = $stmt->execute([':niveau' => $niveau, ':description' => $description]);
+        $success = $stmt->execute([
+            ':nom' => $nom,
+            ':prenom' => $prenom,
+            ':niveau' => $niveau,
+            ':description' => $description
+        ]);
 
         if ($success) $this->redirect('offres', ['success' => 'experience']);
         else $this->redirect('offres', ['error' => 'insertion_echouee']);
@@ -115,10 +165,12 @@ class OffreController extends BaseController {
                 ':domaine'         => $this->clean($_POST['domaine'] ?? ''),
             ]);
         } elseif ($type === 'experience') {
-            $sql = "UPDATE Experience SET niveau=:niveau, description=:description WHERE id=:id";
+            $sql = "UPDATE Experience SET nom=:nom, prenom=:prenom, niveau=:niveau, description=:description WHERE id=:id";
             $stmt = $pdo->prepare($sql);
             $success = $stmt->execute([
                 ':id'          => $id,
+                ':nom'         => $this->clean($_POST['nom'] ?? ''),
+                ':prenom'      => $this->clean($_POST['prenom'] ?? ''),
                 ':niveau'      => $this->clean($_POST['niveau'] ?? ''),
                 ':description' => $this->clean($_POST['description'] ?? ''),
             ]);
@@ -175,22 +227,80 @@ class OffreController extends BaseController {
 
     public function apply(): void {
         $pdo = $this->getDb();
-        $id = (int)($_GET['id'] ?? 0);
-        if (!$id) { $this->redirect('offres', ['error' => 'id_manquant']); return; }
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = (int)($_POST['offre_id'] ?? 0);
+            if (!$id) { $this->redirect('offres', ['error' => 'id_manquant']); return; }
 
-        // Create table if not exists
-        $pdo->exec("CREATE TABLE IF NOT EXISTS Candidature (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            offre_id INT NOT NULL,
-            date_postulation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )");
+            $nom_candidat = $this->clean($_POST['nom_candidat'] ?? '');
+            $email_candidat = $this->clean($_POST['email_candidat'] ?? '');
+            $cv_texte = $this->clean($_POST['cv_texte'] ?? '');
+            
+            // Calcul du score test dynamique selon le domaine
+            $score_test = 0;
+            $domaine_qcm = $_POST['qcm_domaine'] ?? '';
 
-        $sql = "INSERT INTO Candidature (offre_id) VALUES (:id)";
-        $stmt = $pdo->prepare($sql);
-        $success = $stmt->execute([':id' => $id]);
+            if ($domaine_qcm === 'informatique') {
+                if (isset($_POST['info_q1']) && $_POST['info_q1'] === 'php') $score_test++;
+                if (isset($_POST['info_q2']) && $_POST['info_q2'] === 'sql') $score_test++;
+                if (isset($_POST['info_q3']) && $_POST['info_q3'] === 'js') $score_test++;
+                if (isset($_POST['info_q4']) && $_POST['info_q4'] === 'vcs') $score_test++;
+                if (isset($_POST['info_q5']) && $_POST['info_q5'] === 'mysql') $score_test++;
+            } elseif ($domaine_qcm === 'economie') {
+                if (isset($_POST['eco_q1']) && $_POST['eco_q1'] === 'hausse') $score_test++;
+                if (isset($_POST['eco_q2']) && $_POST['eco_q2'] === 'pib') $score_test++;
+                if (isset($_POST['eco_q3']) && $_POST['eco_q3'] === 'monte') $score_test++;
+                if (isset($_POST['eco_q4']) && $_POST['eco_q4'] === 'peu') $score_test++;
+                if (isset($_POST['eco_q5']) && $_POST['eco_q5'] === 'bce') $score_test++;
+            } elseif ($domaine_qcm === 'architecture') {
+                if (isset($_POST['arch_q1']) && $_POST['arch_q1'] === '1m') $score_test++;
+                if (isset($_POST['arch_q2']) && $_POST['arch_q2'] === 'autocad') $score_test++;
+                if (isset($_POST['arch_q3']) && $_POST['arch_q3'] === 'soutient') $score_test++;
+                if (isset($_POST['arch_q4']) && $_POST['arch_q4'] === 'grecque') $score_test++;
+                if (isset($_POST['arch_q5']) && $_POST['arch_q5'] === 'maquette') $score_test++;
+            } elseif ($domaine_qcm === 'electromecanique') {
+                if (isset($_POST['elec_q1']) && $_POST['elec_q1'] === 'uri') $score_test++;
+                if (isset($_POST['elec_q2']) && $_POST['elec_q2'] === 'alternatif') $score_test++;
+                if (isset($_POST['elec_q3']) && $_POST['elec_q3'] === 'watt') $score_test++;
+                if (isset($_POST['elec_q4']) && $_POST['elec_q4'] === 'metal') $score_test++;
+                if (isset($_POST['elec_q5']) && $_POST['elec_q5'] === 'vitesse') $score_test++;
+            }
 
-        if ($success) $this->redirect('offres', ['success' => 'postule']);
-        else $this->redirect('offres', ['error' => 'postulation_echouee']);
+            // Récupérer les infos de l'offre pour la compatibilité
+            $stmt = $pdo->prepare("SELECT titre, domaine FROM OpportuniteTravail WHERE id = :id");
+            $stmt->execute([':id' => $id]);
+            $offre = $stmt->fetch();
+            $offre_titre = $offre['titre'] ?? '';
+            $offre_domaine = $offre['domaine'] ?? '';
+
+            // Analyse IA
+            require_once __DIR__ . '/CandidatureAnalyzer.php';
+            $analyzer = new CandidatureAnalyzer();
+            $ia_results = $analyzer->analyser($cv_texte, $offre_domaine, $offre_titre, $score_test);
+
+            $sql = "INSERT INTO Candidature 
+                    (offre_id, nom_candidat, email_candidat, cv_texte, score_test, score_ia, compatibilite, niveau, recommandation, feedback) 
+                    VALUES 
+                    (:offre_id, :nom, :email, :cv, :test, :score, :comp, :niv, :rec, :feed)";
+            $stmt = $pdo->prepare($sql);
+            $success = $stmt->execute([
+                ':offre_id' => $id,
+                ':nom' => $nom_candidat,
+                ':email' => $email_candidat,
+                ':cv' => $cv_texte,
+                ':test' => $score_test,
+                ':score' => $ia_results['score_ia'],
+                ':comp' => $ia_results['compatibilite'],
+                ':niv' => $ia_results['niveau'],
+                ':rec' => $ia_results['recommandation'],
+                ':feed' => $ia_results['feedback']
+            ]);
+
+            if ($success) $this->redirect('offres', ['success' => 'postule']);
+            else $this->redirect('offres', ['error' => 'postulation_echouee']);
+        } else {
+            $this->redirect('offres');
+        }
     }
 
     public function deleteCandidature(): void {

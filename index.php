@@ -1,4 +1,5 @@
 <?php
+session_start();
 /**
  * Routeur frontal (Front Controller)
  * Point d'entrée unique pour toutes les actions PHP du projet.
@@ -12,6 +13,14 @@ require_once __DIR__ . '/controllers/OffreController.php';
 $action = $_GET['action'] ?? 'offres';
 
 switch ($action) {
+    case 'loginEntreprise':
+        $controller = new OffreController();
+        $controller->loginEntreprise();
+        break;
+    case 'handleLogin':
+        $controller = new OffreController();
+        $controller->handleLogin();
+        break;
     // Static Pages (PageController)
     case 'home':
         $controller = new PageController();
@@ -67,6 +76,11 @@ switch ($action) {
         $controller = new OffreController();
         $controller->apply();
         break;
+    case 'logout':
+        session_destroy();
+        $redirect = $_GET['redirect'] ?? 'index.php?action=loginEntreprise';
+        header('Location: ' . $redirect);
+        exit();
     case 'deleteCandidature':
         $controller = new OffreController();
         $controller->deleteCandidature();

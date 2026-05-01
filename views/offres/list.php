@@ -117,6 +117,35 @@
 <!-- Form Section (Publier une offre) -->
 <div class="container-fluid form-section">
     <div class="container">
+        <?php if (!empty($entreprise_nom)): ?>
+            <div class="welcome-banner mb-4">
+                <h2 class="text-white fw-bold">Bienvenue, <span class="text-primary-gradient"><?= htmlspecialchars($entreprise_nom) ?></span> 👋</h2>
+                <style>
+                    .text-primary-gradient {
+                        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        display: inline-block;
+                    }
+                    .welcome-banner {
+                        background: rgba(255, 255, 255, 0.95);
+                        padding: 2rem;
+                        border-radius: 2rem;
+                        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+                        text-align: center;
+                        animation: slideDown 0.6s ease-out;
+                    }
+                    .welcome-banner h2 {
+                        margin: 0;
+                        color: #1e293b !important;
+                    }
+                    @keyframes slideDown {
+                        from { transform: translateY(-30px); opacity: 0; }
+                        to { transform: translateY(0); opacity: 1; }
+                    }
+                </style>
+            </div>
+        <?php endif; ?>
         <div class="row justify-content-center">
             <div class="col-xl-9">
                 <!-- Choice Tabs -->
@@ -148,7 +177,7 @@
                                 <select class="form-select" name="experience_id" required>
                                     <option value="">Sélectionnez l'ID...</option>
                                     <?php foreach ($experiences as $exp): ?>
-                                        <option value="<?= $exp['id'] ?>"><?= $exp['id'] ?> - <?= htmlspecialchars($exp['niveau']) ?></option>
+                                        <option value="<?= $exp['id'] ?>"><?= htmlspecialchars($exp['prenom'] ?? '') ?> - <?= htmlspecialchars($exp['niveau']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -165,6 +194,14 @@
                         </div>
                         <input type="hidden" name="type_offre" value="experience">
                         <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nom</label>
+                                <input type="text" class="form-control" name="nom" placeholder="Votre nom" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Prénom</label>
+                                <input type="text" class="form-control" name="prenom" placeholder="Votre prénom" required>
+                            </div>
                             <div class="col-md-12">
                                 <label class="form-label">Niveau d'expérience</label>
                                 <select class="form-select" name="niveau" required>
@@ -205,7 +242,16 @@
   <form method="GET" action="index.php" class="search-bar">
     <input type="hidden" name="action" value="offres">
     <div class="row g-2 align-items-center">
-      <div class="col-md-10"><input type="text" name="q" class="form-control" placeholder="🔎 Rechercher..." value="<?= htmlspecialchars($search) ?>"></div>
+      <div class="col-md-7"><input type="text" name="q" class="form-control" placeholder="🔎 Rechercher..." value="<?= htmlspecialchars($search) ?>"></div>
+      <div class="col-md-3">
+        <select name="sort" class="form-select" style="border-radius: 1rem; border: 1.5px solid rgba(15,23,42,.14); padding: .85rem 1.2rem;" onchange="this.form.submit()">
+          <option value="newest" <?= ($sort ?? '') === 'newest' ? 'selected' : '' ?>>📅 Plus récent</option>
+          <option value="exp_title" <?= ($sort ?? '') === 'exp_title' ? 'selected' : '' ?>>🎓 Expérience + Titre (A-Z)</option>
+          <option value="exp_asc" <?= ($sort ?? '') === 'exp_asc' ? 'selected' : '' ?>>🎓 Niveau (Junior -> Expert)</option>
+          <option value="title_asc" <?= ($sort ?? '') === 'title_asc' ? 'selected' : '' ?>>🔤 Titre (A-Z)</option>
+          <option value="oldest" <?= ($sort ?? '') === 'oldest' ? 'selected' : '' ?>>📅 Plus ancien</option>
+        </select>
+      </div>
       <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Rechercher</button></div>
     </div>
   </form>
@@ -272,6 +318,8 @@
         <div class="edit-controls">
           <button class="btn-edit-item w-100" data-bs-toggle="modal" data-bs-target="#editExpModal" 
               data-id="<?= $exp['id'] ?>" 
+              data-nom="<?= htmlspecialchars($exp['nom'] ?? '') ?>" 
+              data-prenom="<?= htmlspecialchars($exp['prenom'] ?? '') ?>" 
               data-niveau="<?= htmlspecialchars($exp['niveau']) ?>" 
               data-description="<?= htmlspecialchars($exp['description'] ?? '') ?>">
             Modifier
@@ -313,7 +361,7 @@
                 <label class="form-label">ID Expérience</label>
                 <select class="form-select" name="experience_id" id="edit-experience_id" required>
                     <?php foreach ($experiences as $exp): ?>
-                        <option value="<?= $exp['id'] ?>"><?= $exp['id'] ?> - <?= htmlspecialchars($exp['niveau']) ?></option>
+                        <option value="<?= $exp['id'] ?>"><?= htmlspecialchars($exp['prenom'] ?? '') ?> - <?= htmlspecialchars($exp['niveau']) ?></option>
                     <?php endforeach; ?>
                 </select>
               </div>
@@ -343,6 +391,16 @@
         <div class="modal-body p-4">
           <input type="hidden" name="id" id="edit-exp-id">
           <input type="hidden" name="type_offre" value="experience">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Nom</label>
+              <input type="text" class="form-control" name="nom" id="edit-exp-nom" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Prénom</label>
+              <input type="text" class="form-control" name="prenom" id="edit-exp-prenom" required>
+            </div>
+          </div>
           <div class="mb-3">
              <label class="form-label">Niveau d'expérience</label>
              <select class="form-select" name="niveau" id="edit-exp-niveau" required>
@@ -401,6 +459,8 @@
       editExpModal.addEventListener('show.bs.modal', function (event) {
           const button = event.relatedTarget;
           document.getElementById('edit-exp-id').value = button.getAttribute('data-id');
+          document.getElementById('edit-exp-nom').value = button.getAttribute('data-nom') || '';
+          document.getElementById('edit-exp-prenom').value = button.getAttribute('data-prenom') || '';
           document.getElementById('edit-exp-niveau').value = button.getAttribute('data-niveau') || '';
           document.getElementById('edit-exp-description').value = button.getAttribute('data-description') || '';
       });
@@ -432,9 +492,11 @@
   function validateExperienceForm(form) {
       const level = form.querySelector('[name="niveau"]').value;
       const desc = form.querySelector('[name="description"]').value.trim();
+      const nom = form.querySelector('[name="nom"]').value.trim();
+      const prenom = form.querySelector('[name="prenom"]').value.trim();
 
-      if (!level || !desc) {
-          alert("Veuillez choisir un niveau et saisir une description.");
+      if (!level || !desc || !nom || !prenom) {
+          alert("Veuillez remplir tous les champs (Nom, Prénom, Niveau, Description).");
           return false;
       }
       return true;

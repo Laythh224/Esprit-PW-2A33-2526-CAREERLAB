@@ -16,10 +16,38 @@ $contratsResult = $pdo->query("SELECT type_contrat, COUNT(*) as total FROM Oppor
 $contrats = $contratsResult->fetchAll();
 
 // Offres
-$travaux = $pdo->query("SELECT t.*, e.niveau as niveau_experience FROM OpportuniteTravail t LEFT JOIN Experience e ON t.experience_id = e.id ORDER BY t.id DESC")->fetchAll();
+$sort = $_GET['sort'] ?? 'newest';
+$sqlTravail = "SELECT t.*, e.niveau as niveau_experience FROM OpportuniteTravail t LEFT JOIN Experience e ON t.experience_id = e.id";
+
+switch ($sort) {
+    case 'exp_title':
+        $sqlTravail .= " ORDER BY FIELD(e.niveau, 'Junior', 'Intermédiaire', 'Confirmé', 'Senior', 'Expert') ASC, t.titre ASC";
+        break;
+    case 'title_asc':
+        $sqlTravail .= " ORDER BY t.titre ASC";
+        break;
+    case 'exp_asc':
+        $sqlTravail .= " ORDER BY FIELD(e.niveau, 'Junior', 'Intermédiaire', 'Confirmé', 'Senior', 'Expert') ASC";
+        break;
+    case 'oldest':
+        $sqlTravail .= " ORDER BY t.id ASC";
+        break;
+    case 'newest':
+    default:
+        $sqlTravail .= " ORDER BY t.id DESC";
+        break;
+}
+$travaux = $pdo->query($sqlTravail)->fetchAll();
 
 // Expériences
-$experiences = $pdo->query("SELECT * FROM Experience ORDER BY id ASC")->fetchAll();
+$sort_exp = $_GET['sort_exp'] ?? 'id_asc';
+$sqlExp = "SELECT * FROM Experience";
+if ($sort_exp === 'level_asc') {
+    $sqlExp .= " ORDER BY FIELD(niveau, 'Junior', 'Intermédiaire', 'Confirmé', 'Senior', 'Expert') ASC";
+} else {
+    $sqlExp .= " ORDER BY id ASC";
+}
+$experiences = $pdo->query($sqlExp)->fetchAll();
 
 // JSON pour Chart.js
 $domainesLabels = json_encode(array_column($domaines, 'domaine'));
@@ -231,8 +259,18 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
           <div class="col-md-12 mb-4">
             <div class="card shadow-sm">
               <div class="card-header">
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center justify-content-between">
                   <h4 class="card-title mb-0">📋 Opportunités de Travail</h4>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="small text-muted d-none d-sm-inline">Trier par :</span>
+                    <select class="form-select form-select-sm" style="width: auto; border-radius: 8px;" onchange="window.location.href='admin.php?sort=' + this.value">
+                      <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>📅 Plus récent</option>
+                      <option value="exp_title" <?= $sort === 'exp_title' ? 'selected' : '' ?>>🎓 Expérience + Titre (A-Z)</option>
+                      <option value="exp_asc" <?= $sort === 'exp_asc' ? 'selected' : '' ?>>🎓 Niveau (Junior -> Expert)</option>
+                      <option value="title_asc" <?= $sort === 'title_asc' ? 'selected' : '' ?>>🔤 Titre (A-Z)</option>
+                      <option value="oldest" <?= $sort === 'oldest' ? 'selected' : '' ?>>📅 Plus ancien</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               <div class="card-body">
@@ -298,19 +336,28 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
             <div class="card shadow-sm">
               <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="card-title mb-0">🎓 Niveaux d'Expérience</h4>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="small text-muted d-none d-sm-inline">Trier par :</span>
+                  <select class="form-select form-select-sm" style="width: auto; border-radius: 8px;" onchange="const url = new URL(window.location.href); url.searchParams.set('sort_exp', this.value); window.location.href = url.href;">
+                    <option value="id_asc" <?= $sort_exp === 'id_asc' ? 'selected' : '' ?>>🆔 ID (Défaut)</option>
+                    <option value="level_asc" <?= $sort_exp === 'level_asc' ? 'selected' : '' ?>>🎓 Niveau (Junior -> Expert)</option>
+                  </select>
+                </div>
               </div>
               <div class="card-body">
                 <div class="table-responsive">
-                  <table class="display table table-striped table-hover">
+                  <table id="tbl-experience" class="display table table-striped table-hover">
                     <thead>
                       <tr>
-                        <th>ID</th><th>Niveau</th><th>Description</th><th style="width: 10%">Actions</th>
+                        <th>ID</th><th>Nom</th><th>Prénom</th><th>Niveau</th><th>Description</th><th style="width: 10%">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       <?php foreach ($experiences as $exp): ?>
                       <tr>
                         <td><?= $exp['id'] ?></td>
+                        <td><?= htmlspecialchars($exp['nom'] ?? '-') ?></td>
+                        <td><?= htmlspecialchars($exp['prenom'] ?? '-') ?></td>
                         <td><?= htmlspecialchars($exp['niveau']) ?></td>
                         <td><?= htmlspecialchars($exp['description'] ?? '-') ?></td>
                         <td>
@@ -318,6 +365,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
                             <button type="button" class="btn btn-link btn-primary px-1" title="Modifier" 
                                     data-bs-toggle="modal" data-bs-target="#editExpModal"
                                     data-id="<?= $exp['id'] ?>"
+                                    data-nom="<?= htmlspecialchars($exp['nom'] ?? '') ?>"
+                                    data-prenom="<?= htmlspecialchars($exp['prenom'] ?? '') ?>"
                                     data-niveau="<?= htmlspecialchars($exp['niveau']) ?>"
                                     data-description="<?= htmlspecialchars($exp['description'] ?? '') ?>">
                               <i class="fa fa-edit"></i>
@@ -354,6 +403,14 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
         <input type="hidden" name="type_offre" value="experience">
         <input type="hidden" name="redirect" value="tables">
         <div class="modal-body">
+          <div class="form-group">
+            <label>Nom</label>
+            <input type="text" name="nom" class="form-control" placeholder="Nom" required>
+          </div>
+          <div class="form-group">
+            <label>Prénom</label>
+            <input type="text" name="prenom" class="form-control" placeholder="Prénom" required>
+          </div>
           <div class="form-group">
             <label>Niveau</label>
             <input type="text" name="niveau" class="form-control" placeholder="ex: Junior" required>
@@ -432,7 +489,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
                 <label>ID Expérience</label>
                 <select name="experience_id" id="edit-experience_id" class="form-control" required>
                     <?php foreach ($experiences as $exp): ?>
-                        <option value="<?= $exp['id'] ?>"><?= $exp['id'] ?> - <?= htmlspecialchars($exp['niveau']) ?></option>
+                        <option value="<?= $exp['id'] ?>"><?= htmlspecialchars($exp['prenom'] ?? '') ?> - <?= htmlspecialchars($exp['niveau']) ?></option>
                     <?php endforeach; ?>
                 </select>
               </div>
@@ -467,6 +524,14 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
         <input type="hidden" name="type_offre" value="experience">
         <input type="hidden" name="redirect" value="tables">
         <div class="modal-body">
+          <div class="form-group">
+            <label>Nom</label>
+            <input type="text" name="nom" id="edit-exp-nom" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label>Prénom</label>
+            <input type="text" name="prenom" id="edit-exp-prenom" class="form-control" required>
+          </div>
           <div class="form-group">
             <label>Niveau</label>
             <input type="text" name="niveau" id="edit-exp-niveau" class="form-control" required>
@@ -675,6 +740,8 @@ $(document).ready(function() {
     $('#editExpModal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget);
         $('#edit-exp-id').val(button.data('id'));
+        $('#edit-exp-nom').val(button.data('nom'));
+        $('#edit-exp-prenom').val(button.data('prenom'));
         $('#edit-exp-niveau').val(button.data('niveau'));
         $('#edit-exp-description').val(button.data('description'));
     });

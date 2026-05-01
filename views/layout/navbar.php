@@ -18,7 +18,7 @@
                         <a href="index.php?action=price" class="dropdown-item">Utilisateur</a>
                         <a href="index.php?action=feature" class="dropdown-item">Métiers</a>
                         <a href="index.php?action=team" class="dropdown-item">Evaluation</a>
-                        <a href="index.php?action=offres" class="dropdown-item">Les offres</a>
+                        <a href="index.php?action=loginEntreprise" class="dropdown-item">Les offres</a>
                         <a href="index.php?action=quote" class="dropdown-item">E_learning</a>
                     </div>
                 </div>

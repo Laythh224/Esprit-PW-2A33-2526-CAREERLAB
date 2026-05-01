@@ -1,10 +1,29 @@
 <?php
+session_start();
 require_once 'models/Database.php';
 
 $pdo = Database::getInstance()->getConnection();
 
+// Handle logout
+if (isset($_GET['action']) && $_GET['action'] === 'logout_admin_about') {
+    unset($_SESSION['admin_entreprise_nom']);
+    header('Location: admin_about.php');
+    exit;
+}
+
+// Handle login specifically for this page if needed
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_admin_about'])) {
+    $nom = htmlspecialchars(strip_tags(trim($_POST['nom_entreprise'] ?? '')));
+    $email = htmlspecialchars(strip_tags(trim($_POST['email_entreprise'] ?? '')));
+    if (!empty($nom) && !empty($email)) {
+        $_SESSION['admin_entreprise_nom'] = $nom;
+    }
+}
+
 $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
 $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
+
+$isLoggedIn = isset($_SESSION['admin_entreprise_nom']);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -34,6 +53,73 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
   <link rel="stylesheet" href="assets/css/demo.css" />
 </head>
 <body>
+<?php if (!$isLoggedIn): ?>
+<div class="login-page-wrapper">
+    <div class="login-card">
+        <div class="login-header text-center mb-4">
+            <div class="logo-box mb-3">
+                <i class="fas fa-user-tie fa-3x text-primary"></i>
+            </div>
+            <h2 class="fw-bold">Espace Entreprise</h2>
+            <p class="text-muted">Connectez-vous pour accéder aux candidatures</p>
+        </div>
+        <form action="admin_about.php" method="POST">
+            <input type="hidden" name="login_admin_about" value="1">
+            <div class="form-group mb-3">
+                <label class="form-label"><i class="fas fa-building me-2"></i>Nom de l'entreprise</label>
+                <input type="text" name="nom_entreprise" class="form-control rounded-pill px-4 py-2" placeholder="Ex: Career Lab" required>
+            </div>
+            <div class="form-group mb-3">
+                <label class="form-label"><i class="fas fa-envelope me-2"></i>Email entreprise</label>
+                <input type="email" name="email_entreprise" class="form-control rounded-pill px-4 py-2" placeholder="admin@entreprise.com" required>
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label"><i class="fas fa-lock me-2"></i>Mot de passe</label>
+                <input type="password" name="mdp_entreprise" class="form-control rounded-pill px-4 py-2" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow-sm">
+                Se connecter
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .login-page-wrapper {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #87CEEB 0%, #E0F7FA 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .login-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 24px;
+        padding: 40px;
+        width: 100%;
+        max-width: 450px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        border: 1px solid rgba(255,255,255,0.5);
+    }
+    .logo-box {
+        width: 80px;
+        height: 80px;
+        background: #f0f9ff;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+    .form-control:focus {
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        border-color: #4f46e5;
+    }
+</style>
+
+<?php else: ?>
 <div class="wrapper">
 
   <!-- ===================== SIDEBAR ===================== -->
@@ -115,6 +201,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
               <li class="nav-item"><a href="#">Candidatures</a></li>
             </ul>
           </div>
+          <div>
+            <a href="admin_about.php?action=logout_admin_about" class="btn btn-danger btn-round fw-bold shadow-sm">
+                <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
+            </a>
+          </div>
         </div>
 
         <div class="mb-4">
@@ -132,7 +223,14 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
                 <span class="badge bg-primary-gradient px-3 py-2 rounded-pill shadow-sm" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);">
                     <?php
                     // Count entries
-                    $count = $pdo->query("SELECT COUNT(*) FROM Candidature")->fetchColumn();
+                    $stmtCount = $pdo->prepare("
+                        SELECT COUNT(c.id) 
+                        FROM Candidature c 
+                        JOIN OpportuniteTravail t ON c.offre_id = t.id 
+                        WHERE t.entreprise = :entreprise
+                    ");
+                    $stmtCount->execute(['entreprise' => $_SESSION['admin_entreprise_nom']]);
+                    $count = $stmtCount->fetchColumn();
                     echo $count . " Candidature" . ($count > 1 ? "s" : "");
                     ?>
                 </span>
@@ -145,15 +243,27 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 offre_id INT NOT NULL,
                 date_postulation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                statut VARCHAR(20) DEFAULT 'en_attente'
+                statut VARCHAR(20) DEFAULT 'en_attente',
+                nom_candidat VARCHAR(255) NULL,
+                email_candidat VARCHAR(255) NULL,
+                cv_texte TEXT NULL,
+                score_test INT DEFAULT 0,
+                score_ia INT DEFAULT 0,
+                compatibilite INT DEFAULT 0,
+                niveau VARCHAR(50) NULL,
+                recommandation VARCHAR(50) NULL,
+                feedback TEXT NULL
             )");
 
-            $applications = $pdo->query("
-                SELECT c.id as candidature_id, c.date_postulation, c.statut, t.titre, t.entreprise, t.localisation, t.domaine, t.type_contrat
+            $stmt = $pdo->prepare("
+                SELECT c.*, t.titre, t.entreprise, t.localisation, t.domaine, t.type_contrat
                 FROM Candidature c
                 JOIN OpportuniteTravail t ON c.offre_id = t.id
-                ORDER BY c.date_postulation DESC
-            ")->fetchAll();
+                WHERE t.entreprise = :entreprise
+                ORDER BY c.score_ia DESC, c.date_postulation DESC
+            ");
+            $stmt->execute(['entreprise' => $_SESSION['admin_entreprise_nom']]);
+            $applications = $stmt->fetchAll();
             ?>
 
             <?php if (empty($applications)): ?>
@@ -167,26 +277,32 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
                 </div>
             <?php else: ?>
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover mb-0 align-middle">
                         <thead style="background: #f8fafc;">
                             <tr>
-                                <th class="ps-4 py-3 border-0">DATE</th>
+                                <th class="ps-4 py-3 border-0">CANDIDAT</th>
                                 <th class="py-3 border-0">POSTE</th>
-                                <th class="py-3 border-0">ENTREPRISE</th>
-                                <th class="py-3 border-0">LOCALISATION</th>
+                                <th class="py-3 border-0 text-center">SCORE IA</th>
+                                <th class="py-3 border-0 text-center">RECOMMANDATION</th>
                                 <th class="py-3 border-0 text-end pe-4">ACTION</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($applications as $app): ?>
-                            <tr style="transition: all 0.2s;" id="row-<?= $app['candidature_id'] ?>">
-                                <td class="ps-4 py-4 align-middle">
+                            <tr style="transition: all 0.2s;" id="row-<?= $app['id'] ?>">
+                                <td class="ps-4 py-4">
                                     <div class="d-flex flex-column">
-                                        <span class="fw-bold text-dark"><?= date('d M, Y', strtotime($app['date_postulation'])) ?></span>
-                                        <small class="text-muted"><?= date('H:i', strtotime($app['date_postulation'])) ?></small>
+                                        <span class="fw-bold text-dark" style="font-size: 1.1rem;">
+                                            <?= htmlspecialchars($app['nom_candidat'] ?? 'Anonyme') ?>
+                                            <?php if (($app['score_ia'] ?? 0) >= 80 || ($app['recommandation'] ?? '') === 'Accepter'): ?>
+                                                <span class="badge bg-danger ms-1" title="Excellent profil">🔥 Bon candidat</span>
+                                            <?php endif; ?>
+                                        </span>
+                                        <small class="text-muted"><i class="fas fa-envelope me-1"></i><?= htmlspecialchars($app['email_candidat'] ?? 'N/A') ?></small>
+                                        <small class="text-muted mt-1"><i class="far fa-clock me-1"></i><?= date('d M, Y', strtotime($app['date_postulation'])) ?></small>
                                     </div>
                                 </td>
-                                <td class="py-4 align-middle">
+                                <td class="py-4">
                                     <div class="d-flex align-items-center">
                                         <div class="bg-light rounded p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                                             <i class="fas fa-briefcase text-primary"></i>
@@ -197,25 +313,54 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
                                         </div>
                                     </div>
                                 </td>
-                                <td class="py-4 align-middle">
-                                    <span class="text-muted"><i class="far fa-building me-1"></i><?= htmlspecialchars($app['entreprise']) ?></span>
+                                <td class="py-4 text-center">
+                                    <div class="d-flex flex-column align-items-center">
+                                        <h5 class="fw-bold text-primary mb-1"><?= $app['score_ia'] ?? 0 ?>%</h5>
+                                        <div class="progress" style="height: 6px; width: 60px;">
+                                            <div class="progress-bar bg-primary" role="progressbar" style="width: <?= $app['score_ia'] ?? 0 ?>%;"></div>
+                                        </div>
+                                        <small class="text-muted mt-1" style="font-size: 0.7rem;">Compat: <?= $app['compatibilite'] ?? 0 ?>%</small>
+                                    </div>
                                 </td>
-                                <td class="py-4 align-middle">
-                                    <span class="badge rounded-pill bg-light text-dark fw-normal border" style="padding: 0.5rem 1rem;">
-                                        <i class="fas fa-map-marker-alt text-danger me-1"></i> <?= htmlspecialchars($app['localisation']) ?>
-                                    </span>
+                                <td class="py-4 text-center">
+                                    <?php 
+                                    $rec = $app['recommandation'] ?? 'Refuser';
+                                    $badgeColor = $rec === 'Accepter' ? 'success' : ($rec === 'À revoir' ? 'warning text-dark' : 'danger');
+                                    ?>
+                                    <span class="badge bg-<?= $badgeColor ?> px-3 py-2 rounded-pill shadow-sm mb-1"><?= $rec ?></span>
+                                    <div class="mt-1">
+                                        <span class="badge bg-light text-dark border"><i class="fas fa-layer-group me-1"></i><?= $app['niveau'] ?? 'N/A' ?></span>
+                                    </div>
                                 </td>
-                                <td class="py-4 align-middle text-end pe-4">
+                                <td class="py-4 text-end pe-4">
                                     <div class="d-flex gap-2 justify-content-end">
-                                        <button class="btn btn-sm btn-success rounded-pill px-3" onclick="this.innerHTML='<i class=\'fas fa-check me-1\'></i> Accepté'; this.disabled=true;">
-                                            Accepter
+                                        <button class="btn btn-sm btn-info rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#feedbackModal<?= $app['id'] ?>">
+                                            <i class="fas fa-robot me-1"></i> Détails IA
                                         </button>
-                                        <a href="index.php?action=deleteCandidature&id=<?= $app['candidature_id'] ?>" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="return confirm('Voulez-vous vraiment annuler cette candidature ?')">
-                                            Annuler
+                                        <a href="index.php?action=deleteCandidature&id=<?= $app['id'] ?>" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="return confirm('Voulez-vous vraiment annuler cette candidature ?')">
+                                            Refuser
                                         </a>
                                     </div>
                                 </td>
                             </tr>
+                            
+                            <!-- Feedback Modal -->
+                            <div class="modal fade" id="feedbackModal<?= $app['id'] ?>" tabindex="-1" aria-hidden="true">
+                              <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow" style="border-radius: 15px;">
+                                  <div class="modal-header text-white" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); border-radius: 15px 15px 0 0;">
+                                    <h5 class="modal-title fw-bold"><i class="fas fa-brain me-2"></i> Rapport IA - <?= htmlspecialchars($app['nom_candidat'] ?? 'Candidat') ?></h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                  </div>
+                                  <div class="modal-body p-4">
+                                      <?= $app['feedback'] ?? '<p class="text-muted">Aucun rapport disponible.</p>' ?>
+                                  </div>
+                                  <div class="modal-footer border-0 p-3 bg-light" style="border-radius: 0 0 15px 15px;">
+                                      <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Fermer</button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -231,6 +376,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
   </div><!-- main-panel -->
 
 </div><!-- wrapper -->
+<?php endif; ?>
 
 <!-- Core JS -->
 <script src="assets/js/core/jquery-3.7.1.min.js"></script>
