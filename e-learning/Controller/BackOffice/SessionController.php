@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace App\Controller\BackOffice;
 
 use App\Controller\BaseController;
-use App\Model\CritereModel;
 use App\Model\FormationModel;
+use App\Model\SessionModel;
 
-class CritereController extends BaseController
+class SessionController extends BaseController
 {
-    private CritereModel $critereModel;
+    private SessionModel $sessionModel;
     private FormationModel $formationModel;
 
     public function __construct()
     {
-        $this->critereModel = new CritereModel();
+        $this->sessionModel = new SessionModel();
         $this->formationModel = new FormationModel();
     }
 
@@ -31,8 +31,8 @@ class CritereController extends BaseController
             $formationSpecialites[$name] = (string) ($formation['specialite'] ?? '');
         }
 
-        $this->render('BackOffice/criteres', [
-            'criteres' => $this->critereModel->all(),
+        $this->render('BackOffice/sessions', [
+            'sessions' => $this->sessionModel->all(),
             'formationChoices' => $this->formationModel->names(),
             'formationSpecialites' => $formationSpecialites,
             'flash' => $this->getFlash(),
@@ -46,13 +46,13 @@ class CritereController extends BaseController
         $data = $this->validatedData();
         if ($data === null) {
             $this->setOldInput($postedInput);
-            $this->setFlash('Donnees critere invalides.');
-            $this->redirect('back/criteres');
+            $this->setFlash('Donnees session invalides.');
+            $this->redirect('back/sessions');
         }
 
-        $this->critereModel->create($data);
-        $this->setFlash('Critere ajoute avec succes.');
-        $this->redirect('back/criteres');
+        $this->sessionModel->create($data);
+        $this->setFlash('Session ajoutee avec succes.');
+        $this->redirect('back/sessions');
     }
 
     public function update(): void
@@ -63,26 +63,26 @@ class CritereController extends BaseController
         $data = $this->validatedData();
         if ($id <= 0 || $data === null) {
             $this->setOldInput($postedInput);
-            $this->setFlash('Donnees invalides pour la modification du critere.');
-            $this->redirect('back/criteres');
+            $this->setFlash('Donnees invalides pour la modification de la session.');
+            $this->redirect('back/sessions');
         }
 
-        $this->critereModel->update($id, $data);
-        $this->setFlash('Critere modifie avec succes.');
-        $this->redirect('back/criteres');
+        $this->sessionModel->update($id, $data);
+        $this->setFlash('Session modifiee avec succes.');
+        $this->redirect('back/sessions');
     }
 
     public function delete(): void
     {
         $id = (int) ($_POST['id'] ?? 0);
         if ($id <= 0) {
-            $this->setFlash('Identifiant critere invalide.');
-            $this->redirect('back/criteres');
+            $this->setFlash('Identifiant session invalide.');
+            $this->redirect('back/sessions');
         }
 
-        $this->critereModel->delete($id);
-        $this->setFlash('Critere supprime avec succes.');
-        $this->redirect('back/criteres');
+        $this->sessionModel->delete($id);
+        $this->setFlash('Session supprimee avec succes.');
+        $this->redirect('back/sessions');
     }
 
     private function validatedData(): ?array
@@ -94,8 +94,10 @@ class CritereController extends BaseController
         $adresse = trim((string) ($_POST['adresse'] ?? ''));
         $salle = trim((string) ($_POST['salle'] ?? ''));
         $dureePresentiel = trim((string) ($_POST['duree_presentiel'] ?? ''));
+        $dateDebut = trim((string) ($_POST['date_debut'] ?? ''));
+        $dateFin = trim((string) ($_POST['date_fin'] ?? ''));
 
-        if ($nomFormation === '' || $type === '') {
+        if ($nomFormation === '' || $type === '' || $dateDebut === '' || $dateFin === '') {
             return null;
         }
 
@@ -104,6 +106,22 @@ class CritereController extends BaseController
         }
 
         if (!in_array($type, ['online', 'presentiel'], true)) {
+            return null;
+        }
+
+        if (!$this->isValidDate($dateDebut) || !$this->isValidDate($dateFin)) {
+            return null;
+        }
+
+        $today = new \DateTimeImmutable('today');
+        $startDate = new \DateTimeImmutable($dateDebut);
+        $endDate = new \DateTimeImmutable($dateFin);
+
+        if ($startDate < $today) {
+            return null;
+        }
+
+        if ($endDate <= $startDate) {
             return null;
         }
 
@@ -130,6 +148,8 @@ class CritereController extends BaseController
             'adresse' => $adresse !== null ? ($adresse !== '' ? $adresse : null) : null,
             'salle' => $salle !== null ? ($salle !== '' ? $salle : null) : null,
             'duree_presentiel' => $dureePresentiel !== null ? ($dureePresentiel !== '' ? (int) $dureePresentiel : null) : null,
+            'date_debut' => $dateDebut,
+            'date_fin' => $dateFin,
         ];
     }
 
@@ -144,7 +164,15 @@ class CritereController extends BaseController
             'adresse' => trim((string) ($_POST['adresse'] ?? '')),
             'salle' => trim((string) ($_POST['salle'] ?? '')),
             'duree_presentiel' => trim((string) ($_POST['duree_presentiel'] ?? '')),
+            'date_debut' => trim((string) ($_POST['date_debut'] ?? '')),
+            'date_fin' => trim((string) ($_POST['date_fin'] ?? '')),
         ];
     }
-}
 
+    private function isValidDate(string $date): bool
+    {
+        $parsed = \DateTimeImmutable::createFromFormat('Y-m-d', $date);
+
+        return $parsed !== false && $parsed->format('Y-m-d') === $date;
+    }
+}

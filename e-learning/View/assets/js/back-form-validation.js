@@ -58,10 +58,8 @@
     const nomInput = document.getElementById('nom_formation');
     const specialiteInput = document.getElementById('specialite');
     const descriptionInput = document.getElementById('description');
-    const dateDebutInput = document.getElementById('date_debut');
-    const dateFinInput = document.getElementById('date_fin');
     const niveauInput = document.getElementById('niveau');
-    const dureeInput = document.getElementById('duree');
+    const nbPlaceInput = document.getElementById('nb_place');
     const cancelBtn = document.getElementById('formation-cancel-btn');
     const title = document.getElementById('formation-form-title');
 
@@ -71,14 +69,120 @@
       const nom = normalizeSpaces(nomInput.value);
       const specialite = normalizeSpaces(specialiteInput.value);
       const description = normalizeSpaces(descriptionInput.value);
-      const dateDebut = normalizeSpaces(dateDebutInput.value);
-      const dateFin = normalizeSpaces(dateFinInput.value);
       const niveau = normalizeSpaces(niveauInput.value);
-      const duree = Number(dureeInput.value);
+      const nbPlace = Number(nbPlaceInput.value);
 
-      if (!nom || !specialite || !description || !dateDebut || !dateFin || !niveau || !duree) {
+      if (!nom || !specialite || !description || !niveau || !nbPlaceInput.value.trim()) {
         event.preventDefault();
         window.alert('Tous les champs formation sont obligatoires.');
+        return;
+      }
+
+      if (!Number.isInteger(nbPlace) || nbPlace <= 0) {
+        event.preventDefault();
+        window.alert('nb_place doit etre un entier positif.');
+        return;
+      }
+
+      nomInput.value = nom;
+      specialiteInput.value = specialite;
+      descriptionInput.value = description;
+      niveauInput.value = niveau;
+    });
+
+    document.querySelectorAll('.formation-edit-btn').forEach((button) => {
+      button.addEventListener('click', function () {
+        oldNomInput.value = this.dataset.nom || '';
+        nomInput.value = this.dataset.nom || '';
+        specialiteInput.value = this.dataset.specialite || '';
+        descriptionInput.value = this.dataset.description || '';
+        niveauInput.value = this.dataset.niveau || '';
+        nbPlaceInput.value = this.dataset.nbPlace || '';
+        form.action = 'index.php?r=back/formations/update';
+        if (title) {
+          title.textContent = 'Modifier une formation';
+        }
+      });
+    });
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function () {
+        oldNomInput.value = '';
+        nomInput.value = '';
+        specialiteInput.value = '';
+        descriptionInput.value = '';
+        niveauInput.value = '';
+        nbPlaceInput.value = '';
+        form.action = 'index.php?r=back/formations/store';
+        if (title) {
+          title.textContent = 'Ajouter une formation';
+        }
+      });
+    }
+  }
+
+  function toggleSessionFields() {
+    const form = document.getElementById('session-form');
+    const typeInput = document.getElementById('session_type');
+    if (!form || !typeInput) {
+      return;
+    }
+
+    const isOnline = typeInput.value === 'online';
+    const isPresentiel = typeInput.value === 'presentiel';
+
+    form.querySelectorAll('.js-online-field').forEach((node) => {
+      node.classList.toggle('is-visible', isOnline);
+    });
+
+    form.querySelectorAll('.js-presentiel-field').forEach((node) => {
+      node.classList.toggle('is-visible', isPresentiel);
+    });
+  }
+
+  function bindSessionForm() {
+    const form = document.getElementById('session-form');
+    if (!form) {
+      return;
+    }
+
+    const idInput = document.getElementById('session_id');
+    const nomFormationInput = document.getElementById('nom_formation_select');
+    const typeInput = document.getElementById('session_type');
+    const dateDebutInput = document.getElementById('date_debut');
+    const dateFinInput = document.getElementById('date_fin');
+    const lienInput = document.getElementById('lien');
+    const dureeOnlineInput = document.getElementById('duree_online');
+    const adresseInput = document.getElementById('adresse');
+    const salleInput = document.getElementById('salle');
+    const dureePresentielInput = document.getElementById('duree_presentiel');
+    const title = document.getElementById('session-form-title');
+    const cancelBtn = document.getElementById('session-cancel-btn');
+
+    if (!typeInput) {
+      return;
+    }
+
+    form.setAttribute('novalidate', 'novalidate');
+    typeInput.addEventListener('change', toggleSessionFields);
+    typeInput.addEventListener('input', toggleSessionFields);
+    toggleSessionFields();
+
+    form.addEventListener('submit', function (event) {
+      const type = typeInput.value;
+      const nomFormation = nomFormationInput.value;
+      const dateDebut = normalizeSpaces(dateDebutInput.value);
+      const dateFin = normalizeSpaces(dateFinInput.value);
+
+      if (!nomFormation || !type) {
+        event.preventDefault();
+        window.alert('nom_formation et type sont obligatoires.');
+        return;
+      }
+
+      if (!dateDebut || !dateFin) {
+        event.preventDefault();
+        window.alert('date_debut et date_fin sont obligatoires.');
         return;
       }
 
@@ -97,96 +201,6 @@
       if (!isDateAfter(dateFin, dateDebut)) {
         event.preventDefault();
         window.alert('date_fin doit etre au moins 1 jour apres date_debut.');
-        return;
-      }
-
-      nomInput.value = nom;
-      specialiteInput.value = specialite;
-      descriptionInput.value = description;
-      niveauInput.value = niveau;
-    });
-
-    document.querySelectorAll('.formation-edit-btn').forEach((button) => {
-      button.addEventListener('click', function () {
-        oldNomInput.value = this.dataset.nom || '';
-        nomInput.value = this.dataset.nom || '';
-        specialiteInput.value = this.dataset.specialite || '';
-        descriptionInput.value = this.dataset.description || '';
-        dateDebutInput.value = this.dataset.dateDebut || '';
-        dateFinInput.value = this.dataset.dateFin || '';
-        niveauInput.value = this.dataset.niveau || '';
-        dureeInput.value = this.dataset.duree || '';
-        form.action = 'index.php?r=back/formations/update';
-        if (title) {
-          title.textContent = 'Modifier une formation';
-        }
-      });
-    });
-
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', function () {
-        oldNomInput.value = '';
-        nomInput.value = '';
-        specialiteInput.value = '';
-        descriptionInput.value = '';
-        dateDebutInput.value = '';
-        dateFinInput.value = '';
-        niveauInput.value = '';
-        dureeInput.value = '';
-        form.action = 'index.php?r=back/formations/store';
-        if (title) {
-          title.textContent = 'Ajouter une formation';
-        }
-      });
-    }
-  }
-
-  function toggleCritereFields() {
-    const typeInput = document.getElementById('type');
-    if (!typeInput) {
-      return;
-    }
-
-    const isOnline = typeInput.value === 'online';
-    const isPresentiel = typeInput.value === 'presentiel';
-
-    document.querySelectorAll('.js-online-field').forEach((node) => {
-      node.style.display = isOnline ? '' : 'none';
-    });
-
-    document.querySelectorAll('.js-presentiel-field').forEach((node) => {
-      node.style.display = isPresentiel ? '' : 'none';
-    });
-  }
-
-  function bindCritereForm() {
-    const form = document.getElementById('critere-form');
-    if (!form) {
-      return;
-    }
-
-    const idInput = document.getElementById('critere_id');
-    const nomFormationInput = document.getElementById('nom_formation_select');
-    const typeInput = document.getElementById('type');
-    const lienInput = document.getElementById('lien');
-    const dureeOnlineInput = document.getElementById('duree_online');
-    const adresseInput = document.getElementById('adresse');
-    const salleInput = document.getElementById('salle');
-    const dureePresentielInput = document.getElementById('duree_presentiel');
-    const title = document.getElementById('critere-form-title');
-    const cancelBtn = document.getElementById('critere-cancel-btn');
-
-    form.setAttribute('novalidate', 'novalidate');
-    typeInput.addEventListener('change', toggleCritereFields);
-    toggleCritereFields();
-
-    form.addEventListener('submit', function (event) {
-      const type = typeInput.value;
-      const nomFormation = nomFormationInput.value;
-
-      if (!nomFormation || !type) {
-        event.preventDefault();
-        window.alert('nom_formation et type sont obligatoires.');
         return;
       }
 
@@ -235,20 +249,22 @@
       }
     });
 
-    document.querySelectorAll('.critere-edit-btn').forEach((button) => {
+    document.querySelectorAll('.session-edit-btn').forEach((button) => {
       button.addEventListener('click', function () {
         idInput.value = this.dataset.id || '';
         nomFormationInput.value = this.dataset.nomFormation || '';
         typeInput.value = this.dataset.type || '';
+        dateDebutInput.value = this.dataset.dateDebut || '';
+        dateFinInput.value = this.dataset.dateFin || '';
         lienInput.value = this.dataset.lien || '';
         dureeOnlineInput.value = this.dataset.dureeOnline || '';
         adresseInput.value = this.dataset.adresse || '';
         salleInput.value = this.dataset.salle || '';
         dureePresentielInput.value = this.dataset.dureePresentiel || '';
-        form.action = 'index.php?r=back/criteres/update';
-        toggleCritereFields();
+        form.action = 'index.php?r=back/sessions/update';
+        toggleSessionFields();
         if (title) {
-          title.textContent = 'Modifier un critere';
+          title.textContent = 'Modifier une session';
         }
       });
     });
@@ -258,15 +274,17 @@
         idInput.value = '';
         nomFormationInput.value = '';
         typeInput.value = '';
+        dateDebutInput.value = '';
+        dateFinInput.value = '';
         lienInput.value = '';
         dureeOnlineInput.value = '';
         adresseInput.value = '';
         salleInput.value = '';
         dureePresentielInput.value = '';
-        form.action = 'index.php?r=back/criteres/store';
-        toggleCritereFields();
+        form.action = 'index.php?r=back/sessions/store';
+        toggleSessionFields();
         if (title) {
-          title.textContent = 'Ajouter un critere';
+          title.textContent = 'Ajouter une session';
         }
       });
     }
@@ -291,13 +309,15 @@
       .join(' ');
   }
 
-  function renderStatsCircles(container, rows, statsField) {
+  function renderStatsCircles(container, rows, statsField, presetLabels) {
     if (!container) {
       return;
     }
 
     const total = rows.length;
-    if (total === 0) {
+    const hasPreset = Array.isArray(presetLabels) && presetLabels.length > 0;
+
+    if (total === 0 && !hasPreset) {
       container.innerHTML = '<p class="page-subtitle">Aucune donnee pour les statistiques.</p>';
       return;
     }
@@ -318,15 +338,33 @@
       }
     });
 
-    const topEntries = Array.from(counts.entries())
-      .sort((a, b) => b[1].count - a[1].count)
-      .slice(0, 6);
+    if (hasPreset) {
+      presetLabels.forEach((label) => {
+        const key = normalizeSearchText(label) || 'non renseigne';
+        if (!counts.has(key)) {
+          counts.set(key, { label, count: 0 });
+        }
+      });
+    }
+
+    let orderedEntries;
+    if (hasPreset) {
+      orderedEntries = presetLabels.map((label) => {
+        const key = normalizeSearchText(label) || 'non renseigne';
+        const stat = counts.get(key);
+        return [key, stat || { label, count: 0 }];
+      });
+    } else {
+      orderedEntries = Array.from(counts.entries())
+        .sort((a, b) => b[1].count - a[1].count)
+        .slice(0, 6);
+    }
 
     const circumference = 251;
-    container.innerHTML = topEntries
+    container.innerHTML = orderedEntries
       .map(([, stat]) => {
         const count = stat.count;
-        const percent = Math.round((count * 100) / total);
+        const percent = total === 0 ? 0 : Math.round((count * 100) / total);
         const offset = circumference - (circumference * percent) / 100;
         return `
           <article class="stats-circle">
@@ -487,7 +525,7 @@
 
       tbody.innerHTML = '';
       visibleRows.forEach((row) => tbody.appendChild(row));
-      renderStatsCircles(statsContainer, visibleRows, config.statsField);
+      renderStatsCircles(statsContainer, visibleRows, config.statsField, config.statsPresetLabels);
     }
 
     searchInput.addEventListener('input', applyTableState);
@@ -501,9 +539,9 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     showFlashAlert('formation-flash-message');
-    showFlashAlert('critere-flash-message');
+    showFlashAlert('session-flash-message');
     bindFormationForm();
-    bindCritereForm();
+    bindSessionForm();
     bindTableEnhancements({
       title: 'Formations',
       tableId: 'formations-table',
@@ -517,17 +555,17 @@
       statsField: 'specialite',
     });
     bindTableEnhancements({
-      title: 'Criteres',
-      tableId: 'criteres-table',
-      searchId: 'criteres-search',
-      sortId: 'criteres-sort',
-      statsId: 'criteres-stats',
-      exportButtonId: 'criteres-word-btn',
+      title: 'Sessions',
+      tableId: 'sessions-table',
+      searchId: 'sessions-search',
+      sortId: 'sessions-sort',
+      statsId: 'sessions-stats',
+      exportButtonId: 'sessions-word-btn',
       logoUrl: '/careerlabb/e-learning/View/assets/img/careerlab-logo.png',
       searchFields: ['name', 'type', 'specialite'],
       sortField: 'name',
-      statsField: 'specialite',
+      statsField: 'type',
+      statsPresetLabels: ['En ligne', 'Présentiel'],
     });
   });
 })();
-

@@ -19,7 +19,7 @@ $active = $active ?? '';
         </div>
         <ul class="back-nav">
           <li><a href="index.php?r=back/formations" class="<?= $active === 'formations' ? 'is-active' : '' ?>">Formations</a></li>
-          <li><a href="index.php?r=back/criteres" class="<?= $active === 'criteres' ? 'is-active' : '' ?>">Criteres</a></li>
+          <li><a href="index.php?r=back/sessions" class="<?= $active === 'sessions' ? 'is-active' : '' ?>">Sessions</a></li>
           <li><a href="/careerlabb/indexF.html">Front Office</a></li>
           <li><a href="/careerlabb/index.html">Main page</a></li>
         </ul>

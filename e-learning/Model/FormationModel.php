@@ -18,9 +18,9 @@ class FormationModel
     public function all(): array
     {
         $statement = $this->db->query(
-            'SELECT nom_formation, specialite, description, date_debut, date_fin, niveau, duree
+            'SELECT nom_formation, specialite, description, niveau, nb_place
              FROM formation
-             ORDER BY date_debut DESC, nom_formation ASC'
+             ORDER BY nom_formation ASC'
         );
 
         return $statement->fetchAll();
@@ -47,17 +47,15 @@ class FormationModel
     public function create(array $data): void
     {
         $statement = $this->db->prepare(
-            'INSERT INTO formation (nom_formation, specialite, description, date_debut, date_fin, niveau, duree)
-             VALUES (:nom_formation, :specialite, :description, :date_debut, :date_fin, :niveau, :duree)'
+            'INSERT INTO formation (nom_formation, specialite, description, niveau, nb_place)
+             VALUES (:nom_formation, :specialite, :description, :niveau, :nb_place)'
         );
         $statement->execute([
             ':nom_formation' => $data['nom_formation'],
             ':specialite' => $data['specialite'],
             ':description' => $data['description'],
-            ':date_debut' => $data['date_debut'],
-            ':date_fin' => $data['date_fin'],
             ':niveau' => $data['niveau'],
-            ':duree' => $data['duree'],
+            ':nb_place' => $data['nb_place'],
         ]);
     }
 
@@ -68,20 +66,16 @@ class FormationModel
              SET nom_formation = :nom_formation,
                  specialite = :specialite,
                  description = :description,
-                 date_debut = :date_debut,
-                 date_fin = :date_fin,
                  niveau = :niveau,
-                 duree = :duree
+                 nb_place = :nb_place
              WHERE nom_formation = :old_nom_formation'
         );
         $statement->execute([
             ':nom_formation' => $data['nom_formation'],
             ':specialite' => $data['specialite'],
             ':description' => $data['description'],
-            ':date_debut' => $data['date_debut'],
-            ':date_fin' => $data['date_fin'],
             ':niveau' => $data['niveau'],
-            ':duree' => $data['duree'],
+            ':nb_place' => $data['nb_place'],
             ':old_nom_formation' => $oldNomFormation,
         ]);
     }
@@ -92,4 +86,3 @@ class FormationModel
         $statement->execute([':nom_formation' => $nomFormation]);
     }
 }
-

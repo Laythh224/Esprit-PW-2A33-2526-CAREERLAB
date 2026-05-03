@@ -72,16 +72,27 @@ class Database
 
         try {
             $formationExists = false;
-            $critereExists = false;
+            $sessionExists = false;
 
             $formationCheck = $connection->query("SHOW TABLES LIKE 'formation'");
             if ($formationCheck !== false && $formationCheck->fetch() !== false) {
                 $formationExists = true;
             }
 
+            $sessionCheck = $connection->query("SHOW TABLES LIKE 'session'");
+            if ($sessionCheck !== false && $sessionCheck->fetch() !== false) {
+                $sessionExists = true;
+            }
+
+            $critereExists = false;
             $critereCheck = $connection->query("SHOW TABLES LIKE 'critere'");
             if ($critereCheck !== false && $critereCheck->fetch() !== false) {
                 $critereExists = true;
+            }
+
+            if (!$sessionExists && $critereExists) {
+                $connection->exec('RENAME TABLE `critere` TO `session`');
+                $sessionExists = true;
             }
 
             if (!$formationExists) {
@@ -90,18 +101,26 @@ class Database
                         nom_formation VARCHAR(150) NOT NULL,
                         specialite VARCHAR(150) NOT NULL,
                         description TEXT NOT NULL,
-                        date_debut DATE NOT NULL,
-                        date_fin DATE NOT NULL,
                         niveau VARCHAR(80) NOT NULL,
-                        duree INT NOT NULL,
+                        nb_place INT NOT NULL,
                         PRIMARY KEY (nom_formation)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
                 );
             }
 
-            if (!$critereExists) {
+            try {
+                self::ensureFormationNbPlaceColumn($connection);
+            } catch (\Throwable $exception) {
+                // Column migration failed; formation queries may error until fixed manually.
+            }
+
+            if ($sessionExists) {
+                self::ensureSessionDateColumns($connection);
+            }
+
+            if (!$sessionExists) {
                 $connection->exec(
-                    "CREATE TABLE critere (
+                    "CREATE TABLE `session` (
                         id INT NOT NULL AUTO_INCREMENT,
                         nom_formation VARCHAR(150) NOT NULL,
                         type ENUM('online', 'presentiel') NOT NULL,
@@ -110,9 +129,11 @@ class Database
                         adresse VARCHAR(255) DEFAULT NULL,
                         salle VARCHAR(120) DEFAULT NULL,
                         duree_presentiel INT DEFAULT NULL,
+                        date_debut DATE NOT NULL,
+                        date_fin DATE NOT NULL,
                         PRIMARY KEY (id),
-                        INDEX idx_critere_formation (nom_formation),
-                        CONSTRAINT fk_critere_formation
+                        INDEX idx_session_formation (nom_formation),
+                        CONSTRAINT fk_session_formation
                             FOREIGN KEY (nom_formation) REFERENCES formation(nom_formation)
                             ON DELETE CASCADE ON UPDATE CASCADE
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
@@ -122,5 +143,58 @@ class Database
             // Keep application running; controllers will surface useful errors if needed.
         }
     }
-}
 
+    private static function ensureSessionDateColumns(PDO $connection): void
+    {
+        $statement = $connection->query(
+            "SELECT COUNT(*) AS c FROM information_schema.columns
+             WHERE table_schema = DATABASE() AND table_name = 'session' AND column_name = 'date_debut'"
+        );
+        if ($statement === false) {
+            return;
+        }
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if ((int) ($row['c'] ?? 0) > 0) {
+            return;
+        }
+
+        $connection->exec(
+            "ALTER TABLE `session`
+             ADD COLUMN date_debut DATE NOT NULL DEFAULT '1970-01-01',
+             ADD COLUMN date_fin DATE NOT NULL DEFAULT '1970-01-02'"
+        );
+    }
+
+    private static function ensureFormationNbPlaceColumn(PDO $connection): void
+    {
+        $formationCheck = $connection->query("SHOW TABLES LIKE 'formation'");
+        if ($formationCheck === false || $formationCheck->fetch() === false) {
+            return;
+        }
+
+        $statement = $connection->query(
+            "SELECT COUNT(*) AS c FROM information_schema.columns
+             WHERE table_schema = DATABASE() AND table_name = 'formation' AND column_name = 'nb_place'"
+        );
+        if ($statement !== false) {
+            $row = $statement->fetch(PDO::FETCH_ASSOC);
+            if ((int) ($row['c'] ?? 0) === 0) {
+                $connection->exec('ALTER TABLE formation ADD COLUMN nb_place INT NOT NULL DEFAULT 1');
+            }
+        }
+
+        foreach (['date_debut', 'date_fin', 'duree'] as $column) {
+            $colStmt = $connection->query(
+                "SELECT COUNT(*) AS c FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = 'formation' AND column_name = " . $connection->quote($column)
+            );
+            if ($colStmt === false) {
+                continue;
+            }
+            $colRow = $colStmt->fetch(PDO::FETCH_ASSOC);
+            if ((int) ($colRow['c'] ?? 0) > 0) {
+                $connection->exec('ALTER TABLE formation DROP COLUMN `' . str_replace('`', '``', $column) . '`');
+            }
+        }
+    }
+}

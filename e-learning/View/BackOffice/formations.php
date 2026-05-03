@@ -33,20 +33,12 @@ require __DIR__ . '/../Layouts/back_header.php';
           <textarea name="description" id="description" required><?= htmlspecialchars((string) ($oldInput['description'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
         </div>
         <div class="form-group">
-          <label for="date_debut">date_debut</label>
-          <input type="date" name="date_debut" id="date_debut" value="<?= htmlspecialchars((string) ($oldInput['date_debut'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required />
-        </div>
-        <div class="form-group">
-          <label for="date_fin">date_fin</label>
-          <input type="date" name="date_fin" id="date_fin" value="<?= htmlspecialchars((string) ($oldInput['date_fin'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required />
-        </div>
-        <div class="form-group">
           <label for="niveau">niveau</label>
           <input type="text" name="niveau" id="niveau" value="<?= htmlspecialchars((string) ($oldInput['niveau'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required />
         </div>
         <div class="form-group">
-          <label for="duree">duree</label>
-          <input type="number" min="1" name="duree" id="duree" value="<?= htmlspecialchars((string) ($oldInput['duree'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required />
+          <label for="nb_place">nb_place</label>
+          <input type="number" min="1" name="nb_place" id="nb_place" value="<?= htmlspecialchars((string) ($oldInput['nb_place'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required />
         </div>
       </div>
       <div class="actions-row">
@@ -79,10 +71,8 @@ require __DIR__ . '/../Layouts/back_header.php';
             <th>nom_formation</th>
             <th>specialite</th>
             <th>description</th>
-            <th>date_debut</th>
-            <th>date_fin</th>
             <th>niveau</th>
-            <th>duree</th>
+            <th>nb_place</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -96,10 +86,8 @@ require __DIR__ . '/../Layouts/back_header.php';
               <td><?= htmlspecialchars($formation['nom_formation'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
               <td><?= htmlspecialchars($formation['specialite'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
               <td><?= htmlspecialchars($formation['description'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
-              <td><?= htmlspecialchars($formation['date_debut'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
-              <td><?= htmlspecialchars($formation['date_fin'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
               <td><?= htmlspecialchars($formation['niveau'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
-              <td><?= (int) ($formation['duree'] ?? 0) ?></td>
+              <td><?= (int) ($formation['nb_place'] ?? 0) ?></td>
               <td>
                 <button
                   type="button"
@@ -107,10 +95,8 @@ require __DIR__ . '/../Layouts/back_header.php';
                   data-nom="<?= htmlspecialchars($formation['nom_formation'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                   data-specialite="<?= htmlspecialchars($formation['specialite'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                   data-description="<?= htmlspecialchars($formation['description'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
-                  data-date-debut="<?= htmlspecialchars($formation['date_debut'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
-                  data-date-fin="<?= htmlspecialchars($formation['date_fin'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                   data-niveau="<?= htmlspecialchars($formation['niveau'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
-                  data-duree="<?= (int) ($formation['duree'] ?? 0) ?>"
+                  data-nb-place="<?= (int) ($formation['nb_place'] ?? 0) ?>"
                 >
                   Modifier
                 </button>
@@ -128,4 +114,3 @@ require __DIR__ . '/../Layouts/back_header.php';
 </div>
 <script src="/careerlabb/e-learning/View/assets/js/back-form-validation.js"></script>
 <?php require __DIR__ . '/../Layouts/back_footer.php'; ?>
-

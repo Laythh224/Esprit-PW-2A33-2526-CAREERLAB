@@ -87,30 +87,10 @@ class FormationController extends BaseController
         $nomFormation = $this->normalizeSpaces($_POST['nom_formation'] ?? '');
         $specialite = $this->normalizeSpaces($_POST['specialite'] ?? '');
         $description = $this->normalizeSpaces($_POST['description'] ?? '');
-        $dateDebut = $this->normalizeSpaces($_POST['date_debut'] ?? '');
-        $dateFin = $this->normalizeSpaces($_POST['date_fin'] ?? '');
         $niveau = $this->normalizeSpaces($_POST['niveau'] ?? '');
-        $duree = (int) ($_POST['duree'] ?? 0);
+        $nbPlace = (int) ($_POST['nb_place'] ?? 0);
 
-        if ($nomFormation === '' || $specialite === '' || $description === '' || $dateDebut === '' || $dateFin === '' || $niveau === '' || $duree <= 0) {
-            return null;
-        }
-
-        if (!$this->isValidDate($dateDebut) || !$this->isValidDate($dateFin)) {
-            return null;
-        }
-
-        $today = new \DateTimeImmutable('today');
-        $startDate = new \DateTimeImmutable($dateDebut);
-        $endDate = new \DateTimeImmutable($dateFin);
-
-        // date_debut cannot be in the past.
-        if ($startDate < $today) {
-            return null;
-        }
-
-        // Must be at least one day apart: date_fin strictly after date_debut.
-        if ($endDate <= $startDate) {
+        if ($nomFormation === '' || $specialite === '' || $description === '' || $niveau === '' || $nbPlace <= 0) {
             return null;
         }
 
@@ -118,10 +98,8 @@ class FormationController extends BaseController
             'nom_formation' => $nomFormation,
             'specialite' => $specialite,
             'description' => $description,
-            'date_debut' => $dateDebut,
-            'date_fin' => $dateFin,
             'niveau' => $niveau,
-            'duree' => $duree,
+            'nb_place' => $nbPlace,
         ];
     }
 
@@ -132,10 +110,8 @@ class FormationController extends BaseController
             'nom_formation' => $this->normalizeSpaces($_POST['nom_formation'] ?? ''),
             'specialite' => $this->normalizeSpaces($_POST['specialite'] ?? ''),
             'description' => $this->normalizeSpaces($_POST['description'] ?? ''),
-            'date_debut' => $this->normalizeSpaces($_POST['date_debut'] ?? ''),
-            'date_fin' => $this->normalizeSpaces($_POST['date_fin'] ?? ''),
             'niveau' => $this->normalizeSpaces($_POST['niveau'] ?? ''),
-            'duree' => (string) ($_POST['duree'] ?? ''),
+            'nb_place' => (string) ($_POST['nb_place'] ?? ''),
         ];
     }
 
@@ -143,11 +119,4 @@ class FormationController extends BaseController
     {
         return trim(preg_replace('/\s+/u', ' ', $value) ?? '');
     }
-
-    private function isValidDate(string $date): bool
-    {
-        $parsed = \DateTimeImmutable::createFromFormat('Y-m-d', $date);
-        return $parsed !== false && $parsed->format('Y-m-d') === $date;
-    }
 }
-

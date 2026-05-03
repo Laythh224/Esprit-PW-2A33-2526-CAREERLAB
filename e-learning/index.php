@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Controller\BackOffice\CritereController as BackCritereController;
 use App\Controller\BackOffice\FormationController as BackFormationController;
+use App\Controller\BackOffice\SessionController as BackSessionController;
 use App\Controller\FrontOffice\FormationController as FrontFormationController;
 use App\Controller\FrontOffice\HomeController as FrontHomeController;
 
@@ -35,7 +35,11 @@ $routeAliases = [
     'front/certifications' => 'front/formations',
     'back/options' => 'back/formations',
     'back/planning' => 'back/formations',
-    'back/planning-option' => 'back/criteres',
+    'back/planning-option' => 'back/sessions',
+    'back/criteres' => 'back/sessions',
+    'back/criteres/store' => 'back/sessions/store',
+    'back/criteres/update' => 'back/sessions/update',
+    'back/criteres/delete' => 'back/sessions/delete',
 ];
 
 if (isset($routeAliases[$route])) {
@@ -52,10 +56,10 @@ $routes = [
     'back/formations/store' => [BackFormationController::class, 'store', ['POST']],
     'back/formations/update' => [BackFormationController::class, 'update', ['POST']],
     'back/formations/delete' => [BackFormationController::class, 'delete', ['POST']],
-    'back/criteres' => [BackCritereController::class, 'index', ['GET']],
-    'back/criteres/store' => [BackCritereController::class, 'store', ['POST']],
-    'back/criteres/update' => [BackCritereController::class, 'update', ['POST']],
-    'back/criteres/delete' => [BackCritereController::class, 'delete', ['POST']],
+    'back/sessions' => [BackSessionController::class, 'index', ['GET']],
+    'back/sessions/store' => [BackSessionController::class, 'store', ['POST']],
+    'back/sessions/update' => [BackSessionController::class, 'update', ['POST']],
+    'back/sessions/delete' => [BackSessionController::class, 'delete', ['POST']],
 ];
 
 if (!isset($routes[$route])) {

@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace App\Controller\FrontOffice;
 
 use App\Controller\BaseController;
-use App\Model\CritereModel;
+use App\Model\SessionModel;
 
 class FormationController extends BaseController
 {
-    private CritereModel $critereModel;
+    private SessionModel $sessionModel;
 
     public function __construct()
     {
-        $this->critereModel = new CritereModel();
+        $this->sessionModel = new SessionModel();
     }
 
     public function index(): void
     {
-        $rawRows = $this->critereModel->byFormation();
+        $rawRows = $this->sessionModel->byFormation();
         $formations = [];
 
         foreach ($rawRows as $row) {
@@ -28,23 +28,23 @@ class FormationController extends BaseController
                     'nom_formation' => $nomFormation,
                     'specialite' => $row['specialite'],
                     'description' => $row['description'],
-                    'date_debut' => $row['date_debut'],
-                    'date_fin' => $row['date_fin'],
                     'niveau' => $row['niveau'],
-                    'duree' => $row['duree'],
-                    'criteres' => [],
+                    'nb_place' => $row['nb_place'],
+                    'sessions' => [],
                 ];
             }
 
-            if ($row['critere_id'] !== null) {
-                $formations[$nomFormation]['criteres'][] = [
-                    'id' => (int) $row['critere_id'],
+            if ($row['session_id'] !== null) {
+                $formations[$nomFormation]['sessions'][] = [
+                    'id' => (int) $row['session_id'],
                     'type' => $row['type'],
                     'lien' => $row['lien'],
                     'duree_online' => $row['duree_online'],
                     'adresse' => $row['adresse'],
                     'salle' => $row['salle'],
                     'duree_presentiel' => $row['duree_presentiel'],
+                    'date_debut' => $row['date_debut'],
+                    'date_fin' => $row['date_fin'],
                 ];
             }
         }
@@ -56,4 +56,3 @@ class FormationController extends BaseController
         ]);
     }
 }
-

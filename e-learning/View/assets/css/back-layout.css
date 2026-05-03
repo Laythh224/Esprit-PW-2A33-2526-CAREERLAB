@@ -211,6 +211,17 @@ table.data-table {
   resize: vertical;
 }
 
+/* Session form: champs online / presentiel selon le type */
+.form-group.js-online-field:not(.is-visible),
+.form-group.js-presentiel-field:not(.is-visible) {
+  display: none !important;
+}
+
+.form-group.js-online-field.is-visible,
+.form-group.js-presentiel-field.is-visible {
+  display: flex;
+}
+
 .actions-row {
   display: flex;
   gap: 0.75rem;
@@ -272,9 +283,22 @@ table.data-table {
 
 .stats-circles {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 0.85rem;
   margin-bottom: 1rem;
+}
+
+/* Deux cartes côte à côte sur desktop (comme la maquette formations) */
+.stats-circles--session-type {
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+  max-width: 420px;
+}
+
+@media (max-width: 520px) {
+  .stats-circles--session-type {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
 }
 
 .stats-circle {

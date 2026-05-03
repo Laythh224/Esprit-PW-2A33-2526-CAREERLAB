@@ -3,7 +3,7 @@ require __DIR__ . '/../Layouts/front_header.php';
 ?>
 <main class="main-wrap">
   <h1 class="page-title">Catalogue des formations</h1>
-  <p class="page-subtitle">Liste des formations et des criteres associes.</p>
+  <p class="page-subtitle">Liste des formations et des sessions associees.</p>
 
   <?php if ($formations === []): ?>
     <div class="card">
@@ -18,30 +18,30 @@ require __DIR__ . '/../Layouts/front_header.php';
           <p>
             <span class="card__meta">specialite: <?= htmlspecialchars($formation['specialite'] ?? '', ENT_QUOTES, 'UTF-8') ?></span>
             <span class="card__meta">description: <?= htmlspecialchars($formation['description'] ?? '', ENT_QUOTES, 'UTF-8') ?></span>
-            <span class="card__meta">date_debut: <?= htmlspecialchars($formation['date_debut'] ?? '', ENT_QUOTES, 'UTF-8') ?></span>
-            <span class="card__meta">date_fin: <?= htmlspecialchars($formation['date_fin'] ?? '', ENT_QUOTES, 'UTF-8') ?></span>
-            <span class="card__meta">duree: <?= (int) ($formation['duree'] ?? 0) ?> jours</span>
+            <span class="card__meta">nb_place: <?= (int) ($formation['nb_place'] ?? 0) ?> places</span>
           </p>
-          <?php if (!empty($formation['criteres'])): ?>
+          <?php if (!empty($formation['sessions'])): ?>
             <ul class="list-resources" style="margin-top: 1rem">
-              <?php foreach ($formation['criteres'] as $critere): ?>
+              <?php foreach ($formation['sessions'] as $session): ?>
                 <li>
                   <div>
-                    <strong>type: <?= htmlspecialchars($critere['type'] ?? '', ENT_QUOTES, 'UTF-8') ?></strong>
-                    <?php if (($critere['type'] ?? '') === 'online'): ?>
-                      <div class="card__meta">lien: <?= htmlspecialchars($critere['lien'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
-                      <div class="card__meta">duree_online: <?= htmlspecialchars((string) ($critere['duree_online'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
+                    <strong>type: <?= htmlspecialchars($session['type'] ?? '', ENT_QUOTES, 'UTF-8') ?></strong>
+                    <div class="card__meta">date_debut: <?= htmlspecialchars((string) ($session['date_debut'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
+                    <div class="card__meta">date_fin: <?= htmlspecialchars((string) ($session['date_fin'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
+                    <?php if (($session['type'] ?? '') === 'online'): ?>
+                      <div class="card__meta">lien: <?= htmlspecialchars($session['lien'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
+                      <div class="card__meta">duree_online: <?= htmlspecialchars((string) ($session['duree_online'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                     <?php else: ?>
-                      <div class="card__meta">adresse: <?= htmlspecialchars($critere['adresse'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
-                      <div class="card__meta">salle: <?= htmlspecialchars($critere['salle'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
-                      <div class="card__meta">duree_presentiel: <?= htmlspecialchars((string) ($critere['duree_presentiel'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
+                      <div class="card__meta">adresse: <?= htmlspecialchars($session['adresse'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
+                      <div class="card__meta">salle: <?= htmlspecialchars($session['salle'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
+                      <div class="card__meta">duree_presentiel: <?= htmlspecialchars((string) ($session['duree_presentiel'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                     <?php endif; ?>
                   </div>
                 </li>
               <?php endforeach; ?>
             </ul>
           <?php else: ?>
-            <p class="card__meta" style="margin-top: 1rem">Aucun critere pour cette formation.</p>
+            <p class="card__meta" style="margin-top: 1rem">Aucune session pour cette formation.</p>
           <?php endif; ?>
         </article>
       <?php endforeach; ?>
@@ -49,4 +49,3 @@ require __DIR__ . '/../Layouts/front_header.php';
   <?php endif; ?>
 </main>
 <?php require __DIR__ . '/../Layouts/front_footer.php'; ?>
-
