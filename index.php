@@ -43,6 +43,10 @@ $routes = [
         'comments' => [ChallengeController::class, 'comments'],
         'commentCreate' => [ChallengeController::class, 'commentCreate'],
         'commentUpvote' => [ChallengeController::class, 'commentUpvote'],
+        'saveBackoffice' => [ChallengeController::class, 'saveBackoffice'],
+        'listBackoffice' => [ChallengeController::class, 'listBackoffice'],
+        'saveCommentBackoffice' => [ChallengeController::class, 'saveCommentBackoffice'],
+        'sendNotification' => [ChallengeController::class, 'sendNotification'],
     ],
 ];
 

@@ -666,10 +666,45 @@
                 </div>
               </div>
             </div>
+            
+            <!-- Notification Modal -->
+            <div class="modal fade" id="notificationModal" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Envoyer une notification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="mb-3">
+                      <label class="form-label" for="notifyType">Type de notification *</label>
+                      <select id="notifyType" class="form-control">
+                        <option value="email">Email</option>
+                        <option value="sms">SMS (Téléphone)</option>
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label" for="notifyContact">Email ou Numéro de téléphone *</label>
+                      <input type="text" id="notifyContact" class="form-control" placeholder="exemple@mail.com ou +33612345678">
+                      <div class="text-danger small" id="notifyContactError"></div>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label" for="notifyMessage">Message personnalisé (optionnel)</label>
+                      <textarea id="notifyMessage" class="form-control" rows="3" placeholder="Votre message..."></textarea>
+                    </div>
+                    <div class="alert alert-info small">
+                      <strong>Info:</strong> La notification inclura le contenu du commentaire sélectionné.
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" id="sendNotificationBtn">Envoyer</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-
-        <footer class="footer">
           <div class="container-fluid d-flex justify-content-between">
             <nav class="pull-left">
               <ul class="nav">
@@ -763,6 +798,8 @@
         let comments = [];
         let commentsTable;
         let commentModal;
+        let notificationModal;
+        let currentCommentForNotification = null;
 
         const challengeKey = "blogChallenges";
         const commentKey = "challengeComments";
@@ -1101,6 +1138,9 @@
               '<button type="button" class="btn btn-sm btn-warning me-1 btn-edit-comment" data-id="' +
               escapeHtml(String(c.id)) +
               '">Modifier</button> ' +
+              '<button type="button" class="btn btn-sm btn-info me-1 btn-notify-comment" data-id="' +
+              escapeHtml(String(c.id)) +
+              '" title="Envoyer notification">Notifier</button> ' +
               '<button type="button" class="btn btn-sm btn-danger btn-del-comment" data-id="' +
               escapeHtml(String(c.id)) +
               '">Supprimer</button>' +
@@ -1196,31 +1236,58 @@
         function saveComment() {
           if (!validateComment()) return;
           const idValue = document.getElementById("commentId").value;
-          const c = {
-            id: idValue ? idValue : "c_" + Date.now() + "_" + Math.random().toString(36).slice(2, 9),
-            challengeId: String(document.getElementById("commentChallengeId").value),
-            body: document.getElementById("commentBody").value.trim(),
-            imageUrl: document.getElementById("commentImageUrl").value.trim(),
-            videoUrl: document.getElementById("commentVideoUrl").value.trim(),
-            createdAt: idValue
-              ? (comments.find(function (x) { return String(x.id) === String(idValue); }) || {}).createdAt || todayISODate()
-              : todayISODate(),
-            upvoteCount: Math.max(0, Number(document.getElementById("commentUpvoteCount").value) || 0),
-            upvotedBy: idValue
-              ? ((comments.find(function (x) { return String(x.id) === String(idValue); }) || {}).upvotedBy || [])
-              : [],
-          };
-          if (idValue) {
-            comments = comments.map(function (x) {
-              return String(x.id) === String(idValue) ? c : x;
-            });
-          } else {
-            comments.push(c);
-          }
-          saveComments();
-          updateStatistics();
-          renderCommentsTable();
-          commentModal.hide();
+          const challengeId = String(document.getElementById("commentChallengeId").value);
+          const body = document.getElementById("commentBody").value.trim();
+          const imageUrl = document.getElementById("commentImageUrl").value.trim();
+          const videoUrl = document.getElementById("commentVideoUrl").value.trim();
+
+          // Save to database via API
+          fetch("../index.php?c=challenge&a=saveCommentBackoffice", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              challenge_id: parseInt(challengeId),
+              body: body,
+              image_url: imageUrl,
+              video_url: videoUrl
+            })
+          })
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (data.ok) {
+              const c = {
+                id: data.item ? data.item.id : ("c_" + Date.now() + "_" + Math.random().toString(36).slice(2, 9)),
+                challengeId: challengeId,
+                body: body,
+                imageUrl: imageUrl,
+                videoUrl: videoUrl,
+                createdAt: idValue
+                  ? (comments.find(function (x) { return String(x.id) === String(idValue); }) || {}).createdAt || todayISODate()
+                  : todayISODate(),
+                upvoteCount: 0,
+                upvotedBy: []
+              };
+              if (idValue) {
+                comments = comments.map(function (x) {
+                  return String(x.id) === String(idValue) ? c : x;
+                });
+              } else {
+                comments.push(c);
+              }
+              saveComments();
+              updateStatistics();
+              renderCommentsTable();
+              commentModal.hide();
+              alert("Commentaire enregistré avec succès!");
+            } else {
+              alert("Erreur: " + (data.message || "Impossible d'enregistrer le commentaire"));
+            }
+          })
+          .catch(function (err) {
+            alert("Erreur réseau: " + err);
+          });
         }
 
         function deleteComment(id) {
@@ -1231,6 +1298,80 @@
           saveComments();
           updateStatistics();
           renderCommentsTable();
+        }
+
+        function openNotificationModal(commentId) {
+          const comment = comments.find(function (c) {
+            return String(c.id) === String(commentId);
+          });
+          if (!comment) {
+            alert("Commentaire introuvable.");
+            return;
+          }
+          currentCommentForNotification = comment;
+          document.getElementById("notifyContact").value = "";
+          document.getElementById("notifyMessage").value = "";
+          document.getElementById("notifyType").value = "email";
+          document.getElementById("notifyContactError").textContent = "";
+          if (!notificationModal) {
+            notificationModal = new (window.bootstrap.Modal || bootstrap.Modal)(document.getElementById("notificationModal"));
+          }
+          notificationModal.show();
+        }
+
+        function sendNotification() {
+          if (!currentCommentForNotification) {
+            alert("Aucun commentaire sélectionné.");
+            return;
+          }
+          const contactField = document.getElementById("notifyContact");
+          const contact = contactField.value.trim();
+          const type = document.getElementById("notifyType").value;
+          const customMessage = document.getElementById("notifyMessage").value.trim();
+          
+          if (!contact) {
+            document.getElementById("notifyContactError").textContent = "Veuillez entrer une adresse email ou un numéro de téléphone.";
+            return;
+          }
+          
+          if (type === "email" && !contact.includes("@")) {
+            document.getElementById("notifyContactError").textContent = "Veuillez entrer une adresse email valide.";
+            return;
+          }
+          
+          if (type === "sms" && !contact.match(/^\+?\d{8,}/)) {
+            document.getElementById("notifyContactError").textContent = "Veuillez entrer un numéro de téléphone valide.";
+            return;
+          }
+          
+          // Send via API
+          fetch("../index.php?c=challenge&a=sendNotification", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              type: type,
+              contact: contact,
+              custom_message: customMessage,
+              comment_id: currentCommentForNotification.id
+            })
+          })
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (data.ok) {
+              alert("Notification " + (type === "email" ? "par email" : "par SMS") + " envoyée avec succès à " + contact + "!");
+              if (notificationModal) {
+                notificationModal.hide();
+              }
+              currentCommentForNotification = null;
+            } else {
+              alert("Erreur: " + (data.message || "Impossible d'envoyer la notification"));
+            }
+          })
+          .catch(function (err) {
+            alert("Erreur réseau: " + err);
+          });
         }
 
         function clearChallengeErrors() {
@@ -1458,6 +1599,9 @@
           commentModal = new bootstrap.Modal(
             document.getElementById("commentModal")
           );
+          notificationModal = new bootstrap.Modal(
+            document.getElementById("notificationModal")
+          );
 
           document
             .getElementById("challengeForm")
@@ -1503,6 +1647,9 @@
             .getElementById("saveCommentBtn")
             .addEventListener("click", saveComment);
           document
+            .getElementById("sendNotificationBtn")
+            .addEventListener("click", sendNotification);
+          document
             .getElementById("commentForm")
             .addEventListener("submit", function (e) {
               e.preventDefault();
@@ -1529,10 +1676,13 @@
             .addEventListener("click", function (e) {
               const editBtn = e.target.closest(".btn-edit-comment");
               const delBtn = e.target.closest(".btn-del-comment");
+              const notifyBtn = e.target.closest(".btn-notify-comment");
               if (editBtn) {
                 openCommentModal(editBtn.getAttribute("data-id"));
               } else if (delBtn) {
                 deleteComment(delBtn.getAttribute("data-id"));
+              } else if (notifyBtn) {
+                openNotificationModal(notifyBtn.getAttribute("data-id"));
               }
             });
         });

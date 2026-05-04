@@ -380,11 +380,11 @@
 <script>
 (function () {
   var CL = window.CareerLab;
-  var CH_KEY = 'blogChallenges';
   var currentQuery = '';
   var commentsCache = {};
   var commentsLoading = {};
   var currentSort = 'date_desc';
+  var challengesCache = null; // loaded from DB API
 
   function escapeHtml(s) {
     if (s == null) return '';
@@ -395,6 +395,16 @@
 
   function getVisitorId() {
     return CL.getVisitorId();
+  }
+
+  function apiListChallenges() {
+    return fetch('index.php?c=challenge&a=listBackoffice', { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); });
+  }
+
+  function apiListPosts() {
+    return fetch('index.php?c=post&a=index', { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); });
   }
 
   function apiGetComments(challengeId) {
@@ -445,36 +455,20 @@
   }
 
   function loadChallenges() {
-    try {
-      var raw = localStorage.getItem(CH_KEY);
-      var list = raw ? JSON.parse(raw) : [];
-      // Auto-sync challenge status from attached post eligibility
-      try {
-        var posts = (CL && CL.loadPostsRaw) ? CL.loadPostsRaw() : [];
-        var changed = false;
-        list = (Array.isArray(list) ? list : []).map(function (ch) {
-          var copy = Object.assign({}, ch);
-          if (!copy.postId) return copy;
-          var p = posts.find(function (x) {
-            return String(x.id) === String(copy.postId);
-          });
-          var req = p ? Math.max(0, Math.floor(Number(p.minUpvotesForChallenge) || 0)) : 0;
-          var up = p ? (Number(p.upvoteCount) || 0) : 0;
-          var nextStatus = up >= req ? 'active' : 'upcoming';
-          if (String(copy.status || '').toLowerCase() !== nextStatus) {
-            copy.status = nextStatus;
-            changed = true;
-          }
-          return copy;
-        });
-        if (changed) {
-          localStorage.setItem(CH_KEY, JSON.stringify(list));
-        }
-      } catch (e2) {}
-      return list;
-    } catch (e) {
-      return [];
-    }
+    // Returns cached list (populated by fetchAndRender)
+    return Array.isArray(challengesCache) ? challengesCache : [];
+  }
+
+  function fetchAndRender() {
+    apiListChallenges()
+      .then(function (res) {
+        challengesCache = (res && res.ok && Array.isArray(res.items)) ? res.items : [];
+        renderChallenges();
+      })
+      .catch(function () {
+        challengesCache = [];
+        renderChallenges();
+      });
   }
 
   function getParams() {
@@ -483,10 +477,6 @@
     } catch (e) {
       return new URLSearchParams('');
     }
-  }
-
-  function saveChallenges(list) {
-    localStorage.setItem(CH_KEY, JSON.stringify(list));
   }
 
   function isActiveStatus(s) {
@@ -517,9 +507,10 @@
   }
 
   function renderCommentsBlock(challengeId) {
-    var vid = getVisitorId();
     var cacheKey = String(challengeId);
-    if (commentsCache[cacheKey] === undefined) {
+    var comments = commentsCache[cacheKey];
+
+    if (comments === undefined) {
       ensureCommentsLoaded(challengeId);
       return (
         '<div class="mt-4 pt-3 border-top">' +
@@ -528,32 +519,31 @@
         '</div>'
       );
     }
-    var comments = commentsCache[cacheKey];
+
+    var visitorId = getVisitorId();
     var listHtml = '';
     if (!comments.length) {
       listHtml = '<p class="text-muted small mb-3">Aucun commentaire pour le moment. Soyez le premier à réagir.</p>';
     } else {
       listHtml = comments.map(function (c) {
-        var upvoted = Array.isArray(c.upvotedBy) && c.upvotedBy.indexOf(vid) !== -1;
-        var cnt = Number(c.upvoteCount) || 0;
+        var cnt = Number(c.upvote_count) || 0;
         var media = '';
-        if (c.imageUrl && CL.isValidUrl(c.imageUrl)) {
-          media += '<img src="' + escapeHtml(c.imageUrl) + '" class="img-fluid rounded mt-2" alt="" style="max-height:260px;">';
+        if (c.image_url && CL.isValidUrl(c.image_url)) {
+          media += '<img src="' + escapeHtml(c.image_url) + '" class="img-fluid rounded mt-2" alt="" style="max-height:260px;">';
         }
-        var emb = youtubeEmbedUrl(c.videoUrl);
+        var emb = youtubeEmbedUrl(c.video_url);
         if (emb) {
           media += '<div class="ratio ratio-16x9 mt-2"><iframe src="' + escapeHtml(emb) + '" title="Vidéo" allowfullscreen></iframe></div>';
-        } else if (c.videoUrl && CL.isValidUrl(c.videoUrl)) {
-          media += '<p class="mt-2 mb-0"><a href="' + escapeHtml(c.videoUrl) + '" target="_blank" rel="noopener">Ouvrir la vidéo</a></p>';
+        } else if (c.video_url && CL.isValidUrl(c.video_url)) {
+          media += '<p class="mt-2 mb-0"><a href="' + escapeHtml(c.video_url) + '" target="_blank" rel="noopener">Ouvrir la vidéo</a></p>';
         }
         return (
           '<div class="border rounded p-3 mb-3 bg-white">' +
           '<p class="mb-2">' + escapeHtml(c.body).replace(/\n/g, '<br>') + '</p>' + media +
           '<div class="d-flex align-items-center flex-wrap gap-2 mt-2">' +
-          '<button type="button" class="btn btn-sm btn-outline-primary js-comment-upvote"' + (upvoted ? ' disabled' : '') + ' data-comment-id="' + escapeHtml(String(c.id)) + '">' +
+          '<button type="button" class="btn btn-sm btn-outline-primary js-comment-upvote" data-comment-id="' + escapeHtml(String(c.id)) + '">' +
           '<i class="bi bi-hand-thumbs-up me-1"></i> Soutenir <span class="badge bg-light text-primary">' + cnt + '</span></button>' +
-          (upvoted ? '<span class="small text-muted">Vous avez soutenu ce commentaire.</span>' : '') +
-          '<span class="small text-muted ms-auto">' + escapeHtml(c.createdAt || '') + '</span>' +
+          '<span class="small text-muted ms-auto">' + escapeHtml(c.created_at || '') + '</span>' +
           '</div></div>'
         );
       }).join('');
@@ -563,9 +553,17 @@
       '<h5 class="mb-3">Commentaires</h5>' +
       '<div class="challenge-comments-list mb-3">' + listHtml + '</div>' +
       '<form class="challenge-comment-form bg-white border rounded p-3" data-challenge-id="' + escapeHtml(String(challengeId)) + '">' +
-      '<label class="form-label small mb-1">Votre message <span class="text-muted">(10 à 500 mots)</span></label>' +
+      '<label class="form-label small mb-1">Votre message <span class="text-muted">(10 à 5000 caractères)</span></label>' +
       '<textarea class="form-control mb-2" name="body" rows="4" required placeholder="Décrivez votre réponse au défi…"></textarea>' +
-      '<label class="form-label small mb-1">URL d’image <span class="text-muted">(optionnel)</span></label>' +
+      '<label class="form-label small mb-1">URL d\'image <span class="text-muted">(optionnel)</span></label>' +
+      '<input type="url" class="form-control mb-2" name="imageUrl" placeholder="https://…" autocomplete="off">' +
+      '<label class="form-label small mb-1">URL vidéo <span class="text-muted">(optionnel, ex. YouTube)</span></label>' +
+      '<input type="url" class="form-control mb-2" name="videoUrl" placeholder="https://…" autocomplete="off">' +
+      '<div class="text-danger small comment-form-error mb-2"></div>' +
+      '<button type="submit" class="btn btn-primary btn-sm">Publier le commentaire</button>' +
+      '</form></div>'
+    );
+  }ass="form-label small mb-1">URL d’image <span class="text-muted">(optionnel)</span></label>' +
       '<input type="url" class="form-control mb-2" name="imageUrl" placeholder="https://…" autocomplete="off">' +
       '<label class="form-label small mb-1">URL vidéo <span class="text-muted">(optionnel, ex. YouTube)</span></label>' +
       '<input type="url" class="form-control mb-2" name="videoUrl" placeholder="https://…" autocomplete="off">' +
@@ -826,16 +824,26 @@
     if (!root) return;
     var params = getParams();
     var onlyId = params.get('challengeId');
-    var list = loadChallenges();
-
+    
+    // If a specific challenge is requested, load from database API
     if (onlyId) {
-      var requested = list.filter(function (c) { return String(c.id) === String(onlyId); });
-      if (requested.length) {
-        list = requested;
-      } else {
-        onlyId = null;
-      }
+      fetch('index.php?c=challenge&a=comments&challenge_id=' + encodeURIComponent(String(onlyId)))
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (!data.ok) {
+            root.innerHTML = '<div class="alert alert-danger">Défi introuvable.</div>';
+            return;
+          }
+          // Challenge found, render it with comments
+          renderSingleChallenge(onlyId, data.items || []);
+        })
+        .catch(function (err) {
+          root.innerHTML = '<div class="alert alert-danger">Erreur lors du chargement du défi: ' + escapeHtml(err) + '</div>';
+        });
+      return;
     }
+
+    var list = loadChallenges();
     if (!onlyId) {
       list = list
         .filter(function (c) { return isVisibleStatus(c.status); })

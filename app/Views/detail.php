@@ -493,7 +493,7 @@
       '<h5 class="mb-3">Commentaires</h5>' +
       '<div class="challenge-comments-list mb-3">' + listHtml + '</div>' +
       '<form class="challenge-comment-form bg-white border rounded p-3" data-challenge-id="' + escapeHtml(String(challengeId)) + '">' +
-      '<label class="form-label small mb-1">Votre message <span class="text-muted">(10 à 500 mots)</span></label>' +
+      '<label class="form-label small mb-1">Votre message <span class="text-muted">(10 à 5000 caractères)</span></label>' +
       '<textarea class="form-control mb-2" name="body" rows="4" required placeholder="Décrivez votre réponse au défi…"></textarea>' +
       '<label class="form-label small mb-1">URL d’image <span class="text-muted">(optionnel)</span></label>' +
       '<input type="url" class="form-control mb-2" name="imageUrl" placeholder="https://…" autocomplete="off">' +
