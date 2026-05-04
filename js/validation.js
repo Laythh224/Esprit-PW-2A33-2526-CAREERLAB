@@ -69,3 +69,4 @@ function validateQuizForm(totalQuestions) {
 
     return true;
 }
+

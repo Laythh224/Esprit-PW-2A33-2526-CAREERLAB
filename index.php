@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Controllers\SiteController;
 use App\Controllers\QuestionController;
 use App\Controllers\FrontController;
+use App\Controllers\TestController;
 use App\Core\Router;
 use App\Models\SiteModel;
 
@@ -30,6 +31,7 @@ $router = new Router();
 $siteController = new SiteController(new SiteModel());
 $questionController = new QuestionController();
 $frontController = new FrontController();
+$testController = new TestController();
 
 $router->get('', [$siteController, 'home']);
 $router->get('home', [$siteController, 'home']);
@@ -46,11 +48,17 @@ foreach ($siteController->getLegacyPages() as $legacyRoute => $_legacyFile) {
 $router->get('about', [$siteController, 'about']);
 $router->get('services', [$siteController, 'services']);
 $router->get('team', [$frontController, 'afficherMetiers']);
+$router->post('team', [$testController, 'create']);
+$router->get('team/test', [$testController, 'show']);
+$router->post('team/test/submit', [$testController, 'submit']);
 $router->get('contact', [$siteController, 'contact']);
 $router->post('contact/submit', [$siteController, 'submitContact']);
 
 $router->get('evaluation', [$questionController, 'evaluation']);
 $router->post('evaluation', [$questionController, 'evaluation']);
+
+$router->get('test', [$testController, 'create']);
+$router->post('test', [$testController, 'create']);
 
 $router->get('team/quiz', [$frontController, 'afficherQuiz']);
 $router->post('team/submit', [$frontController, 'traiterQuiz']);

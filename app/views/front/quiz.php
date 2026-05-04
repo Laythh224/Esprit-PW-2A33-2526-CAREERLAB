@@ -71,13 +71,23 @@ $e = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES, '
                 <form method="post" action="index.php?route=team/submit" onsubmit="return validateQuizForm(<?php echo count($questions); ?>);" novalidate>
                     <input type="hidden" name="id_metier" value="<?php echo $idMetier; ?>">
 
+                    <!-- Language switcher -->
+                    <div class="mb-3">
+                        <div class="btn-group" role="group" aria-label="Lang switch">
+                            <button type="button" class="btn btn-outline-secondary lang-switch" data-lang="fr">FR</button>
+                            <button type="button" class="btn btn-outline-secondary lang-switch" data-lang="en">EN</button>
+                            <button type="button" class="btn btn-outline-secondary lang-switch" data-lang="ar">AR</button>
+                            <button type="button" class="btn btn-outline-info test-endpoint">Test API</button>
+                        </div>
+                    </div>
+
                     <?php foreach ($questions as $index => $pack): ?>
                         <?php
                             $question = $pack['question'];
                             $reponses = $pack['reponses'];
                             $questionId = (int) ($question->getId() ?? 0);
                         ?>
-                        <section class="card quiz-question-card mb-3 question-card">
+                        <section class="card quiz-question-card mb-3 question-card" data-question-id="<?php echo $questionId; ?>">
                             <div class="card-body p-4">
                                 <h2 class="h5 mb-3"><?php echo ((int) $index + 1) . '. ' . $e($question->getTexte()); ?></h2>
 
@@ -87,7 +97,7 @@ $e = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES, '
                                         $radioId = 'q' . $questionId . '_r' . $reponseId;
                                         $isChecked = isset($selectedAnswers[$questionId]) && (int) $selectedAnswers[$questionId] === $reponseId;
                                     ?>
-                                    <div class="form-check mb-2">
+                                    <div class="form-check mb-2" data-answer-id="<?php echo $reponseId; ?>">
                                         <input
                                             class="form-check-input"
                                             type="radio"
@@ -113,5 +123,112 @@ $e = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES, '
     </div>
 
     <script src="js/validation.js"></script>
+    <script>
+        // Language switcher: robust fetch translations and apply to DOM
+        document.addEventListener('DOMContentLoaded', function () {
+            var switchButtons = document.querySelectorAll('.lang-switch');
+            var form = document.querySelector('form');
+            if (!form) return;
+
+            function getQuestionIds(){
+                var secs = Array.from(document.querySelectorAll('[data-question-id]'));
+                console.log('[Debug] Found sections with data-question-id:', secs.length);
+                var ids = secs.map(function(s){ 
+                    var id = s.getAttribute('data-question-id');
+                    console.log('[Debug] Section ID:', id, 'Section:', s);
+                    return id; 
+                }).filter(Boolean);
+                console.log('[Debug] Final question IDs:', ids);
+                return ids;
+            }
+
+            async function fetchTranslations(lang){
+                var ids = getQuestionIds();
+                if (ids.length === 0) return;
+
+                // build URL - try multiple approaches
+                var baseUrl = window.location.origin;
+                var url = baseUrl + '/translations/get_translations.php?lang=' + lang + '&ids=' + ids.join(',');
+                console.log('[i18n] Testing URL:', url);
+
+                try{
+                    console.log('[i18n] fetching translations', url.toString());
+                    console.log('[i18n] question IDs:', ids);
+                    console.log('[i18n] target language:', lang);
+                    
+                    var res = await fetch(url.toString(), { credentials: 'same-origin' });
+                    if (!res.ok) {
+                        var txt = await res.text();
+                        console.error('[i18n] HTTP error:', res.status, txt);
+                        throw new Error('Network error: ' + res.status + ' ' + txt);
+                    }
+                    var data = await res.json();
+                    console.log('[i18n] response data:', data);
+                    if (data.error) {
+                        console.error('[i18n] API error:', data.error);
+                        throw new Error(data.error);
+                    }
+
+                    // apply direction and lang
+                    if (data.dir) document.documentElement.dir = data.dir;
+                    if (data.lang) document.documentElement.lang = data.lang;
+
+                    var sections = Array.from(document.querySelectorAll('[data-question-id]'));
+                    sections.forEach(function(section, idx){
+                        var qid = section.getAttribute('data-question-id');
+                        var qText = (data.questions && data.questions[qid]) ? data.questions[qid] : null;
+                        var h = section.querySelector('h2');
+                        if (h && qText !== null) h.innerText = (idx + 1) + '. ' + qText;
+
+                        // answers for this question
+                        var answersMap = (data.reponses && data.reponses[qid]) ? data.reponses[qid] : {};
+                        var items = section.querySelectorAll('[data-answer-id]');
+                        items.forEach(function(item){
+                            var rid = item.getAttribute('data-answer-id');
+                            var label = item.querySelector('label');
+                            if (label && answersMap && answersMap[rid]) {
+                                label.innerText = answersMap[rid];
+                            }
+                        });
+                    });
+
+                    localStorage.setItem('lang', data.lang || lang);
+                    console.log('[i18n] translations applied for lang=', data.lang || lang);
+                }catch(err){
+                    console.error('[i18n] Translation fetch failed', err);
+                }
+            }
+
+            switchButtons.forEach(function(b){
+                b.addEventListener('click', function(){
+                    var lang = b.getAttribute('data-lang');
+                    fetchTranslations(lang);
+                });
+            });
+
+            // Test endpoint button
+            var testBtn = document.querySelector('.test-endpoint');
+            if (testBtn) {
+                testBtn.addEventListener('click', function(){
+                    var testUrl = window.location.origin + '/translations/get_translations.php?test=1&lang=en&ids=2,3,4';
+                    console.log('[Test] Testing endpoint:', testUrl);
+                    fetch(testUrl)
+                        .then(function(res){ return res.json(); })
+                        .then(function(data){ 
+                            console.log('[Test] Endpoint response:', data);
+                            alert('Endpoint test: ' + JSON.stringify(data, null, 2));
+                        })
+                        .catch(function(err){ 
+                            console.error('[Test] Endpoint error:', err);
+                            alert('Endpoint error: ' + err.message);
+                        });
+                });
+            }
+
+            // apply saved language on load
+            var saved = localStorage.getItem('lang');
+            if (saved) fetchTranslations(saved);
+        });
+    </script>
 </body>
 </html>

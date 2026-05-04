@@ -1426,7 +1426,6 @@
         "fas fa-procedures",
         "fas fa-project-diagram",
         "fas fa-puzzle-piece",
-        "fas fa-qrcode",
         "fas fa-question",
         "fas fa-question-circle",
         "fas fa-quidditch",

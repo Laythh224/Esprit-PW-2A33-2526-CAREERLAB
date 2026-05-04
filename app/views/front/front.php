@@ -30,6 +30,19 @@ $e = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES, '
             border-radius: 14px;
             box-shadow: 0 12px 32px rgba(9, 30, 62, 0.16);
         }
+
+        .js-field-error {
+            margin-top: 6px;
+            color: #dc3545;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .form-control.is-js-invalid,
+        .form-select.is-js-invalid {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.12);
+        }
     </style>
 </head>
 <body>
@@ -77,25 +90,58 @@ $e = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES, '
                     <?php if ($metiers === []): ?>
                         <div class="alert alert-warning mb-0" role="alert">Aucun metier disponible.</div>
                     <?php else: ?>
-                        <form method="get" action="index.php" onsubmit="return validateMetierSelection();" novalidate>
-                            <input type="hidden" name="route" value="team/quiz">
-                            <div class="mb-4">
-                                <label for="id_metier" class="form-label fw-bold">Choix du metier</label>
-                                <select class="form-select form-select-lg" id="id_metier" name="id_metier" required>
-                                    <option value="">-- Selectionner un metier --</option>
-                                    <?php foreach ($metiers as $metier): ?>
-                                        <?php
-                                            $idMetier = (int) ($metier['id_metier'] ?? 0);
-                                            $totalQuestions = (int) ($metier['total_questions'] ?? 0);
-                                        ?>
-                                        <option value="<?php echo $idMetier; ?>">
-                                            Metier <?php echo $idMetier; ?> (<?php echo $totalQuestions; ?> question(s))
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
+                        <div class="card">
+                            <div class="card-body">
+                                <?php if (!empty($errors)): ?>
+                                    <div class="alert alert-danger">
+                                        <ul class="mb-0">
+                                            <?php foreach ($errors as $error): ?>
+                                                <li><?php echo $e((string) $error); ?></li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if (!empty($_GET['msg']) && $_GET['msg'] === 'added'): ?>
+                                    <div class="alert alert-success">Test créé avec succès.</div>
+                                <?php endif; ?>
+
+                                <h5 class="mb-3">Créer un test</h5>
+                                <form id="createTestForm" method="post" action="index.php?route=team" novalidate>
+                                    <div class="mb-2">
+                                        <label for="date" class="form-label">Date</label>
+                                        <input class="form-control" type="date" id="date" name="date" value="<?php echo $e((string) ($date ?? '')); ?>">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label for="user_name" class="form-label">Votre nom</label>
+                                        <input class="form-control" type="text" id="user_name" name="user_name" value="<?php echo $e((string) ($_POST['user_name'] ?? '')); ?>" placeholder="Prénom Nom">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label for="user_email" class="form-label">Email</label>
+                                        <input class="form-control" type="email" id="user_email" name="user_email" value="<?php echo $e((string) ($_POST['user_email'] ?? '')); ?>" placeholder="email@example.com">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label for="heure_debut" class="form-label">Heure de début</label>
+                                        <input class="form-control" type="time" id="heure_debut" name="heure_debut" value="<?php echo $e((string) ($heure_debut ?? '')); ?>">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label for="heure_fin" class="form-label">Heure de fin</label>
+                                        <input class="form-control" type="time" id="heure_fin" name="heure_fin" value="<?php echo $e((string) ($heure_fin ?? '')); ?>">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="id_metier_test" class="form-label">Metier</label>
+                                        <select class="form-select" id="id_metier_test" name="id_metier">
+                                            <option value="">-- Selectionner un metier --</option>
+                                            <?php foreach ($metiers as $metier): ?>
+                                                <?php $mid = (int) ($metier['id_metier'] ?? 0); ?>
+                                                <option value="<?php echo $mid; ?>" <?php echo (isset($idMetierInput) && (int)$idMetierInput === $mid) ? 'selected' : ''; ?>>Metier <?php echo $mid; ?> (<?php echo (int) ($metier['total_questions'] ?? 0); ?>)</option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <button class="btn btn-success w-100" type="submit">Créer le test</button>
+                                </form>
                             </div>
-                            <button class="btn btn-primary btn-lg w-100" type="submit">Commencer le quiz</button>
-                        </form>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
