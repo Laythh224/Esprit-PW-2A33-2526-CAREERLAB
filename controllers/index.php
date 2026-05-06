@@ -1,18 +1,18 @@
 <?php
 session_start();
 
-$vendorAutoload = __DIR__ . '/../vendor/autoload.php';
+$vendorAutoload = __DIR__ . '/vendor/autoload.php';
 if (is_file($vendorAutoload)) {
     require_once $vendorAutoload;
 }
 
+require_once __DIR__ . '/../models/Metier.php';
+require_once __DIR__ . '/MetiersController.php';
+
 spl_autoload_register(function (string $className): void {
     $paths = [
-        __DIR__ . '/../models/' . $className . '.php',
         __DIR__ . '/../Models/' . $className . '.php',
         __DIR__ . '/' . $className . '.php',
-        __DIR__ . '/../controllers/' . $className . '.php',
-        __DIR__ . '/../Controllers/' . $className . '.php',
     ];
 
     foreach ($paths as $path) {
@@ -91,12 +91,12 @@ $viewRoutes = [
     'gestion-utilisateurs' => __DIR__ . '/../Views/components/utilisateur.php',
     'gestion-formateurs' => __DIR__ . '/../Views/components/formateur.php',
     'gestion-entreprises' => __DIR__ . '/../Views/components/entreprise.php',
-    'profile' => __DIR__ . '/../Views/profile.view.php',
 ];
 
 $homeRoutes = [
     'accueil' => 'index',
     'main' => 'index',
+    'contact' => 'index',
     'creer-compte' => 'creerCompte',
 ];
 
@@ -104,17 +104,46 @@ try {
     $database = new Database();
     $conn = $database->connection();
 
-    $cvUploadService = new CvUploadService();
-    $userModel = new UserModel($conn, $cvUploadService);
-    $formateurModel = new FormateurModel($conn, $cvUploadService);
-    $entrepriseModel = new EntrepriseModel($conn);
+    $cvUploadService = new CvService();
+    $signupValidator = new SignupValidator($conn, null, $cvUploadService);
+    $userModel = new UserModel($conn, $cvUploadService, $signupValidator);
+    $formateurModel = new FormateurModel($conn, $cvUploadService, $signupValidator);
+    $entrepriseModel = new EntrepriseModel($conn, $signupValidator);
 
     $homeController = new HomeController();
+    $metiersController = new MetiersController($conn);
     $authController = new AuthController($userModel, $formateurModel, $entrepriseModel);
     $dashboardController = new DashboardController($userModel, $formateurModel, $entrepriseModel);
-    $userController = new UserController($userModel);
-    $formateurController = new FormateurController($formateurModel);
-    $entrepriseController = new EntrepriseController($entrepriseModel);
+
+    $mailConfig = require __DIR__ . '/mail.php';
+    $mailer = new Mailer($mailConfig);
+    $emailService = new EmailService($conn, $mailer);
+    $passwordResetModel = new PasswordResetModel($conn);
+    $passwordService = new PasswordService($passwordResetModel, $mailer);
+    $emailVerificationController = new EmailVerificationController(
+        $emailService,
+        $userModel,
+        $formateurModel,
+        $entrepriseModel
+    );
+    $passwordResetController = new PasswordResetController($passwordService);
+    
+    // Système de réinitialisation avec TOKEN (nouveau)
+    $tokenResetModel = new TokenResetModel($conn);
+    $baseUrl = 'http://' . $_SERVER['HTTP_HOST'] . '/mon_site';
+    $tokenService = new TokenService($tokenResetModel, $mailer, $baseUrl, 15, 5);
+    $tokenResetController = new TokenResetController($tokenService);
+
+    $aiConfig = require __DIR__ . '/ai.php';
+    $aiSupportModel = new AiSupportRequestModel($conn);
+    $aiService = new AiService($aiConfig);
+    $aiSupportController = new AiSupportController($aiSupportModel, $aiService);
+
+    $userController = new UserController($userModel, $emailService, $mailer);
+    $formateurController = new FormateurController($formateurModel, $emailService, $mailer);
+    $entrepriseController = new EntrepriseController($entrepriseModel, $emailService, $mailer);
+    $signupValidationController = new SignupValidationController($signupValidator);
+    $profileController = new ProfileController($userModel, $formateurModel, $entrepriseModel, $passwordService);
 
     // Nouvelles entités de jointure
     $inscEntrepriseModel = new InscriptionEntrepriseModel($conn);
@@ -130,6 +159,14 @@ try {
     $controllerRoutes = [
         'login' => [$authController, 'login'],
         'logout' => [$authController, 'logout'],
+        'verifier-email' => [$emailVerificationController, 'verify'],
+        'mot-de-passe-oublie' => [$tokenResetController, 'requestReset'],
+        'mot-de-passe-oublie-code' => [$tokenResetController, 'requestReset'],
+        'mot-de-passe-oublie-reset' => [$tokenResetController, 'requestReset'],
+        // Nouvelles routes avec TOKEN (remplacent le système de code)
+        'reset-password-request' => [$tokenResetController, 'requestReset'],
+        'reset-password-sent' => [$tokenResetController, 'resetPasswordSent'],
+        'reset-password' => [$tokenResetController, 'resetPassword'],
         'dashboard' => [$dashboardController, 'index'],
         'utilisateur' => [$userController, 'signup'],
         'formateur' => [$formateurController, 'signup'],
@@ -137,12 +174,18 @@ try {
         'api-utilisateurs' => [$userController, 'api'],
         'api-formateurs' => [$formateurController, 'api'],
         'api-entreprises' => [$entrepriseController, 'api'],
+        'api-check-email' => [$signupValidationController, 'emailAvailability'],
+        'ai-support' => [$aiSupportController, 'submit'],
+        'demandes-ia' => [$aiSupportController, 'adminIndex'],
         // Routes Actions des Inscriptions (Affiche la vue et gère le POST CRUD)
         'inscription-entreprise' => [$inscEntrepriseController, 'index'],
         'inscription-formateur' => [$inscFormateurController, 'index'],
         // Route pour les statistiques avancées
         'statistiques' => [$statisticsController, 'index'],
         'dashboard-admin' => [$statisticsController, 'dashboardAdmin'],
+        'api-statistiques' => [$statisticsController, 'api'],
+        'profile' => [$profileController, 'index'],
+        'metiers' => [$metiersController, 'index'],
     ];
 
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $page)) {
@@ -172,4 +215,3 @@ try {
         $renderHtmlError($statusCode, 'Erreur serveur', 'Une erreur inattendue est survenue. Veuillez reessayer plus tard.');
     }
 }
-

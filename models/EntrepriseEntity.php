@@ -3,6 +3,17 @@
 class EntrepriseEntity
 {
     private string $nom = '';
+    private string $cv = '';
+        public function getCv(): string
+        {
+            return $this->cv;
+        }
+
+        public function setCv(string $cv): self
+        {
+            $this->cv = $cv;
+            return $this;
+        }
     private string $email = '';
     private string $telephone = '';
     private string $adresse = '';

@@ -41,12 +41,13 @@
                                     <input type="hidden" id="editId" />
                                     <div class="mb-3"><label for="nom" class="form-label">Nom</label><input id="nom" class="form-control" type="text" /><div class="small text-danger d-block" id="nomError"></div></div>
                                     <div class="mb-3"><label for="prenom" class="form-label">Prenom</label><input id="prenom" class="form-control" type="text" /><div class="small text-danger d-block" id="prenomError"></div></div>
+                                    <div class="mb-3"><label for="sexe" class="form-label">Sexe</label><select id="sexe" class="form-select"><option value="" selected disabled>Choisir le sexe</option><option value="homme">Homme</option><option value="femme">Femme</option></select><div class="small text-danger d-block" id="sexeError"></div></div>
                                     <div class="mb-3"><label for="email" class="form-label">Email</label><input id="email" class="form-control" type="text" /><div class="small text-danger d-block" id="emailError"></div></div>
                                     <div class="mb-3"><label for="telephone" class="form-label">Telephone</label><input id="telephone" class="form-control" type="text" /><div class="small text-danger d-block" id="telephoneError"></div></div>
                                     <div class="mb-3"><label for="specialite" class="form-label">Specialite</label><input id="specialite" class="form-control" type="text" /><div class="small text-danger d-block" id="specialiteError"></div></div>
                                     <div class="mb-3"><label for="diplomes" class="form-label">Diplomes</label><input id="diplomes" class="form-control" type="text" /><div class="small text-danger d-block" id="diplomesError"></div></div>
                                     <div class="mb-3"><label for="experience" class="form-label">Experience</label><textarea id="experience" class="form-control" rows="3"></textarea><div class="small text-danger d-block" id="experienceError"></div></div>
-                                    <div class="mb-3"><label for="password" class="form-label">Mot de passe (obligatoire a la creation)</label><input id="password" class="form-control" type="password" /><div class="small text-danger d-block" id="passwordError"></div></div>
+                                    <div class="mb-3"><label for="password" class="form-label">Mot de passe (obligatoire a la creation)</label><div class="input-group"><input id="password" class="form-control" type="password" /><button class="btn btn-outline-secondary" type="button" data-toggle-password data-toggle-target="password">👁️</button></div><div class="small text-danger d-block" id="passwordError"></div></div>
                                     <div class="d-flex gap-2">
                                         <button class="btn btn-primary" type="submit">Enregistrer</button>
                                         <button class="btn btn-outline-secondary" type="button" id="cancelBtn">Annuler</button>
@@ -61,11 +62,23 @@
                         <div class="card">
                             <div class="card-body">
                                 <div class="table-responsive">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="mb-0">Statistique formateurs</h5>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <select id="verificationFilter" class="form-select form-select-sm" style="width: 180px;">
+                                                <option value="all">Tous les comptes</option>
+                                                <option value="verified">Vérifiés</option>
+                                                <option value="unverified">Non vérifiés</option>
+                                            </select>
+                                            <span class="badge bg-primary" id="trainersCountBadge">0 formateur</span>
+                                        </div>
+                                    </div>
                                     <table class="table table-striped align-middle">
                                         <thead>
                                             <tr>
                                                 <th>Nom complet</th>
                                                 <th>Email</th>
+                                                <th>Sexe</th>
                                                 <th>Telephone</th>
                                                 <th>Specialite</th>
                                                 <th>Diplomes</th>
@@ -87,6 +100,7 @@
     <script src="views/assets/js/popper.min.js"></script>
     <script src="views/assets/js/bootstrap.min.js"></script>
     <script src="views/assets/js/kaiadmin.min.js"></script>
+    <script src="views/assets/js/password-toggle.js"></script>
     <script>
         const API_URL = "index.php?page=api-formateurs";
         let trainers = [];
@@ -95,6 +109,7 @@
         const editId = document.getElementById("editId");
         const nomInput = document.getElementById("nom");
         const prenomInput = document.getElementById("prenom");
+        const sexeInput = document.getElementById("sexe");
         const emailInput = document.getElementById("email");
         const telephoneInput = document.getElementById("telephone");
         const specialiteInput = document.getElementById("specialite");
@@ -104,10 +119,14 @@
         const cancelBtn = document.getElementById("cancelBtn");
         const message = document.getElementById("message");
         const trainersBody = document.getElementById("trainersBody");
+        const trainersCountBadge = document.getElementById("trainersCountBadge");
+        const verificationFilterSelect = document.getElementById("verificationFilter");
         const formTitle = document.getElementById("formTitle");
+        let verificationFilter = "all";
         const fieldErrors = {
             nom: document.getElementById("nomError"),
             prenom: document.getElementById("prenomError"),
+            sexe: document.getElementById("sexeError"),
             email: document.getElementById("emailError"),
             telephone: document.getElementById("telephoneError"),
             specialite: document.getElementById("specialiteError"),
@@ -118,6 +137,7 @@
         const fieldInputs = {
             nom: nomInput,
             prenom: prenomInput,
+            sexe: sexeInput,
             email: emailInput,
             telephone: telephoneInput,
             specialite: specialiteInput,
@@ -135,6 +155,14 @@
         function showMessage(text, type) {
             message.textContent = text;
             message.className = type === "ok" ? "mt-3 mb-0 small text-success" : "mt-3 mb-0 small text-danger";
+        }
+
+        function getApiUrl() {
+            const url = new URL(API_URL, window.location.href);
+            if (verificationFilter !== "all") {
+                url.searchParams.set("verified", verificationFilter);
+            }
+            return url.toString();
         }
 
         function isValidEmail(email) {
@@ -171,21 +199,32 @@
         }
 
         function renderTable() {
+            if (trainersCountBadge) {
+                const totalTrainers = trainers.length;
+                trainersCountBadge.textContent = totalTrainers + (totalTrainers > 1 ? " formateurs" : " formateur");
+            }
+
             trainersBody.innerHTML = "";
             if (trainers.length === 0) {
-                trainersBody.innerHTML = "<tr><td colspan='6' class='text-center text-muted'>Aucun formateur.</td></tr>";
+                trainersBody.innerHTML = "<tr><td colspan='7' class='text-center text-muted'>Aucun formateur.</td></tr>";
                 return;
             }
 
             trainers.forEach((u) => {
+                const isVerified = Number(u.verified) === 1;
+                const verifiedBadge = isVerified ? " <span class='badge bg-primary' title='Compte vérifié'>✔</span>" : "";
+                const verificationActionLabel = isVerified ? "Retirer vérification" : "Vérifier le compte";
+                const verificationActionValue = isVerified ? "0" : "1";
                 const tr = document.createElement("tr");
                 tr.innerHTML = ""
-                    + "<td>" + escapeHtml((u.prenom || "") + " " + (u.nom || "")) + "</td>"
+                    + "<td>" + escapeHtml((u.prenom || "") + " " + (u.nom || "")) + verifiedBadge + "</td>"
                     + "<td>" + escapeHtml(u.email || "") + "</td>"
+                    + "<td>" + escapeHtml(u.sexe || "-") + "</td>"
                     + "<td>" + escapeHtml(u.telephone || "-") + "</td>"
                     + "<td>" + escapeHtml(u.specialite || "-") + "</td>"
                     + "<td>" + escapeHtml(u.diplomes || "-") + "</td>"
                     + "<td>"
+                    + "<button class='btn btn-sm btn-" + (isVerified ? "outline-warning" : "outline-success") + " me-1' data-action='toggle-verification' data-id='" + u.id + "' data-verified='" + verificationActionValue + "'>" + verificationActionLabel + "</button>"
                     + "<button class='btn btn-sm btn-outline-primary me-1' data-action='edit' data-id='" + u.id + "'>Modifier</button>"
                     + "<button class='btn btn-sm btn-outline-danger' data-action='delete' data-id='" + u.id + "'>Supprimer</button>"
                     + "</td>";
@@ -194,7 +233,7 @@
         }
 
         async function fetchTrainers() {
-            const res = await fetch(API_URL);
+            const res = await fetch(getApiUrl());
             const data = await res.json();
             if (!data.ok) {
                 throw new Error(data.message || "Impossible de charger les formateurs.");
@@ -216,6 +255,13 @@
             return data;
         }
 
+        verificationFilterSelect.addEventListener("change", function () {
+            verificationFilter = this.value;
+            fetchTrainers().catch(function (error) {
+                showMessage(error.message, "error");
+            });
+        });
+
         trainerForm.addEventListener("submit", async function (event) {
             event.preventDefault();
             clearFieldErrors();
@@ -228,6 +274,13 @@
             }
             if (!prenomInput.value.trim()) {
                 setFieldError("prenom", "Le prenom est obligatoire.");
+                hasError = true;
+            }
+            if (!sexeInput.value.trim()) {
+                setFieldError("sexe", "Le sexe est obligatoire.");
+                hasError = true;
+            } else if (!["homme", "femme"].includes(sexeInput.value.trim().toLowerCase())) {
+                setFieldError("sexe", "Sexe invalide.");
                 hasError = true;
             }
             if (!emailInput.value.trim()) {
@@ -253,6 +306,7 @@
             const payload = {
                 nom: nomInput.value.trim(),
                 prenom: prenomInput.value.trim(),
+                sexe: sexeInput.value.trim().toLowerCase(),
                 email: emailInput.value.trim(),
                 telephone: telephoneInput.value.trim(),
                 specialite: specialiteInput.value.trim(),
@@ -302,6 +356,7 @@
                 editId.value = String(trainer.id);
                 nomInput.value = trainer.nom || "";
                 prenomInput.value = trainer.prenom || "";
+                sexeInput.value = (trainer.sexe || "").toLowerCase();
                 emailInput.value = trainer.email || "";
                 telephoneInput.value = trainer.telephone || "";
                 specialiteInput.value = trainer.specialite || "";
@@ -324,6 +379,19 @@
                     if (String(id) === editId.value) {
                         resetForm();
                     }
+                    await fetchTrainers();
+                } catch (error) {
+                    showMessage(error.message, "error");
+                }
+                return;
+            }
+
+            if (action === "toggle-verification") {
+                const verified = button.getAttribute("data-verified") === "1";
+
+                try {
+                    await sendAction({ action: "toggleVerification", id: id, verified: verified });
+                    showMessage(verified ? "Compte vérifié." : "Vérification retirée.", "ok");
                     await fetchTrainers();
                 } catch (error) {
                     showMessage(error.message, "error");

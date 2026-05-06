@@ -1,11 +1,12 @@
 <?php
 $activeAccountPage = $activeAccountPage ?? '';
+$pathPrefix = (strpos($_SERVER['SCRIPT_NAME'], 'startup2-1.0.0') !== false) ? '../' : '';
 ?>
 <div class="sidebar sidebar-style-2" data-background-color="dark">
     <div class="sidebar-logo">
         <div class="logo-header" data-background-color="dark">
-            <a href="index.php?r=admin&view=dashboard" class="logo">
-                <img src="views/assets/img/image_2026-04-11_005109464-removebg-preview.png" alt="CareerLab" class="navbar-brand" style="height: 40px;" />
+            <a href="<?php echo $pathPrefix; ?>index.php?r=admin&view=dashboard" class="logo">
+                <img src="<?php echo $pathPrefix; ?>views/assets/img/image_2026-04-11_005109464-removebg-preview.png" alt="CareerLab" class="navbar-brand" style="height: 40px;" />
             </a>
             <div class="nav-toggle">
                 <button class="btn btn-toggle toggle-sidebar"><i class="gg-menu-right"></i></button>
@@ -26,7 +27,7 @@ $activeAccountPage = $activeAccountPage ?? '';
                     <div class="collapse <?php echo $activeAccountPage === 'dashboard' ? 'show' : ''; ?>" id="dashboard">
                         <ul class="nav nav-collapse">
                             <li class="<?php echo $activeAccountPage === 'dashboard' ? 'active' : ''; ?>">
-                                <a href="index.php?r=admin&view=dashboard">
+                                <a href="<?php echo $pathPrefix; ?>index.php?r=admin&view=dashboard">
                                     <span class="sub-item">Dashboard</span>
                                 </a>
                             </li>
@@ -50,26 +51,55 @@ $activeAccountPage = $activeAccountPage ?? '';
                     <div class="collapse <?php echo in_array($activeAccountPage, ['utilisateur', 'formateur', 'entreprise', 'inscription-entreprise', 'inscription-formateur']) ? 'show' : ''; ?>" id="base">
                         <ul class="nav nav-collapse">
                             <li class="<?php echo $activeAccountPage === 'utilisateur' ? 'active' : ''; ?>">
-                                <a href="index.php?page=gestion-utilisateurs"><span class="sub-item">Comptes Utilisateur</span></a>
+                                <a href="<?php echo $pathPrefix; ?>index.php?page=gestion-utilisateurs"><span class="sub-item">Comptes Utilisateur</span></a>
                             </li>
                             <li class="<?php echo $activeAccountPage === 'formateur' ? 'active' : ''; ?>">
-                                <a href="index.php?page=gestion-formateurs"><span class="sub-item">Comptes Formateur</span></a>
+                                <a href="<?php echo $pathPrefix; ?>index.php?page=gestion-formateurs"><span class="sub-item">Comptes Formateur</span></a>
                             </li>
                             <li class="<?php echo $activeAccountPage === 'entreprise' ? 'active' : ''; ?>">
-                                <a href="index.php?page=gestion-entreprises"><span class="sub-item">Comptes Entreprise</span></a>
+                                <a href="<?php echo $pathPrefix; ?>index.php?page=gestion-entreprises"><span class="sub-item">Comptes Entreprise</span></a>
                             </li>
                             <li class="<?php echo $activeAccountPage === 'inscription-entreprise' ? 'active' : ''; ?>">
-                                <a href="index.php?page=inscription-entreprise"><span class="sub-item">Inscriptions Entreprises</span></a>
+                                <a href="<?php echo $pathPrefix; ?>index.php?page=inscription-entreprise"><span class="sub-item">Inscriptions Entreprises</span></a>
                             </li>
                             <li class="<?php echo $activeAccountPage === 'inscription-formateur' ? 'active' : ''; ?>">
-                                <a href="index.php?page=inscription-formateur"><span class="sub-item">Inscriptions Formateurs</span></a>
+                                <a href="<?php echo $pathPrefix; ?>index.php?page=inscription-formateur"><span class="sub-item">Inscriptions Formateurs</span></a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item <?php echo $activeAccountPage === 'demandes-ia' ? 'active' : ''; ?>">
+                    <a href="<?php echo $pathPrefix; ?>index.php?page=demandes-ia">
+                        <i class="fas fa-robot"></i>
+                        <p>Demandes IA</p>
+                    </a>
+                </li>
+
+                <li class="nav-item <?php echo $activeAccountPage === 'metiers' ? 'active submenu' : ''; ?>">
+                    <a data-bs-toggle="collapse" href="#metiersSub" class="<?php echo $activeAccountPage === 'metiers' ? '' : 'collapsed'; ?>" aria-expanded="<?php echo $activeAccountPage === 'metiers' ? 'true' : 'false'; ?>">
+                        <i class="fas fa-briefcase"></i>
+                        <p>Gestion Métiers</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse <?php echo $activeAccountPage === 'metiers' ? 'show' : ''; ?>" id="metiersSub">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="<?php echo $pathPrefix; ?>startup2-1.0.0/index.php?action=admin_metiers">
+                                    <span class="sub-item">Liste des Métiers</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php echo $pathPrefix; ?>startup2-1.0.0/index.php?action=admin_categories">
+                                    <span class="sub-item">Catégories</span>
+                                </a>
                             </li>
                         </ul>
                     </div>
                 </li>
 
                 <li class="nav-item">
-                    <a href="index.php?r=main">
+                    <a href="<?php echo $pathPrefix; ?>index.php?r=main">
                         <i class="fas fa-globe"></i>
                         <p>Front</p>
                     </a>

@@ -8,13 +8,14 @@ if (!defined('BASE_URL')) define('BASE_URL', '/mon_site/');
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Créer un compte Utilisateur</title>
+  <title>Creer un compte Utilisateur</title>
   <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/plugins.min.css">
   <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/kaiadmin.min.css">
+  <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/form-auth-ui.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.css"/>
 </head>
-<body>
+<body class="auth-page">
     <div class="container py-5">
         <div class="row justify-content-center mb-4">
             <div class="col-auto text-center">
@@ -30,76 +31,96 @@ if (!defined('BASE_URL')) define('BASE_URL', '/mon_site/');
                         <h4 class="mb-0">Inscription Utilisateur</h4>
                     </div>
                     <div class="card-body">
-                        <form method="POST" enctype="multipart/form-data" novalidate data-phone-form>
+                        <?php if (!empty($serverError)): ?>
+                            <div class="alert alert-danger"><?= htmlspecialchars($serverError, ENT_QUOTES, 'UTF-8') ?></div>
+                        <?php endif; ?>
+
+                        <form method="POST" enctype="multipart/form-data" novalidate data-signup-form data-form-type="utilisateur">
                             <div class="mb-3">
                                 <label for="nom" class="form-label">Nom</label>
-                                <input class="form-control <?php echo ($fieldErrors['nom'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="nom" name="nom" placeholder="Votre nom" value="<?php echo htmlspecialchars((string) ($old['nom'] ?? '')); ?>" />
-                                <div class="small text-danger d-block" id="nomError"><?php echo htmlspecialchars((string) ($fieldErrors['nom'] ?? '')); ?></div>
+                                <input class="form-control <?= ($fieldErrors['nom'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="nom" name="nom" placeholder="Votre nom" value="<?= htmlspecialchars((string) ($old['nom'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+                                <div class="small text-danger d-block" id="nomError"><?= htmlspecialchars((string) ($fieldErrors['nom'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <div class="mb-3">
-                                <label for="prenom" class="form-label">Prénom</label>
-                                <input class="form-control <?php echo ($fieldErrors['prenom'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="prenom" name="prenom" placeholder="Votre prénom" value="<?php echo htmlspecialchars((string) ($old['prenom'] ?? '')); ?>" />
-                                <div class="small text-danger d-block" id="prenomError"><?php echo htmlspecialchars((string) ($fieldErrors['prenom'] ?? '')); ?></div>
+                                <label for="prenom" class="form-label">Prenom</label>
+                                <input class="form-control <?= ($fieldErrors['prenom'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="prenom" name="prenom" placeholder="Votre prenom" value="<?= htmlspecialchars((string) ($old['prenom'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+                                <div class="small text-danger d-block" id="prenomError"><?= htmlspecialchars((string) ($fieldErrors['prenom'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="sexe" class="form-label">Sexe</label>
+                                <select class="form-select <?= ($fieldErrors['sexe'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="sexe" name="sexe">
+                                    <option value="" <?= ($old['sexe'] ?? '') === '' ? 'selected' : '' ?> disabled>Choisir le sexe</option>
+                                    <option value="homme" <?= ($old['sexe'] ?? '') === 'homme' ? 'selected' : '' ?>>Homme</option>
+                                    <option value="femme" <?= ($old['sexe'] ?? '') === 'femme' ? 'selected' : '' ?>>Femme</option>
+                                </select>
+                                <div class="small text-danger d-block" id="sexeError"><?= htmlspecialchars((string) ($fieldErrors['sexe'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email</label>
-                                <input class="form-control <?php echo ($fieldErrors['email'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="email" name="email" placeholder="votre@email.com" value="<?php echo htmlspecialchars((string) ($old['email'] ?? '')); ?>" />
-                                <div class="small text-danger d-block" id="emailError"><?php echo htmlspecialchars((string) ($fieldErrors['email'] ?? '')); ?></div>
+                                <input type="email" class="form-control <?= ($fieldErrors['email'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="email" name="email" placeholder="votre@email.com" value="<?= htmlspecialchars((string) ($old['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+                                <div class="small text-danger d-block" id="emailError"><?= htmlspecialchars((string) ($fieldErrors['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
-                            <div class="mb-3">
-                                <div class="mb-1">
-                                  <label for="phone" class="form-label">Numéro de téléphone</label>
-                                </div>
-                                <div class="mb-3">
-                                  <input id="phone" name="phone" class="form-control">
-                                </div>
-                                <input type="hidden" id="full_phone" name="full_phone">
+                            <div class="mb-3 phone-field">
+                                <label for="telephone" class="form-label">Numero de telephone</label>
+                                <input type="tel" id="telephone" name="telephone_display" class="form-control <?= ($fieldErrors['telephone'] ?? '') !== '' ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars((string) ($old['telephone'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="+216 98 123 456" autocomplete="tel" inputmode="tel" data-phone-visible>
+                                <input type="hidden" id="telephoneFull" name="telephone" value="<?= htmlspecialchars((string) ($old['telephone'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" data-phone-hidden>
+                                <small class="phone-hint">Saisissez votre numero avec l'indicatif pays.</small>
+                                <div class="small text-danger d-block" id="telephoneError"><?= htmlspecialchars((string) ($fieldErrors['telephone'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <div class="mb-3">
                                 <label for="password" class="form-label">Mot de passe</label>
-                                <input class="form-control <?php echo ($fieldErrors['password'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="password" name="password" placeholder="********" value="<?php echo htmlspecialchars((string) ($old['password'] ?? '')); ?>" />
-                                <div class="small text-danger d-block" id="passwordError"><?php echo htmlspecialchars((string) ($fieldErrors['password'] ?? '')); ?></div>
+                                <div class="input-group">
+                                    <input type="password" class="form-control <?= ($fieldErrors['password'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="password" name="password" placeholder="********" value="<?= htmlspecialchars((string) ($old['password'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+                                    <button class="btn btn-outline-secondary" type="button" data-toggle-password data-toggle-target="password">
+                                        👁️
+                                    </button>
+                                </div>
+                                <div class="small text-danger d-block" id="passwordError"><?= htmlspecialchars((string) ($fieldErrors['password'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <div class="mb-3">
                                 <label for="confirmPassword" class="form-label">Confirmer le mot de passe</label>
-                                <input class="form-control <?php echo ($fieldErrors['confirm_password'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="confirmPassword" name="confirm_password" placeholder="********" value="<?php echo htmlspecialchars((string) ($old['confirm_password'] ?? '')); ?>" />
-                                <div class="small text-danger d-block" id="confirmPasswordError"><?php echo htmlspecialchars((string) ($fieldErrors['confirm_password'] ?? '')); ?></div>
+                                <div class="input-group">
+                                    <input type="password" class="form-control <?= ($fieldErrors['confirm_password'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="confirmPassword" name="confirm_password" placeholder="********" value="<?= htmlspecialchars((string) ($old['confirm_password'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+                                    <button class="btn btn-outline-secondary" type="button" data-toggle-password data-toggle-target="confirmPassword">
+                                        👁️
+                                    </button>
+                                </div>
+                                <div class="small text-danger d-block" id="confirmPasswordError"><?= htmlspecialchars((string) ($fieldErrors['confirm_password'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <hr />
-                            <h6 class="mb-3">Informations académiques / professionnelles</h6>
+                            <h6 class="mb-3">Informations academiques / professionnelles</h6>
                             <div class="mb-3">
-                                <label for="niveauEtude" class="form-label">Niveau d'étude</label>
-                                <select class="form-select <?php echo ($fieldErrors['niveau'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="niveauEtude" name="niveau">
-                                    <option value="" <?php echo ($old['niveau'] ?? '') === '' ? 'selected' : ''; ?> disabled>Choisissez un niveau</option>
-                                    <option value="Bac" <?php echo ($old['niveau'] ?? '') === 'Bac' ? 'selected' : ''; ?>>Bac</option>
-                                    <option value="Licence" <?php echo ($old['niveau'] ?? '') === 'Licence' ? 'selected' : ''; ?>>Licence</option>
-                                    <option value="Master" <?php echo ($old['niveau'] ?? '') === 'Master' ? 'selected' : ''; ?>>Master</option>
-                                    <option value="Ingénieur" <?php echo ($old['niveau'] ?? '') === 'Ingénieur' ? 'selected' : ''; ?>>Ingénieur</option>
+                                <label for="niveauEtude" class="form-label">Niveau d'etude</label>
+                                <select class="form-select <?= ($fieldErrors['niveau'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="niveauEtude" name="niveau">
+                                    <option value="" <?= ($old['niveau'] ?? '') === '' ? 'selected' : '' ?> disabled>Choisissez un niveau</option>
+                                    <option value="Bac" <?= ($old['niveau'] ?? '') === 'Bac' ? 'selected' : '' ?>>Bac</option>
+                                    <option value="Licence" <?= ($old['niveau'] ?? '') === 'Licence' ? 'selected' : '' ?>>Licence</option>
+                                    <option value="Master" <?= ($old['niveau'] ?? '') === 'Master' ? 'selected' : '' ?>>Master</option>
+                                    <option value="Ingenieur" <?= ($old['niveau'] ?? '') === 'Ingenieur' ? 'selected' : '' ?>>Ingenieur</option>
                                 </select>
-                                <div class="small text-danger d-block" id="niveauEtudeError"><?php echo htmlspecialchars((string) ($fieldErrors['niveau'] ?? '')); ?></div>
+                                <div class="small text-danger d-block" id="niveauEtudeError"><?= htmlspecialchars((string) ($fieldErrors['niveau'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <div class="mb-3">
                                 <label for="domaine" class="form-label">Domaine</label>
-                                <select class="form-select <?php echo ($fieldErrors['domaine'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="domaine" name="domaine">
-                                    <option value="" <?php echo ($old['domaine'] ?? '') === '' ? 'selected' : ''; ?> disabled>Choisissez un domaine</option>
-                                    <option value="Informatique" <?php echo ($old['domaine'] ?? '') === 'Informatique' ? 'selected' : ''; ?>>Informatique</option>
-                                    <option value="Marketing" <?php echo ($old['domaine'] ?? '') === 'Marketing' ? 'selected' : ''; ?>>Marketing</option>
-                                    <option value="Finance" <?php echo ($old['domaine'] ?? '') === 'Finance' ? 'selected' : ''; ?>>Finance</option>
-                                    <option value="Ressources humaines" <?php echo ($old['domaine'] ?? '') === 'Ressources humaines' ? 'selected' : ''; ?>>Ressources humaines</option>
-                                    <option value="Autre" <?php echo ($old['domaine'] ?? '') === 'Autre' ? 'selected' : ''; ?>>Autre</option>
+                                <select class="form-select <?= ($fieldErrors['domaine'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="domaine" name="domaine">
+                                    <option value="" <?= ($old['domaine'] ?? '') === '' ? 'selected' : '' ?> disabled>Choisissez un domaine</option>
+                                    <option value="Informatique" <?= ($old['domaine'] ?? '') === 'Informatique' ? 'selected' : '' ?>>Informatique</option>
+                                    <option value="Marketing" <?= ($old['domaine'] ?? '') === 'Marketing' ? 'selected' : '' ?>>Marketing</option>
+                                    <option value="Finance" <?= ($old['domaine'] ?? '') === 'Finance' ? 'selected' : '' ?>>Finance</option>
+                                    <option value="Ressources humaines" <?= ($old['domaine'] ?? '') === 'Ressources humaines' ? 'selected' : '' ?>>Ressources humaines</option>
+                                    <option value="Autre" <?= ($old['domaine'] ?? '') === 'Autre' ? 'selected' : '' ?>>Autre</option>
                                 </select>
-                                <div class="small text-danger d-block" id="domaineError"><?php echo htmlspecialchars((string) ($fieldErrors['domaine'] ?? '')); ?></div>
+                                <div class="small text-danger d-block" id="domaineError"><?= htmlspecialchars((string) ($fieldErrors['domaine'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <div class="mb-3">
-                                <label for="competences" class="form-label">Compétences</label>
-                                <textarea class="form-control" id="competences" name="competences" rows="3" placeholder="Ex: C, Java, HTML"><?php echo htmlspecialchars((string) ($old['competences'] ?? '')); ?></textarea>
+                                <label for="competences" class="form-label">Competences</label>
+                                <textarea class="form-control" id="competences" name="competences" rows="3" placeholder="Ex : C, Java, HTML"><?= htmlspecialchars((string) ($old['competences'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
                             </div>
                             <div class="mb-3">
                                 <label for="cv" class="form-label">CV (PDF)</label>
-                                <input class="form-control <?php echo ($fieldErrors['cv'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="cv" name="cv" accept="application/pdf,.pdf" />
-                                <div class="small text-danger d-block" id="cvError"><?php echo htmlspecialchars((string) ($fieldErrors['cv'] ?? '')); ?></div>
+                                <input type="file" class="form-control <?= ($fieldErrors['cv'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="cv" name="cv" accept="application/pdf,.pdf" />
+                                <div class="small text-danger d-block" id="cvError"><?= htmlspecialchars((string) ($fieldErrors['cv'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
-                            <div id="formMessage" class="alert d-none" role="alert"></div>
                             <div class="d-grid">
                                 <button type="submit" name="submit" class="btn btn-primary">S'inscrire</button>
                             </div>
@@ -117,137 +138,20 @@ if (!defined('BASE_URL')) define('BASE_URL', '/mon_site/');
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"></script>
     <script>
-      const input = document.querySelector("#phone");
-      const hiddenInput = document.querySelector("#full_phone");
-      const iti = window.intlTelInput(input, {
-        initialCountry: "tn",
-        preferredCountries: ["tn", "fr", "us"],
-        separateDialCode: true,
-        utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"
-      });
-      input.addEventListener('input', function() {
-        hiddenInput.value = iti.getNumber();
-      });
-      input.addEventListener('countrychange', function() {
-        hiddenInput.value = iti.getNumber();
-      });
-    </script>
-    <script>
       (function () {
-        const form = document.querySelector("form");
-        const nomInput = document.getElementById("nom");
-        const prenomInput = document.getElementById("prenom");
-        const emailInput = document.getElementById("email");
-        const telephoneInput = document.getElementById("telephone");
-        const passwordInput = document.getElementById("password");
-        const confirmPasswordInput = document.getElementById("confirmPassword");
-        const niveauEtudeInput = document.getElementById("niveauEtude");
-        const domaineInput = document.getElementById("domaine");
-        const cvInput = document.getElementById("cv");
-        const message = document.getElementById("formMessage");
-        const fieldErrors = {
-          nom: document.getElementById("nomError"),
-          prenom: document.getElementById("prenomError"),
-          email: document.getElementById("emailError"),
-          telephone: document.getElementById("telephoneError"),
-          password: document.getElementById("passwordError"),
-          confirmPassword: document.getElementById("confirmPasswordError"),
-          niveauEtude: document.getElementById("niveauEtudeError"),
-          domaine: document.getElementById("domaineError"),
-          cv: document.getElementById("cvError"),
-        };
-        const fieldInputs = {
-          nom: nomInput,
-          prenom: prenomInput,
-          email: emailInput,
-          telephone: telephoneInput,
-          password: passwordInput,
-          confirmPassword: confirmPasswordInput,
-          niveauEtude: niveauEtudeInput,
-          domaine: domaineInput,
-          cv: cvInput,
-        };
-
-        function clearFieldErrors() {
-          Object.entries(fieldErrors).forEach(([key, element]) => {
-            if (element) {
-              element.textContent = "";
-            }
-            const input = fieldInputs[key];
-            if (input) {
-              input.classList.remove("is-invalid");
-            }
-          });
+        const input = document.querySelector("#telephone");
+        if (!input || !window.intlTelInput) {
+          return;
         }
 
-        function setFieldError(key, text) {
-          const error = fieldErrors[key];
-          const input = fieldInputs[key];
-          if (error) {
-            error.textContent = text;
-          }
-          if (input) {
-            input.classList.add("is-invalid");
-          }
-        }
-
-        function showMessage(text, type) {
-          message.className = "alert alert-" + type;
-          message.textContent = text;
-          message.classList.remove("d-none");
-        }
-
-        form.addEventListener("submit", function (event) {
-          clearFieldErrors();
-          let hasError = false;
-
-          if (!nomInput.value.trim()) { setFieldError("nom", "Le nom est obligatoire."); hasError = true; }
-          if (!prenomInput.value.trim()) { setFieldError("prenom", "Le prénom est obligatoire."); hasError = true; }
-          if (!emailInput.value.trim()) { setFieldError("email", "L'email est obligatoire."); hasError = true; }
-          else if (!emailInput.checkValidity()) { setFieldError("email", "Veuillez saisir une adresse email valide."); hasError = true; }
-          if (!telephoneInput.value.trim()) { setFieldError("telephone", "Le téléphone est obligatoire."); hasError = true; }
-          else if (window.PhoneInputEnhancer) {
-            const phoneValidation = window.PhoneInputEnhancer.validateField(form, true);
-            if (!phoneValidation.isValid) {
-              setFieldError("telephone", phoneValidation.message);
-              hasError = true;
-            }
-          }
-          if (!passwordInput.value) { setFieldError("password", "Le mot de passe est obligatoire."); hasError = true; }
-          if (!confirmPasswordInput.value) { setFieldError("confirmPassword", "La confirmation du mot de passe est obligatoire."); hasError = true; }
-          if (!niveauEtudeInput.value) { setFieldError("niveauEtude", "Le niveau d'étude est obligatoire."); hasError = true; }
-          if (!domaineInput.value) { setFieldError("domaine", "Le domaine est obligatoire."); hasError = true; }
-
-          const cvFile = cvInput.files[0];
-          if (!cvFile) {
-            setFieldError("cv", "Le CV est obligatoire.");
-            hasError = true;
-          } else if (!cvFile.name.toLowerCase().endsWith(".pdf")) {
-            setFieldError("cv", "Le CV doit être au format PDF.");
-            hasError = true;
-          }
-
-          if (passwordInput.value && confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
-            setFieldError("confirmPassword", "Le mot de passe et la confirmation doivent être identiques.");
-            hasError = true;
-          }
-
-          if (hasError) {
-            event.preventDefault();
-            showMessage("Les champs en rouge doivent être corrigés.", "danger");
-            return;
-          }
-
-          if (!form.checkValidity()) {
-            event.preventDefault();
-            showMessage("Veuillez vérifier les champs du formulaire.", "danger");
-            return;
-          }
-
-          showMessage("Inscription en cours...", "success");
+        window.intlTelInput(input, {
+          initialCountry: "tn",
+          preferredCountries: ["tn", "fr", "us"],
+          utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"
         });
       })();
     </script>
+    <script src="<?= BASE_URL ?>Views/assets/js/password-toggle.js"></script>
+    <script src="<?= BASE_URL ?>Views/assets/js/signup-validation.js"></script>
 </body>
 </html>
-

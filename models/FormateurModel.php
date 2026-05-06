@@ -3,20 +3,65 @@
 class FormateurModel
 {
     private PDO $conn;
-    private CvUploadService $cvUploadService;
+    private CvService $cvUploadService;
+    private SignupValidator $signupValidator;
 
-    public function __construct(PDO $conn, ?CvUploadService $cvUploadService = null)
+    public function __construct(PDO $conn, ?CvService $cvUploadService = null, ?SignupValidator $signupValidator = null)
     {
         $this->conn = $conn;
-        $this->cvUploadService = $cvUploadService ?? new CvUploadService();
+        $this->cvUploadService = $cvUploadService ?? new CvService();
+        $this->signupValidator = $signupValidator ?? new SignupValidator($conn, null, $this->cvUploadService);
     }
 
-    public function all(): array
+    public function all(?string $verificationFilter = null): array
     {
-        $stmt = $this->conn->prepare('SELECT id, nom, prenom, email, telephone, specialite, diplomes, experience FROM formateur ORDER BY id DESC');
+        $sql = 'SELECT id, nom, prenom, sexe, email, telephone, specialite, diplomes, experience, verified, verified_at, verified_by FROM formateur';
+
+        if ($verificationFilter === 'verified') {
+            $sql .= ' WHERE verified = 1';
+        } elseif ($verificationFilter === 'unverified') {
+            $sql .= ' WHERE verified = 0';
+        }
+
+        $sql .= ' ORDER BY id DESC';
+
+        $stmt = $this->conn->prepare($sql);
         $stmt->execute();
 
         return $stmt->fetchAll() ?: [];
+    }
+
+    public function findById(int $id): ?array
+    {
+        $stmt = $this->conn->prepare('SELECT * FROM formateur WHERE id = ? LIMIT 1');
+        $stmt->execute([$id]);
+        $account = $stmt->fetch();
+
+        return $account !== false ? $account : null;
+    }
+
+    public function updateVerificationStatus(int $id, bool $verified, ?int $adminId = null): bool
+    {
+        if ($id <= 0) {
+            return false;
+        }
+
+        if ($verified) {
+            $stmt = $this->conn->prepare('UPDATE formateur SET verified = 1, verified_at = NOW(), verified_by = ? WHERE id = ?');
+            return $stmt->execute([$adminId, $id]);
+        }
+
+        $stmt = $this->conn->prepare('UPDATE formateur SET verified = 0, verified_at = NULL, verified_by = NULL WHERE id = ?');
+        return $stmt->execute([$id]);
+    }
+
+    public function logVerificationChange(int $accountId, ?int $adminId, bool $previousVerified, bool $newVerified): void
+    {
+        $stmt = $this->conn->prepare(
+            'INSERT INTO account_verification_logs (account_type, account_id, admin_id, previous_verified, new_verified, created_at)
+             VALUES (?, ?, ?, ?, ?, NOW())'
+        );
+        $stmt->execute(['formateur', $accountId, $adminId, $previousVerified ? 1 : 0, $newVerified ? 1 : 0]);
     }
 
     public function count(): int
@@ -41,119 +86,29 @@ class FormateurModel
         $entity = $this->hydrateSignupEntity($post);
         $errors = $this->validateSignup($entity, $files);
 
-        if ($this->hasValidationErrors($errors)) {
-            throw new RuntimeException($this->firstValidationError($errors));
+        if ($this->signupValidator->hasErrors($errors)) {
+            throw new RuntimeException($this->signupValidator->firstError($errors));
         }
 
-        $this->registerFromEntity($entity, $files);
+        $data = $this->prepareRegistrationData($entity, $files);
+        $this->create($data);
     }
 
     public function validateSignup(FormateurEntity $entity, array $files): array
     {
-        $errors = [
-            'nom' => '',
-            'prenom' => '',
-            'email' => '',
-            'telephone' => '',
-            'password' => '',
-            'confirm_password' => '',
-            'specialite' => '',
-            'diplomes' => '',
-            'experience' => '',
-            'cv' => '',
-        ];
-
-        if ($entity->getNom() === '') {
-            $errors['nom'] = 'Le nom est obligatoire.';
-        }
-        if ($entity->getPrenom() === '') {
-            $errors['prenom'] = 'Le prenom est obligatoire.';
-        }
-        if ($entity->getEmail() === '') {
-            $errors['email'] = "L'email est obligatoire.";
-        } elseif (!filter_var($entity->getEmail(), FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = 'Veuillez saisir une adresse email valide.';
-        } elseif ($this->emailExistsInAnyAccount($entity->getEmail())) {
-            $errors['email'] = 'Cet email est deja utilise.';
-        }
-        if ($entity->getTelephone() === '') {
-            $errors['telephone'] = 'Le telephone est obligatoire.';
-        } elseif (!preg_match('/^\d{8}$/', $entity->getTelephone())) {
-            $errors['telephone'] = 'Le telephone doit contenir 8 chiffres.';
-        }
-        if ($entity->getPassword() === '') {
-            $errors['password'] = 'Le mot de passe est obligatoire.';
-        } elseif (mb_strlen($entity->getPassword()) < 6) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins 6 caracteres.';
-        }
-        if ($entity->getConfirmPassword() === '') {
-            $errors['confirm_password'] = 'La confirmation du mot de passe est obligatoire.';
-        } elseif ($entity->getPassword() !== '' && $entity->getConfirmPassword() !== $entity->getPassword()) {
-            $errors['confirm_password'] = 'La confirmation ne correspond pas au mot de passe.';
-        }
-        if ($entity->getSpecialite() === '') {
-            $errors['specialite'] = 'La specialite est obligatoire.';
-        }
-        if ($entity->getDiplomes() === '') {
-            $errors['diplomes'] = 'Les diplomes sont obligatoires.';
-        }
-        if ($entity->getExperience() === '') {
-            $errors['experience'] = "L'experience est obligatoire.";
-        }
-
-        $cvFile = $files['cv'] ?? null;
-        $uploadError = is_array($cvFile) ? (int) ($cvFile['error'] ?? UPLOAD_ERR_NO_FILE) : UPLOAD_ERR_NO_FILE;
-        if ($uploadError === UPLOAD_ERR_NO_FILE) {
-            $errors['cv'] = 'Le CV est obligatoire.';
-            return $errors;
-        }
-
-        if ($uploadError !== UPLOAD_ERR_OK) {
-            $errors['cv'] = 'Le fichier CV est invalide.';
-            return $errors;
-        }
-
-        $cvName = mb_strtolower((string) ($cvFile['name'] ?? ''));
-        if (!str_ends_with($cvName, '.pdf')) {
-            $errors['cv'] = 'Le CV doit etre au format PDF.';
-        }
-
-        return $errors;
+        return $this->signupValidator->validateFormateur($entity, $files);
     }
 
-    public function registerFromEntity(FormateurEntity $entity, array $files): void
+    public function prepareRegistrationData(FormateurEntity $entity, array $files): array
     {
-        if ($this->emailExistsInAnyAccount($entity->getEmail())) {
-            throw new RuntimeException('Cet email est deja utilise sur le site.');
-        }
-
-        $storedCvPath = null;
-
-        try {
-            $upload = $this->cvUploadService->uploadPdf($files['cv'] ?? []);
-            $storedCvPath = $upload['diskPath'];
-
-            $this->create([
-                'nom' => $entity->getNom(),
-                'prenom' => $entity->getPrenom(),
-                'email' => $entity->getEmail(),
-                'password' => $entity->getPassword(),
-                'telephone' => $entity->getTelephone(),
-                'specialite' => $entity->getSpecialite(),
-                'diplomes' => $entity->getDiplomes(),
-                'experience' => $entity->getExperience(),
-                'cv' => $upload['publicPath'],
-            ]);
-        } catch (Throwable $exception) {
-            $this->cvUploadService->deleteFile($storedCvPath);
-            throw $exception;
-        }
+        return $this->signupValidator->prepareFormateurRegistrationData($entity, $files);
     }
 
     public function create(array $data): void
     {
         $nom = trim((string) ($data['nom'] ?? ''));
         $prenom = trim((string) ($data['prenom'] ?? ''));
+        $sexe = trim((string) ($data['sexe'] ?? ''));
         $email = trim((string) ($data['email'] ?? ''));
         $telephone = trim((string) ($data['telephone'] ?? ''));
         $specialite = trim((string) ($data['specialite'] ?? ''));
@@ -162,14 +117,44 @@ class FormateurModel
         $password = (string) ($data['password'] ?? '');
         $cv = trim((string) ($data['cv'] ?? ''));
 
-        if ($nom === '' || $prenom === '' || $email === '' || $password === '') {
-            throw new InvalidArgumentException('Nom, prénom, email et mot de passe sont obligatoires.');
+        $sexeValue = mb_strtolower($sexe, 'UTF-8');
+        if ($nom === '' || $prenom === '' || $email === '' || $password === '' || $sexeValue === '') {
+            throw new InvalidArgumentException('Nom, prenom, sexe, email et mot de passe sont obligatoires.');
+        }
+
+        if (!in_array($sexeValue, ['homme', 'femme'], true)) {
+            throw new InvalidArgumentException('Sexe invalide.');
         }
 
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-        $stmt = $this->conn->prepare('INSERT INTO formateur (nom, prenom, email, password, telephone, specialite, diplomes, experience, cv) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        $stmt->execute([$nom, $prenom, $email, $passwordHash, $telephone, $specialite, $diplomes, $experience, $cv]);
+        try {
+            $this->conn->beginTransaction();
+
+            $stmt = $this->conn->prepare(
+                 'INSERT INTO utilisateur (nom, prenom, sexe, email, password, telephone, niveau_etude, domaine, competences, cv, email_verified)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)'
+            );
+              $stmt->execute([$nom, $prenom, $sexeValue, $email, $passwordHash, $telephone, '', '', '', $cv]);
+
+            $userId = (int) $this->conn->lastInsertId();
+            if ($userId <= 0) {
+                throw new RuntimeException('Creation utilisateur invalide.');
+            }
+
+            $stmt = $this->conn->prepare(
+                 'INSERT INTO formateur (id, nom, prenom, sexe, email, password, telephone, specialite, diplomes, experience, cv, email_verified)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)'
+            );
+              $stmt->execute([$userId, $nom, $prenom, $sexeValue, $email, $passwordHash, $telephone, $specialite, $diplomes, $experience, $cv]);
+
+            $this->conn->commit();
+        } catch (Throwable $exception) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            throw $exception;
+        }
     }
 
     public function update(array $data): void
@@ -177,6 +162,7 @@ class FormateurModel
         $id = (int) ($data['id'] ?? 0);
         $nom = trim((string) ($data['nom'] ?? ''));
         $prenom = trim((string) ($data['prenom'] ?? ''));
+        $sexe = trim((string) ($data['sexe'] ?? ''));
         $email = trim((string) ($data['email'] ?? ''));
         $telephone = trim((string) ($data['telephone'] ?? ''));
         $specialite = trim((string) ($data['specialite'] ?? ''));
@@ -184,19 +170,81 @@ class FormateurModel
         $experience = trim((string) ($data['experience'] ?? ''));
         $password = (string) ($data['password'] ?? '');
 
-        if ($id <= 0 || $nom === '' || $prenom === '' || $email === '') {
-            throw new InvalidArgumentException('Données de mise à jour invalides.');
+        $sexeValue = mb_strtolower($sexe, 'UTF-8');
+        if ($id <= 0 || $nom === '' || $prenom === '' || $email === '' || $sexeValue === '') {
+            throw new InvalidArgumentException('Donnees de mise a jour invalides.');
+        }
+
+        if (!in_array($sexeValue, ['homme', 'femme'], true)) {
+            throw new InvalidArgumentException('Sexe invalide.');
         }
 
         if ($password !== '') {
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $this->conn->prepare('UPDATE formateur SET nom = ?, prenom = ?, email = ?, telephone = ?, specialite = ?, diplomes = ?, experience = ?, password = ? WHERE id = ?');
-            $stmt->execute([$nom, $prenom, $email, $telephone, $specialite, $diplomes, $experience, $passwordHash, $id]);
+            $stmt = $this->conn->prepare('UPDATE formateur SET nom = ?, prenom = ?, sexe = ?, email = ?, telephone = ?, specialite = ?, diplomes = ?, experience = ?, password = ? WHERE id = ?');
+            $stmt->execute([$nom, $prenom, $sexeValue, $email, $telephone, $specialite, $diplomes, $experience, $passwordHash, $id]);
             return;
         }
 
-        $stmt = $this->conn->prepare('UPDATE formateur SET nom = ?, prenom = ?, email = ?, telephone = ?, specialite = ?, diplomes = ?, experience = ? WHERE id = ?');
-        $stmt->execute([$nom, $prenom, $email, $telephone, $specialite, $diplomes, $experience, $id]);
+        $stmt = $this->conn->prepare('UPDATE formateur SET nom = ?, prenom = ?, sexe = ?, email = ?, telephone = ?, specialite = ?, diplomes = ?, experience = ? WHERE id = ?');
+        $stmt->execute([$nom, $prenom, $sexeValue, $email, $telephone, $specialite, $diplomes, $experience, $id]);
+    }
+
+    public function updateProfile(array $data): void
+    {
+        $id = (int) ($data['id'] ?? 0);
+        $nom = trim((string) ($data['nom'] ?? ''));
+        $prenom = trim((string) ($data['prenom'] ?? ''));
+        $sexe = trim((string) ($data['sexe'] ?? ''));
+        $email = trim((string) ($data['email'] ?? ''));
+        $telephone = trim((string) ($data['telephone'] ?? ''));
+        $specialite = trim((string) ($data['specialite'] ?? ''));
+        $diplomes = trim((string) ($data['diplomes'] ?? ''));
+        $experience = trim((string) ($data['experience'] ?? ''));
+        $password = (string) ($data['password'] ?? '');
+
+        $sexeValue = mb_strtolower($sexe, 'UTF-8');
+        if ($id <= 0 || $nom === '' || $prenom === '' || $email === '' || $sexeValue === '') {
+            throw new InvalidArgumentException('Donnees de mise a jour invalides.');
+        }
+
+        if (!in_array($sexeValue, ['homme', 'femme'], true)) {
+            throw new InvalidArgumentException('Sexe invalide.');
+        }
+
+        try {
+            $this->conn->beginTransaction();
+
+            if ($password !== '') {
+                $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+                $stmt = $this->conn->prepare(
+                    'UPDATE utilisateur SET nom = ?, prenom = ?, sexe = ?, email = ?, telephone = ?, password = ? WHERE id = ?'
+                );
+                $stmt->execute([$nom, $prenom, $sexeValue, $email, $telephone, $passwordHash, $id]);
+
+                $stmt = $this->conn->prepare(
+                    'UPDATE formateur SET nom = ?, prenom = ?, sexe = ?, email = ?, telephone = ?, specialite = ?, diplomes = ?, experience = ?, password = ? WHERE id = ?'
+                );
+                $stmt->execute([$nom, $prenom, $sexeValue, $email, $telephone, $specialite, $diplomes, $experience, $passwordHash, $id]);
+            } else {
+                $stmt = $this->conn->prepare(
+                    'UPDATE utilisateur SET nom = ?, prenom = ?, sexe = ?, email = ?, telephone = ? WHERE id = ?'
+                );
+                $stmt->execute([$nom, $prenom, $sexeValue, $email, $telephone, $id]);
+
+                $stmt = $this->conn->prepare(
+                    'UPDATE formateur SET nom = ?, prenom = ?, sexe = ?, email = ?, telephone = ?, specialite = ?, diplomes = ?, experience = ? WHERE id = ?'
+                );
+                $stmt->execute([$nom, $prenom, $sexeValue, $email, $telephone, $specialite, $diplomes, $experience, $id]);
+            }
+
+            $this->conn->commit();
+        } catch (Throwable $exception) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            throw $exception;
+        }
     }
 
     public function delete(int $id): void
@@ -205,65 +253,31 @@ class FormateurModel
             throw new InvalidArgumentException('ID invalide.');
         }
 
+        $stmt = $this->conn->prepare('DELETE FROM inscription_formateur WHERE id_formateur = ?');
+        $stmt->execute([$id]);
+
         $stmt = $this->conn->prepare('DELETE FROM formateur WHERE id = ?');
         $stmt->execute([$id]);
-    }
-
-    private function emailExistsInAnyAccount(string $email): bool
-    {
-        $stmt = $this->conn->prepare(
-            'SELECT 1
-             FROM (
-                SELECT email FROM utilisateur WHERE email = ?
-                UNION ALL
-                SELECT email FROM formateur WHERE email = ?
-                UNION ALL
-                SELECT email FROM entreprise WHERE email = ?
-             ) AS comptes
-             LIMIT 1'
-        );
-        $stmt->execute([$email, $email, $email]);
-
-        return $stmt->fetchColumn() !== false;
     }
 
     private function hydrateSignupEntity(array $post): FormateurEntity
     {
         $entity = new FormateurEntity();
+        $diplomeCount = filter_var((string) ($post['diplome_count'] ?? ''), FILTER_VALIDATE_INT);
 
         $entity
-            ->setNom(trim((string) ($post['nom'] ?? '')))
-            ->setPrenom(trim((string) ($post['prenom'] ?? '')))
-            ->setEmail(trim((string) ($post['email'] ?? '')))
-            ->setTelephone(trim((string) ($post['telephone'] ?? '')))
+            ->setNom($this->signupValidator->cleanText((string) ($post['nom'] ?? '')))
+            ->setPrenom($this->signupValidator->cleanText((string) ($post['prenom'] ?? '')))
+            ->setSexe($this->signupValidator->cleanText((string) ($post['sexe'] ?? '')))
+            ->setEmail($this->signupValidator->cleanEmail((string) ($post['email'] ?? '')))
+            ->setTelephone($this->signupValidator->cleanText((string) ($post['telephone'] ?? '')))
             ->setPassword((string) ($post['password'] ?? ''))
             ->setConfirmPassword((string) ($post['confirm_password'] ?? ''))
-            ->setSpecialite(trim((string) ($post['specialite'] ?? '')))
-            ->setDiplomes(trim((string) ($post['diplomes'] ?? '')))
-            ->setExperience(trim((string) ($post['experience'] ?? '')));
+            ->setSpecialite($this->signupValidator->cleanText((string) ($post['specialite'] ?? '')))
+            ->setDiplomes($this->signupValidator->cleanText((string) ($post['diplome_count'] ?? '')))
+            ->setDiplomeCount($diplomeCount === false ? 0 : (int) $diplomeCount)
+            ->setExperience($this->signupValidator->cleanMultilineText((string) ($post['experience'] ?? '')));
 
         return $entity;
-    }
-
-    private function hasValidationErrors(array $errors): bool
-    {
-        foreach ($errors as $error) {
-            if ((string) $error !== '') {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function firstValidationError(array $errors): string
-    {
-        foreach ($errors as $error) {
-            if ((string) $error !== '') {
-                return (string) $error;
-            }
-        }
-
-        return 'Le formulaire contient des erreurs.';
     }
 }

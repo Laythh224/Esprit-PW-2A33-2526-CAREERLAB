@@ -35,12 +35,22 @@
                         <form method="POST" id="passwordResetForm" novalidate data-password-reset-form="reset">
                             <div class="mb-3">
                                 <label for="password" class="form-label">Nouveau mot de passe</label>
-                                <input type="password" class="form-control <?= $state['errors']['password'] !== '' ? 'is-invalid' : '' ?>" id="password" name="password" placeholder="********">
+                                <div class="input-group">
+                                    <input type="password" class="form-control <?= $state['errors']['password'] !== '' ? 'is-invalid' : '' ?>" id="password" name="password" placeholder="********">
+                                    <button class="btn btn-outline-secondary" type="button" data-toggle-password data-toggle-target="password">
+                                        👁️
+                                    </button>
+                                </div>
                                 <div class="small text-danger d-block" id="passwordError"><?= htmlspecialchars($state['errors']['password'], ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <div class="mb-3">
                                 <label for="confirmPassword" class="form-label">Confirmer le mot de passe</label>
-                                <input type="password" class="form-control <?= $state['errors']['confirm_password'] !== '' ? 'is-invalid' : '' ?>" id="confirmPassword" name="confirm_password" placeholder="********">
+                                <div class="input-group">
+                                    <input type="password" class="form-control <?= $state['errors']['confirm_password'] !== '' ? 'is-invalid' : '' ?>" id="confirmPassword" name="confirm_password" placeholder="********">
+                                    <button class="btn btn-outline-secondary" type="button" data-toggle-password data-toggle-target="confirmPassword">
+                                        👁️
+                                    </button>
+                                </div>
                                 <div class="small text-danger d-block" id="confirmPasswordError"><?= htmlspecialchars($state['errors']['confirm_password'], ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <div class="d-grid">
@@ -55,6 +65,7 @@
             </div>
         </div>
     </div>
+    <script src="<?= BASE_URL ?>Views/assets/js/password-toggle.js"></script>
     <script src="<?= BASE_URL ?>Views/assets/js/password-reset.js"></script>
 </body>
 </html>

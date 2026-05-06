@@ -3,7 +3,19 @@
 class UserEntity
 {
     private string $nom = '';
+    private string $cv = '';
+        public function getCv(): string
+        {
+            return $this->cv;
+        }
+
+        public function setCv(string $cv): self
+        {
+            $this->cv = $cv;
+            return $this;
+        }
     private string $prenom = '';
+    private string $sexe = '';
     private string $email = '';
     private string $telephone = '';
     private string $password = '';
@@ -31,6 +43,17 @@ class UserEntity
     public function setPrenom(string $prenom): self
     {
         $this->prenom = $prenom;
+        return $this;
+    }
+
+    public function getSexe(): string
+    {
+        return $this->sexe;
+    }
+
+    public function setSexe(string $sexe): self
+    {
+        $this->sexe = $sexe;
         return $this;
     }
 

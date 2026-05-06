@@ -135,6 +135,7 @@
         return Object.assign(common, {
           nom: form.querySelector("#nom"),
           prenom: form.querySelector("#prenom"),
+          sexe: form.querySelector("#sexe"),
           niveau: form.querySelector("#niveauEtude"),
           domaine: form.querySelector("#domaine")
         });
@@ -143,6 +144,7 @@
       return Object.assign(common, {
         nom: form.querySelector("#nom"),
         prenom: form.querySelector("#prenom"),
+        sexe: form.querySelector("#sexe"),
         specialite: form.querySelector("#specialite"),
         diplomes: form.querySelector("#diplomeCount"),
         experience: form.querySelector("#experience")
@@ -153,6 +155,7 @@
     const errorNodes = {
       nom: form.querySelector(formType === "entreprise" ? "#nomEntrepriseError" : "#nomError"),
       prenom: form.querySelector("#prenomError"),
+      sexe: form.querySelector("#sexeError"),
       email: form.querySelector("#emailError"),
       password: form.querySelector("#passwordError"),
       confirm_password: form.querySelector("#confirmPasswordError"),
@@ -193,6 +196,14 @@
           message = "Le prenom est obligatoire.";
         } else if (!isLettersOnly(value)) {
           message = "Le prenom doit contenir uniquement des lettres.";
+        }
+      }
+
+      if (name === "sexe") {
+        if (value === "") {
+          message = "Le sexe est obligatoire.";
+        } else if (!["homme", "femme"].includes(value.toLowerCase())) {
+          message = "Veuillez choisir un sexe valide.";
         }
       }
 

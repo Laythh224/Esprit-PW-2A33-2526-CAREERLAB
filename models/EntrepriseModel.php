@@ -3,18 +3,63 @@
 class EntrepriseModel
 {
     private PDO $conn;
+    private SignupValidator $signupValidator;
 
-    public function __construct(PDO $conn)
+    public function __construct(PDO $conn, ?SignupValidator $signupValidator = null)
     {
         $this->conn = $conn;
+        $this->signupValidator = $signupValidator ?? new SignupValidator($conn);
     }
 
-    public function all(): array
+    public function all(?string $verificationFilter = null): array
     {
-        $stmt = $this->conn->prepare('SELECT id, nom_entreprise, email, telephone, adresse, ville, secteur, description, site_web FROM entreprise ORDER BY id DESC');
+        $sql = 'SELECT id, nom_entreprise, email, telephone, adresse, ville, secteur, description, site_web, verified, verified_at, verified_by FROM entreprise';
+
+        if ($verificationFilter === 'verified') {
+            $sql .= ' WHERE verified = 1';
+        } elseif ($verificationFilter === 'unverified') {
+            $sql .= ' WHERE verified = 0';
+        }
+
+        $sql .= ' ORDER BY id DESC';
+
+        $stmt = $this->conn->prepare($sql);
         $stmt->execute();
 
         return $stmt->fetchAll() ?: [];
+    }
+
+    public function findById(int $id): ?array
+    {
+        $stmt = $this->conn->prepare('SELECT * FROM entreprise WHERE id = ? LIMIT 1');
+        $stmt->execute([$id]);
+        $account = $stmt->fetch();
+
+        return $account !== false ? $account : null;
+    }
+
+    public function updateVerificationStatus(int $id, bool $verified, ?int $adminId = null): bool
+    {
+        if ($id <= 0) {
+            return false;
+        }
+
+        if ($verified) {
+            $stmt = $this->conn->prepare('UPDATE entreprise SET verified = 1, verified_at = NOW(), verified_by = ? WHERE id = ?');
+            return $stmt->execute([$adminId, $id]);
+        }
+
+        $stmt = $this->conn->prepare('UPDATE entreprise SET verified = 0, verified_at = NULL, verified_by = NULL WHERE id = ?');
+        return $stmt->execute([$id]);
+    }
+
+    public function logVerificationChange(int $accountId, ?int $adminId, bool $previousVerified, bool $newVerified): void
+    {
+        $stmt = $this->conn->prepare(
+            'INSERT INTO account_verification_logs (account_type, account_id, admin_id, previous_verified, new_verified, created_at)
+             VALUES (?, ?, ?, ?, ?, NOW())'
+        );
+        $stmt->execute(['entreprise', $accountId, $adminId, $previousVerified ? 1 : 0, $newVerified ? 1 : 0]);
     }
 
     public function count(): int
@@ -34,94 +79,27 @@ class EntrepriseModel
         return $account !== false ? $account : null;
     }
 
-    public function registerFromSignup(array $post): void
+    public function registerFromSignup(array $post, array $files = []): void
     {
         $entity = $this->hydrateSignupEntity($post);
-        $errors = $this->validateSignup($entity);
+        $errors = $this->validateSignup($entity, $files);
 
-        if ($this->hasValidationErrors($errors)) {
-            throw new RuntimeException($this->firstValidationError($errors));
+        if ($this->signupValidator->hasErrors($errors)) {
+            throw new RuntimeException($this->signupValidator->firstError($errors));
         }
 
-        $this->registerFromEntity($entity);
+        $data = $this->prepareRegistrationData($entity, $files);
+        $this->create($data);
     }
 
-    public function validateSignup(EntrepriseEntity $entity): array
+    public function validateSignup(EntrepriseEntity $entity, array $files = []): array
     {
-        $errors = [
-            'nom' => '',
-            'email' => '',
-            'telephone' => '',
-            'adresse' => '',
-            'ville' => '',
-            'secteur' => '',
-            'description' => '',
-            'site' => '',
-            'password' => '',
-            'confirm_password' => '',
-        ];
-
-        if ($entity->getNom() === '') {
-            $errors['nom'] = "Le nom de l'entreprise est obligatoire.";
-        }
-        if ($entity->getEmail() === '') {
-            $errors['email'] = "L'email est obligatoire.";
-        } elseif (!filter_var($entity->getEmail(), FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = 'Veuillez saisir une adresse email valide.';
-        } elseif ($this->emailExistsInAnyAccount($entity->getEmail())) {
-            $errors['email'] = 'Cet email est deja utilise.';
-        }
-        if ($entity->getTelephone() === '') {
-            $errors['telephone'] = 'Le telephone est obligatoire.';
-        } elseif (!preg_match('/^\d{8}$/', $entity->getTelephone())) {
-            $errors['telephone'] = 'Le telephone doit contenir 8 chiffres.';
-        }
-        if ($entity->getAdresse() === '') {
-            $errors['adresse'] = "L'adresse est obligatoire.";
-        }
-        if ($entity->getVille() === '') {
-            $errors['ville'] = 'La ville est obligatoire.';
-        }
-        if ($entity->getSecteur() === '') {
-            $errors['secteur'] = "Le secteur d'activite est obligatoire.";
-        }
-        if ($entity->getDescription() === '') {
-            $errors['description'] = 'La description est obligatoire.';
-        }
-        if ($entity->getPassword() === '') {
-            $errors['password'] = 'Le mot de passe est obligatoire.';
-        } elseif (mb_strlen($entity->getPassword()) < 6) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins 6 caracteres.';
-        }
-        if ($entity->getConfirmPassword() === '') {
-            $errors['confirm_password'] = 'La confirmation du mot de passe est obligatoire.';
-        } elseif ($entity->getPassword() !== '' && $entity->getConfirmPassword() !== $entity->getPassword()) {
-            $errors['confirm_password'] = 'La confirmation ne correspond pas au mot de passe.';
-        }
-        if ($entity->getSite() !== '' && !filter_var($entity->getSite(), FILTER_VALIDATE_URL)) {
-            $errors['site'] = 'Le site web doit etre une URL valide (https://...).';
-        }
-
-        return $errors;
+        return $this->signupValidator->validateEntreprise($entity, $files);
     }
 
-    public function registerFromEntity(EntrepriseEntity $entity): void
+    public function prepareRegistrationData(EntrepriseEntity $entity, array $files = []): array
     {
-        if ($this->emailExistsInAnyAccount($entity->getEmail())) {
-            throw new RuntimeException('Cet email est deja utilise sur le site.');
-        }
-
-        $this->create([
-            'nom_entreprise' => $entity->getNom(),
-            'email' => $entity->getEmail(),
-            'password' => $entity->getPassword(),
-            'telephone' => $entity->getTelephone(),
-            'adresse' => $entity->getAdresse(),
-            'ville' => $entity->getVille(),
-            'secteur' => $entity->getSecteur(),
-            'description' => $entity->getDescription(),
-            'site_web' => $entity->getSite(),
-        ]);
+        return $this->signupValidator->prepareEntrepriseRegistrationData($entity, $files);
     }
 
     public function create(array $data): void
@@ -142,7 +120,7 @@ class EntrepriseModel
 
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-        $stmt = $this->conn->prepare('INSERT INTO entreprise (nom_entreprise, email, password, telephone, adresse, ville, secteur, description, site_web) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $stmt = $this->conn->prepare('INSERT INTO entreprise (nom_entreprise, email, password, telephone, adresse, ville, secteur, description, site_web, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)');
         $stmt->execute([$nomEntreprise, $email, $passwordHash, $telephone, $adresse, $ville, $secteur, $description, $siteWeb]);
     }
 
@@ -160,7 +138,7 @@ class EntrepriseModel
         $password = (string) ($data['password'] ?? '');
 
         if ($id <= 0 || $nomEntreprise === '' || $email === '') {
-            throw new InvalidArgumentException('Données de mise à jour invalides.');
+            throw new InvalidArgumentException('Donnees de mise a jour invalides.');
         }
 
         if ($password !== '') {
@@ -180,26 +158,11 @@ class EntrepriseModel
             throw new InvalidArgumentException('ID invalide.');
         }
 
+        $stmt = $this->conn->prepare('DELETE FROM inscription_entreprise WHERE id_entreprise = ?');
+        $stmt->execute([$id]);
+
         $stmt = $this->conn->prepare('DELETE FROM entreprise WHERE id = ?');
         $stmt->execute([$id]);
-    }
-
-    private function emailExistsInAnyAccount(string $email): bool
-    {
-        $stmt = $this->conn->prepare(
-            'SELECT 1
-             FROM (
-                SELECT email FROM utilisateur WHERE email = ?
-                UNION ALL
-                SELECT email FROM formateur WHERE email = ?
-                UNION ALL
-                SELECT email FROM entreprise WHERE email = ?
-             ) AS comptes
-             LIMIT 1'
-        );
-        $stmt->execute([$email, $email, $email]);
-
-        return $stmt->fetchColumn() !== false;
     }
 
     private function hydrateSignupEntity(array $post): EntrepriseEntity
@@ -207,39 +170,18 @@ class EntrepriseModel
         $entity = new EntrepriseEntity();
 
         $entity
-            ->setNom(trim((string) ($post['nom'] ?? '')))
-            ->setEmail(trim((string) ($post['email'] ?? '')))
-            ->setTelephone(trim((string) ($post['telephone'] ?? '')))
-            ->setAdresse(trim((string) ($post['adresse'] ?? '')))
-            ->setVille(trim((string) ($post['ville'] ?? '')))
-            ->setSecteur(trim((string) ($post['secteur'] ?? '')))
-            ->setDescription(trim((string) ($post['description'] ?? '')))
-            ->setSite(trim((string) ($post['site'] ?? '')))
+            ->setNom($this->signupValidator->cleanText((string) ($post['nom'] ?? '')))
+            ->setEmail($this->signupValidator->cleanEmail((string) ($post['email'] ?? '')))
+            ->setTelephone($this->signupValidator->cleanText((string) ($post['telephone'] ?? '')))
+            ->setAdresse($this->signupValidator->cleanText((string) ($post['adresse'] ?? '')))
+            ->setVille($this->signupValidator->cleanText((string) ($post['ville'] ?? '')))
+            ->setSecteur($this->signupValidator->cleanText((string) ($post['secteur'] ?? '')))
+            ->setDescription($this->signupValidator->cleanMultilineText((string) ($post['description'] ?? '')))
+            ->setSite($this->signupValidator->cleanText((string) ($post['site'] ?? '')))
+            ->setCodeFiscal($this->signupValidator->cleanText((string) ($post['code_fiscal'] ?? '')))
             ->setPassword((string) ($post['password'] ?? ''))
             ->setConfirmPassword((string) ($post['confirm_password'] ?? ''));
 
         return $entity;
-    }
-
-    private function hasValidationErrors(array $errors): bool
-    {
-        foreach ($errors as $error) {
-            if ((string) $error !== '') {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function firstValidationError(array $errors): string
-    {
-        foreach ($errors as $error) {
-            if ((string) $error !== '') {
-                return (string) $error;
-            }
-        }
-
-        return 'Le formulaire contient des erreurs.';
     }
 }

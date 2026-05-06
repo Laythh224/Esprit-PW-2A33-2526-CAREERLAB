@@ -47,7 +47,7 @@
                                     <div class="mb-3"><label for="secteur" class="form-label">Secteur</label><input id="secteur" class="form-control" type="text" /><div class="small text-danger d-block" id="secteurError"></div></div>
                                     <div class="mb-3"><label for="siteWeb" class="form-label">Site web</label><input id="siteWeb" class="form-control" type="text" /><div class="small text-danger d-block" id="siteWebError"></div></div>
                                     <div class="mb-3"><label for="description" class="form-label">Description</label><textarea id="description" class="form-control" rows="3"></textarea><div class="small text-danger d-block" id="descriptionError"></div></div>
-                                    <div class="mb-3"><label for="password" class="form-label">Mot de passe (obligatoire a la creation)</label><input id="password" class="form-control" type="password" /><div class="small text-danger d-block" id="passwordError"></div></div>
+                                    <div class="mb-3"><label for="password" class="form-label">Mot de passe (obligatoire a la creation)</label><div class="input-group"><input id="password" class="form-control" type="password" /><button class="btn btn-outline-secondary" type="button" data-toggle-password data-toggle-target="password">👁️</button></div><div class="small text-danger d-block" id="passwordError"></div></div>
                                     <div class="d-flex gap-2">
                                         <button class="btn btn-primary" type="submit">Enregistrer</button>
                                         <button class="btn btn-outline-secondary" type="button" id="cancelBtn">Annuler</button>
@@ -62,6 +62,17 @@
                         <div class="card">
                             <div class="card-body">
                                 <div class="table-responsive">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="mb-0">Statistique entreprises</h5>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <select id="verificationFilter" class="form-select form-select-sm" style="width: 180px;">
+                                                <option value="all">Tous les comptes</option>
+                                                <option value="verified">Vérifiés</option>
+                                                <option value="unverified">Non vérifiés</option>
+                                            </select>
+                                            <span class="badge bg-primary" id="companiesCountBadge">0 entreprise</span>
+                                        </div>
+                                    </div>
                                     <table class="table table-striped align-middle">
                                         <thead>
                                             <tr>
@@ -88,6 +99,7 @@
     <script src="views/assets/js/popper.min.js"></script>
     <script src="views/assets/js/bootstrap.min.js"></script>
     <script src="views/assets/js/kaiadmin.min.js"></script>
+    <script src="views/assets/js/password-toggle.js"></script>
     <script>
         const API_URL = "index.php?page=api-entreprises";
         let companies = [];
@@ -106,7 +118,10 @@
         const cancelBtn = document.getElementById("cancelBtn");
         const message = document.getElementById("message");
         const companiesBody = document.getElementById("companiesBody");
+        const companiesCountBadge = document.getElementById("companiesCountBadge");
+        const verificationFilterSelect = document.getElementById("verificationFilter");
         const formTitle = document.getElementById("formTitle");
+        let verificationFilter = "all";
         const fieldErrors = {
             nom_entreprise: document.getElementById("nomEntrepriseError"),
             email: document.getElementById("emailError"),
@@ -139,6 +154,14 @@
         function showMessage(text, type) {
             message.textContent = text;
             message.className = type === "ok" ? "mt-3 mb-0 small text-success" : "mt-3 mb-0 small text-danger";
+        }
+
+        function getApiUrl() {
+            const url = new URL(API_URL, window.location.href);
+            if (verificationFilter !== "all") {
+                url.searchParams.set("verified", verificationFilter);
+            }
+            return url.toString();
         }
 
         function isValidEmail(email) {
@@ -184,6 +207,11 @@
         }
 
         function renderTable() {
+            if (companiesCountBadge) {
+                const totalCompanies = companies.length;
+                companiesCountBadge.textContent = totalCompanies + (totalCompanies > 1 ? " entreprises" : " entreprise");
+            }
+
             companiesBody.innerHTML = "";
             if (companies.length === 0) {
                 companiesBody.innerHTML = "<tr><td colspan='6' class='text-center text-muted'>Aucune entreprise.</td></tr>";
@@ -191,14 +219,19 @@
             }
 
             companies.forEach((u) => {
+                const isVerified = Number(u.verified) === 1;
+                const verifiedBadge = isVerified ? " <span class='badge bg-primary' title='Compte vérifié'>✔</span>" : "";
+                const verificationActionLabel = isVerified ? "Retirer vérification" : "Vérifier le compte";
+                const verificationActionValue = isVerified ? "0" : "1";
                 const tr = document.createElement("tr");
                 tr.innerHTML = ""
-                    + "<td>" + escapeHtml(u.nom_entreprise || "") + "</td>"
+                    + "<td>" + escapeHtml(u.nom_entreprise || "") + verifiedBadge + "</td>"
                     + "<td>" + escapeHtml(u.email || "") + "</td>"
                     + "<td>" + escapeHtml(u.telephone || "-") + "</td>"
                     + "<td>" + escapeHtml(u.ville || "-") + "</td>"
                     + "<td>" + escapeHtml(u.secteur || "-") + "</td>"
                     + "<td>"
+                    + "<button class='btn btn-sm btn-" + (isVerified ? "outline-warning" : "outline-success") + " me-1' data-action='toggle-verification' data-id='" + u.id + "' data-verified='" + verificationActionValue + "'>" + verificationActionLabel + "</button>"
                     + "<button class='btn btn-sm btn-outline-primary me-1' data-action='edit' data-id='" + u.id + "'>Modifier</button>"
                     + "<button class='btn btn-sm btn-outline-danger' data-action='delete' data-id='" + u.id + "'>Supprimer</button>"
                     + "</td>";
@@ -207,7 +240,7 @@
         }
 
         async function fetchCompanies() {
-            const res = await fetch(API_URL);
+            const res = await fetch(getApiUrl());
             const data = await res.json();
             if (!data.ok) {
                 throw new Error(data.message || "Impossible de charger les entreprises.");
@@ -228,6 +261,13 @@
             }
             return data;
         }
+
+        verificationFilterSelect.addEventListener("change", function () {
+            verificationFilter = this.value;
+            fetchCompanies().catch(function (error) {
+                showMessage(error.message, "error");
+            });
+        });
 
         companyForm.addEventListener("submit", async function (event) {
             event.preventDefault();
@@ -340,6 +380,19 @@
                     if (String(id) === editId.value) {
                         resetForm();
                     }
+                    await fetchCompanies();
+                } catch (error) {
+                    showMessage(error.message, "error");
+                }
+                return;
+            }
+
+            if (action === "toggle-verification") {
+                const verified = button.getAttribute("data-verified") === "1";
+
+                try {
+                    await sendAction({ action: "toggleVerification", id: id, verified: verified });
+                    showMessage(verified ? "Compte vérifié." : "Vérification retirée.", "ok");
                     await fetchCompanies();
                 } catch (error) {
                     showMessage(error.message, "error");

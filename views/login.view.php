@@ -1,6 +1,6 @@
+<?php if (!defined('BASE_URL')) define('BASE_URL', '/mon_site/'); ?>
 <!DOCTYPE html>
 <html lang="fr">
-<?php if (!defined('BASE_URL')) define('BASE_URL', '/mon_site/'); ?>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,8 +8,9 @@
     <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/plugins.min.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/kaiadmin.min.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/form-auth-ui.css">
 </head>
-<body>
+<body class="auth-page">
     <div class="container py-5">
         <div class="row justify-content-center mb-4">
             <div class="col-auto text-center">
@@ -34,12 +35,17 @@
                         <form id="loginForm" method="POST" novalidate>
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email</label>
-                                <input type="text" class="form-control <?php echo $errors['email'] !== '' ? 'is-invalid' : ''; ?>" id="email" name="email" placeholder="votre@email.com" value="<?php echo htmlspecialchars($emailValue); ?>">
+                                <input type="email" class="form-control <?php echo $errors['email'] !== '' ? 'is-invalid' : ''; ?>" id="email" name="email" placeholder="votre@email.com" value="<?php echo htmlspecialchars($emailValue); ?>" autocomplete="email">
                                 <div class="small text-danger d-block" id="emailError"><?php echo htmlspecialchars($errors['email']); ?></div>
                             </div>
                             <div class="mb-3">
                                 <label for="password" class="form-label">Mot de passe</label>
-                                <input type="password" class="form-control <?php echo $errors['password'] !== '' ? 'is-invalid' : ''; ?>" id="password" name="password" placeholder="********" value="<?php echo htmlspecialchars($passwordValue ?? ''); ?>">
+                                <div class="input-group">
+                                    <input type="password" class="form-control <?php echo $errors['password'] !== '' ? 'is-invalid' : ''; ?>" id="password" name="password" placeholder="********" value="<?php echo htmlspecialchars($passwordValue ?? ''); ?>" autocomplete="current-password">
+                                    <button class="btn btn-outline-secondary" type="button" data-toggle-password data-toggle-target="password">
+                                        👁️
+                                    </button>
+                                </div>
                                 <div class="small text-danger d-block" id="passwordError"><?php echo htmlspecialchars($errors['password']); ?></div>
                             </div>
                             <div id="validationPopups" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
@@ -51,7 +57,9 @@
                     <div class="card-footer text-center bg-white border-0 pt-0 pb-3">
                         <a href="index.php?page=accueil" class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm border-0 mt-2 mb-2">&larr; Retour à l'accueil</a>
                         <br />
-                        <a href="index.php?page=creer-compte">Créer un compte</a>
+                        <a href="index.php?page=creer-compte">Creer un compte</a>
+                        <span class="text-muted">·</span>
+                        <a href="index.php?page=reset-password-request">Mot de passe oublie</a>
                     </div>
                 </div>
             </div>
@@ -121,6 +129,6 @@
             });
         })();
     </script>
+    <script src="<?= BASE_URL ?>Views/assets/js/password-toggle.js"></script>
 </body>
 </html>
-

@@ -23,6 +23,7 @@ class DashboardController
             'totalEntreprises' => $this->entrepriseModel->count(),
             'nom' => $_SESSION['user_name'] ?? 'Utilisateur',
             'role' => $_SESSION['role'],
+            'isVerified' => (bool) ($_SESSION['account_verified'] ?? false),
         ];
     }
 

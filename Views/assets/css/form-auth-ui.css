@@ -201,81 +201,6 @@ body.auth-page::after {
   width: 100%;
 }
 
-.auth-page .phone-field {
-  position: relative;
-}
-
-.auth-page .phone-field .iti {
-  display: block;
-  width: 100%;
-}
-
-.auth-page .phone-field .iti__tel-input,
-.auth-page .phone-field [data-phone-visible] {
-  min-height: var(--auth-input-height);
-  padding-top: 0.82rem;
-  padding-bottom: 0.82rem;
-  padding-right: var(--auth-input-padding-x);
-  padding-left: 6.25rem !important;
-  border-radius: var(--auth-input-radius);
-}
-
-.auth-page .phone-field .iti__country-container {
-  left: 0.55rem;
-  top: 50%;
-  bottom: auto;
-  transform: translateY(-50%);
-}
-
-.auth-page .phone-field .iti__selected-country {
-  height: calc(var(--auth-input-height) - 10px);
-  border-radius: 12px;
-}
-
-.auth-page .phone-field .iti__selected-country-primary,
-.auth-page .phone-field .iti__selected-flag {
-  height: 100%;
-  padding-left: 0.8rem;
-  padding-right: 0.75rem;
-  border-radius: 12px;
-  border-right: 0;
-}
-
-.auth-page .phone-field .iti__dial-code {
-  margin-left: 0.35rem;
-  color: rgba(244, 247, 251, 0.92) !important;
-}
-
-.auth-page .phone-field .iti__arrow {
-  margin-left: 0.45rem;
-}
-
-.auth-page .phone-field .iti__country-list {
-  width: min(360px, calc(100vw - 2rem));
-  margin-top: 0.6rem;
-}
-
-.auth-page .phone-field .iti__search-input {
-  min-height: 44px;
-}
-
-.auth-page .phone-field .phone-hint {
-  display: block;
-  margin-top: 0.45rem;
-  color: rgba(244, 247, 251, 0.74);
-  font-size: 0.84rem;
-}
-
-.auth-page .phone-field .iti:has(.is-invalid) .iti__selected-country-primary,
-.auth-page .phone-field .iti:has(.is-invalid) .iti__selected-flag {
-  background: rgba(225, 29, 72, 0.16) !important;
-}
-
-.auth-page .phone-field .iti:has(.is-valid) .iti__selected-country-primary,
-.auth-page .phone-field .iti:has(.is-valid) .iti__selected-flag {
-  background: rgba(0, 100, 0, 0.16) !important;
-}
-
 .auth-page .iti--allow-dropdown .iti__country-container,
 .auth-page .iti__selected-country-primary,
 .auth-page .iti__selected-flag {
@@ -560,10 +485,5 @@ body.auth-page::after {
 
   .auth-page .card {
     min-height: calc(100vh - 2rem);
-  }
-
-  .auth-page .phone-field .iti__tel-input,
-  .auth-page .phone-field [data-phone-visible] {
-    padding-left: 5.85rem !important;
   }
 }

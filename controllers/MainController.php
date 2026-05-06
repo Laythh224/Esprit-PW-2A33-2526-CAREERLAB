@@ -59,6 +59,7 @@ class MainController
             'gestion-utilisateurs',
             'gestion-formateurs',
             'gestion-entreprises',
+            'demandes-ia',
             'inscription-entreprise',
             'inscription-formateur',
         ];
@@ -77,4 +78,3 @@ class MainController
         }
     }
 }
-

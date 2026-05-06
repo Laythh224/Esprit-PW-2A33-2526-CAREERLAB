@@ -137,6 +137,7 @@ class SignupValidator
         $errors = [
             'nom' => '',
             'prenom' => '',
+            'sexe' => '',
             'email' => '',
             'telephone' => '',
             'password' => '',
@@ -156,6 +157,13 @@ class SignupValidator
             $errors['prenom'] = 'Le prenom est obligatoire.';
         } elseif (!preg_match('/^[\p{L}\s\'-]{2,}$/u', $entity->getPrenom())) {
             $errors['prenom'] = 'Le prenom doit contenir uniquement des lettres.';
+        }
+
+        $sexe = mb_strtolower($entity->getSexe(), 'UTF-8');
+        if ($sexe === '') {
+            $errors['sexe'] = 'Le sexe est obligatoire.';
+        } elseif (!in_array($sexe, ['homme', 'femme'], true)) {
+            $errors['sexe'] = 'Veuillez choisir un sexe valide.';
         }
 
         $errors['email'] = $this->validateEmail($entity->getEmail());
@@ -194,6 +202,7 @@ class SignupValidator
         $errors = [
             'nom' => '',
             'prenom' => '',
+            'sexe' => '',
             'email' => '',
             'telephone' => '',
             'password' => '',
@@ -214,6 +223,13 @@ class SignupValidator
             $errors['prenom'] = 'Le prenom est obligatoire.';
         } elseif (!preg_match('/^[\p{L}\s\'-]{2,}$/u', $entity->getPrenom())) {
             $errors['prenom'] = 'Le prenom doit contenir uniquement des lettres.';
+        }
+
+        $sexe = mb_strtolower($entity->getSexe(), 'UTF-8');
+        if ($sexe === '') {
+            $errors['sexe'] = 'Le sexe est obligatoire.';
+        } elseif (!in_array($sexe, ['homme', 'femme'], true)) {
+            $errors['sexe'] = 'Veuillez choisir un sexe valide.';
         }
 
         $errors['email'] = $this->validateEmail($entity->getEmail());
@@ -306,6 +322,7 @@ class SignupValidator
         return [
             'nom' => $entity->getNom(),
             'prenom' => $entity->getPrenom(),
+            'sexe' => $entity->getSexe(),
             'email' => $entity->getEmail(),
             'password' => $entity->getPassword(),
             'telephone' => $phoneValidation['number'],
@@ -332,6 +349,7 @@ class SignupValidator
         return [
             'nom' => $entity->getNom(),
             'prenom' => $entity->getPrenom(),
+            'sexe' => $entity->getSexe(),
             'email' => $entity->getEmail(),
             'password' => $entity->getPassword(),
             'telephone' => $phoneValidation['number'],

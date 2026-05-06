@@ -8,13 +8,14 @@ if (!defined('BASE_URL')) define('BASE_URL', '/mon_site/');
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Créer un compte Formateur</title>
+  <title>Creer un compte Formateur</title>
   <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/bootstrap.min.css" />
   <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/plugins.min.css" />
   <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/kaiadmin.min.css" />
+  <link rel="stylesheet" href="<?= BASE_URL ?>Views/assets/css/form-auth-ui.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.css"/>
 </head>
-<body>
+<body class="auth-page">
     <div class="container py-5">
         <div class="row justify-content-center mb-4">
             <div class="col-auto text-center">
@@ -30,66 +31,85 @@ if (!defined('BASE_URL')) define('BASE_URL', '/mon_site/');
                         <h4 class="mb-0">Inscription Formateur</h4>
                     </div>
                     <div class="card-body">
-                        <form id="trainerSignupForm" method="POST" enctype="multipart/form-data" novalidate data-phone-form>
+                        <?php if (!empty($serverError)): ?>
+                            <div class="alert alert-danger"><?= htmlspecialchars($serverError, ENT_QUOTES, 'UTF-8') ?></div>
+                        <?php endif; ?>
+
+                        <form id="trainerSignupForm" method="POST" enctype="multipart/form-data" novalidate data-signup-form data-form-type="formateur">
                             <div class="mb-3">
                                 <label for="nom" class="form-label">Nom</label>
-                                <input class="form-control <?php echo ($fieldErrors['nom'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="nom" name="nom" placeholder="Votre nom" value="<?php echo htmlspecialchars((string) ($old['nom'] ?? '')); ?>" />
-                                <div class="small text-danger d-block" id="nomError"><?php echo htmlspecialchars((string) ($fieldErrors['nom'] ?? '')); ?></div>
+                                <input class="form-control <?= ($fieldErrors['nom'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="nom" name="nom" placeholder="Votre nom" value="<?= htmlspecialchars((string) ($old['nom'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+                                <div class="small text-danger d-block" id="nomError"><?= htmlspecialchars((string) ($fieldErrors['nom'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <div class="mb-3">
-                                <label for="prenom" class="form-label">Prénom</label>
-                                <input class="form-control <?php echo ($fieldErrors['prenom'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="prenom" name="prenom" placeholder="Votre prénom" value="<?php echo htmlspecialchars((string) ($old['prenom'] ?? '')); ?>" />
-                                <div class="small text-danger d-block" id="prenomError"><?php echo htmlspecialchars((string) ($fieldErrors['prenom'] ?? '')); ?></div>
+                                <label for="prenom" class="form-label">Prenom</label>
+                                <input class="form-control <?= ($fieldErrors['prenom'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="prenom" name="prenom" placeholder="Votre prenom" value="<?= htmlspecialchars((string) ($old['prenom'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+                                <div class="small text-danger d-block" id="prenomError"><?= htmlspecialchars((string) ($fieldErrors['prenom'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
+                            </div>
+                            <div class="mb-3">
+                              <label for="sexe" class="form-label">Sexe</label>
+                              <select class="form-select <?= ($fieldErrors['sexe'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="sexe" name="sexe">
+                                <option value="" <?= ($old['sexe'] ?? '') === '' ? 'selected' : '' ?> disabled>Choisir le sexe</option>
+                                <option value="homme" <?= ($old['sexe'] ?? '') === 'homme' ? 'selected' : '' ?>>Homme</option>
+                                <option value="femme" <?= ($old['sexe'] ?? '') === 'femme' ? 'selected' : '' ?>>Femme</option>
+                              </select>
+                              <div class="small text-danger d-block" id="sexeError"><?= htmlspecialchars((string) ($fieldErrors['sexe'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email</label>
-                                <input class="form-control <?php echo ($fieldErrors['email'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="email" name="email" placeholder="votre@email.com" value="<?php echo htmlspecialchars((string) ($old['email'] ?? '')); ?>" />
-                                <div class="small text-danger d-block" id="emailError"><?php echo htmlspecialchars((string) ($fieldErrors['email'] ?? '')); ?></div>
+                                <input type="email" class="form-control <?= ($fieldErrors['email'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="email" name="email" placeholder="votre@email.com" value="<?= htmlspecialchars((string) ($old['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+                                <div class="small text-danger d-block" id="emailError"><?= htmlspecialchars((string) ($fieldErrors['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <div class="mb-3">
-                                <label for="password" class="form-label">Mot de passe</label>
-                                <input class="form-control <?php echo ($fieldErrors['password'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="password" name="password" placeholder="********" value="<?php echo htmlspecialchars((string) ($old['password'] ?? '')); ?>" />
-                                <div class="small text-danger d-block" id="passwordError"><?php echo htmlspecialchars((string) ($fieldErrors['password'] ?? '')); ?></div>
+                              <label for="password" class="form-label">Mot de passe</label>
+                              <div class="input-group">
+                                <input type="password" class="form-control <?= ($fieldErrors['password'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="password" name="password" placeholder="********" value="<?= htmlspecialchars((string) ($old['password'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+                                <button class="btn btn-outline-secondary" type="button" data-toggle-password data-toggle-target="password">
+                                  👁️
+                                </button>
+                              </div>
+                              <div class="small text-danger d-block" id="passwordError"><?= htmlspecialchars((string) ($fieldErrors['password'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <div class="mb-3">
-                                <label for="confirmPassword" class="form-label">Confirmer le mot de passe</label>
-                                <input class="form-control <?php echo ($fieldErrors['confirm_password'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="confirmPassword" name="confirm_password" placeholder="********" value="<?php echo htmlspecialchars((string) ($old['confirm_password'] ?? '')); ?>" />
-                                <div class="small text-danger d-block" id="confirmPasswordError"><?php echo htmlspecialchars((string) ($fieldErrors['confirm_password'] ?? '')); ?></div>
+                              <label for="confirmPassword" class="form-label">Confirmer le mot de passe</label>
+                              <div class="input-group">
+                                <input type="password" class="form-control <?= ($fieldErrors['confirm_password'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="confirmPassword" name="confirm_password" placeholder="********" value="<?= htmlspecialchars((string) ($old['confirm_password'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+                                <button class="btn btn-outline-secondary" type="button" data-toggle-password data-toggle-target="confirmPassword">
+                                  👁️
+                                </button>
+                              </div>
+                              <div class="small text-danger d-block" id="confirmPasswordError"><?= htmlspecialchars((string) ($fieldErrors['confirm_password'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
-                            <div class="mb-3">
-                                <div class="mb-1">
-                                  <label for="phone" class="form-label">Numéro de téléphone</label>
-                                </div>
-                                <div class="mb-3">
-                                  <input id="phone" name="phone" class="form-control">
-                                </div>
-                                <input type="hidden" id="full_phone" name="full_phone">
+                            <div class="mb-3 phone-field">
+                                <label for="telephone" class="form-label">Numero de telephone</label>
+                                <input type="tel" id="telephone" name="telephone_display" class="form-control <?= ($fieldErrors['telephone'] ?? '') !== '' ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars((string) ($old['telephone'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="+216 98 123 456" autocomplete="tel" inputmode="tel" data-phone-visible>
+                                <input type="hidden" id="telephoneFull" name="telephone" value="<?= htmlspecialchars((string) ($old['telephone'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" data-phone-hidden>
+                                <small class="phone-hint">Saisissez votre numero avec l'indicatif pays.</small>
+                                <div class="small text-danger d-block" id="telephoneError"><?= htmlspecialchars((string) ($fieldErrors['telephone'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <hr />
                             <h6 class="mb-3">Informations professionnelles</h6>
                             <div class="mb-3">
-                                <label for="specialite" class="form-label">Spécialité</label>
-                                <input type="text" class="form-control <?php echo ($fieldErrors['specialite'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="specialite" name="specialite" placeholder="Ex : Développement Web" value="<?php echo htmlspecialchars((string) ($old['specialite'] ?? '')); ?>" />
-                                <div class="small text-danger d-block" id="specialiteError"><?php echo htmlspecialchars((string) ($fieldErrors['specialite'] ?? '')); ?></div>
+                                <label for="specialite" class="form-label">Specialite</label>
+                                <input type="text" class="form-control <?= ($fieldErrors['specialite'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="specialite" name="specialite" placeholder="Ex : Developpement Web" value="<?= htmlspecialchars((string) ($old['specialite'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+                                <div class="small text-danger d-block" id="specialiteError"><?= htmlspecialchars((string) ($fieldErrors['specialite'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <div class="mb-3">
-                                <label for="diplomeCount" class="form-label">Nombre de diplômes</label>
-                                <input class="form-control <?php echo ($fieldErrors['diplomes'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="diplomeCount" name="diplome_count" placeholder="Ex : 2" value="<?php echo htmlspecialchars((string) ($old['diplome_count'] ?? '')); ?>" />
-                                <div class="small text-danger d-block" id="diplomesError"><?php echo htmlspecialchars((string) ($fieldErrors['diplomes'] ?? '')); ?></div>
+                                <label for="diplomeCount" class="form-label">Nombre de diplomes</label>
+                                <input type="number" min="1" step="1" class="form-control <?= ($fieldErrors['diplomes'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="diplomeCount" name="diplome_count" placeholder="Ex : 2" value="<?= htmlspecialchars((string) ($old['diplome_count'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+                                <div class="small text-danger d-block" id="diplomesError"><?= htmlspecialchars((string) ($fieldErrors['diplomes'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
-                            <div id="diplomeFiles" class="mb-3"></div>
+                            <div id="diplomeUploads" class="mb-3"></div>
                             <div class="mb-3">
-                                <label for="experience" class="form-label">Expérience</label>
-                                <textarea class="form-control <?php echo ($fieldErrors['experience'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="experience" name="experience" rows="3" placeholder="Ex : 3 ans d'enseignement"><?php echo htmlspecialchars((string) ($old['experience'] ?? '')); ?></textarea>
-                                <div class="small text-danger d-block" id="experienceError"><?php echo htmlspecialchars((string) ($fieldErrors['experience'] ?? '')); ?></div>
+                                <label for="experience" class="form-label">Experience</label>
+                                <textarea class="form-control <?= ($fieldErrors['experience'] ?? '') !== '' ? 'is-invalid' : '' ?>" id="experience" name="experience" rows="3" placeholder="Ex : 3 ans"><?= htmlspecialchars((string) ($old['experience'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
+                                <div class="small text-danger d-block" id="experienceError"><?= htmlspecialchars((string) ($fieldErrors['experience'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
                             <div class="mb-3">
-                                <label for="cv" class="form-label">CV (PDF)</label>
-                                <input class="form-control <?php echo ($fieldErrors['cv'] ?? '') !== '' ? 'is-invalid' : ''; ?>" id="cv" name="cv" accept="application/pdf,.pdf" />
-                                <div class="small text-danger d-block" id="cvError"><?php echo htmlspecialchars((string) ($fieldErrors['cv'] ?? '')); ?></div>
+                              <label for="cv" class="form-label">Telecharger votre CV (PDF uniquement)</label>
+                              <input class="form-control <?= ($fieldErrors['cv'] ?? '') !== '' ? 'is-invalid' : '' ?>" type="file" id="cv" name="cv" accept="application/pdf,.pdf" />
+                              <div class="small text-danger d-block" id="cvError"><?= htmlspecialchars((string) ($fieldErrors['cv'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                             </div>
-                            <div id="validationPopups" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
-                            <div id="formMessage" class="alert d-none" role="alert"></div>
                             <div class="d-grid">
                                 <button type="submit" name="submit" class="btn btn-primary">S'inscrire</button>
                             </div>
@@ -107,216 +127,63 @@ if (!defined('BASE_URL')) define('BASE_URL', '/mon_site/');
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"></script>
     <script>
-      const input = document.querySelector("#phone");
-      const hiddenInput = document.querySelector("#full_phone");
-      const iti = window.intlTelInput(input, {
-        initialCountry: "tn",
-        preferredCountries: ["tn", "fr", "us"],
-        separateDialCode: true,
-        utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"
-      });
-      input.addEventListener('input', function() {
-        hiddenInput.value = iti.getNumber();
-      });
-      input.addEventListener('countrychange', function() {
-        hiddenInput.value = iti.getNumber();
-      });
+      (function () {
+        const input = document.querySelector("#telephone");
+        if (!input || !window.intlTelInput) {
+          return;
+        }
+
+        window.intlTelInput(input, {
+          initialCountry: "tn",
+          preferredCountries: ["tn", "fr", "us"],
+          utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"
+        });
+      })();
     </script>
     <script>
       (function () {
-        const form = document.getElementById("trainerSignupForm");
-        const nomInput = document.getElementById("nom");
-        const prenomInput = document.getElementById("prenom");
-        const emailInput = document.getElementById("email");
-        const passwordInput = document.getElementById("password");
-        const confirmPasswordInput = document.getElementById("confirmPassword");
-        const telephoneInput = document.getElementById("telephone");
-        const specialiteInput = document.getElementById("specialite");
-        const diplomeCountInput = document.getElementById("diplomeCount");
-        const experienceInput = document.getElementById("experience");
-        const cvInput = document.getElementById("cv");
-        const diplomeFilesContainer = document.getElementById("diplomeFiles");
-        const message = document.getElementById("formMessage");
-        const popupContainer = document.getElementById("validationPopups");
-        const fieldErrors = {
-          nom: document.getElementById("nomError"),
-          prenom: document.getElementById("prenomError"),
-          email: document.getElementById("emailError"),
-          password: document.getElementById("passwordError"),
-          confirmPassword: document.getElementById("confirmPasswordError"),
-          telephone: document.getElementById("telephoneError"),
-          specialite: document.getElementById("specialiteError"),
-          diplomes: document.getElementById("diplomesError"),
-          experience: document.getElementById("experienceError"),
-          cv: document.getElementById("cvError"),
-        };
-        const fieldInputs = {
-          nom: nomInput,
-          prenom: prenomInput,
-          email: emailInput,
-          password: passwordInput,
-          confirmPassword: confirmPasswordInput,
-          telephone: telephoneInput,
-          specialite: specialiteInput,
-          diplomes: diplomeCountInput,
-          experience: experienceInput,
-          cv: cvInput,
-        };
+        const countInput = document.getElementById("diplomeCount");
+        const container = document.getElementById("diplomeUploads");
 
-        function clearFieldErrors() {
-          Object.entries(fieldErrors).forEach(([key, element]) => {
-            if (element) {
-              element.textContent = "";
-            }
-            const input = fieldInputs[key];
-            if (input) {
-              input.classList.remove("is-invalid");
-            }
-          });
+        if (!countInput || !container) {
+          return;
         }
 
-        function setFieldError(key, text) {
-          const error = fieldErrors[key];
-          const input = fieldInputs[key];
-          if (error) {
-            error.textContent = text;
-          }
-          if (input) {
-            input.classList.add("is-invalid");
-          }
-        }
+        function renderDiplomaInputs() {
+          const count = Number.parseInt(countInput.value || "0", 10);
+          container.innerHTML = "";
 
-        function isValidEmail(email) {
-          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        }
-
-        function showPopup(text) {
-          if (!popupContainer) {
-            return;
-          }
-          const popup = document.createElement("div");
-          popup.className = "alert alert-warning shadow-sm mb-2";
-          popup.textContent = text;
-          popupContainer.appendChild(popup);
-          setTimeout(function () {
-            popup.remove();
-          }, 2500);
-        }
-
-        function showMessage(text, type) {
-          message.className = "alert alert-" + type;
-          message.textContent = text;
-          message.classList.remove("d-none");
-        }
-
-        function renderDiplomeInputs(count) {
-          diplomeFilesContainer.innerHTML = "";
           if (!Number.isInteger(count) || count <= 0) {
             return;
           }
-          for (let i = 1; i <= count; i += 1) {
+
+          for (let index = 1; index <= count; index += 1) {
             const wrapper = document.createElement("div");
-            wrapper.className = "mb-2";
+            wrapper.className = "mb-3";
 
             const label = document.createElement("label");
             label.className = "form-label";
-            label.setAttribute("for", "diplome" + i);
-            label.textContent = "Diplôme " + i + " (PDF)";
+            label.setAttribute("for", "diplomeFile" + index);
+            label.textContent = "Diplome " + index + " (PDF)";
 
             const input = document.createElement("input");
             input.type = "file";
             input.className = "form-control";
-            input.id = "diplome" + i;
-            input.name = "diplome" + i;
+            input.id = "diplomeFile" + index;
+            input.name = "diplome_files[]";
             input.accept = "application/pdf,.pdf";
 
             wrapper.appendChild(label);
             wrapper.appendChild(input);
-            diplomeFilesContainer.appendChild(wrapper);
+            container.appendChild(wrapper);
           }
         }
 
-        diplomeCountInput.addEventListener("input", function () {
-          const count = Number.parseInt(diplomeCountInput.value, 10);
-          renderDiplomeInputs(Number.isNaN(count) ? 0 : count);
-        });
-
-        renderDiplomeInputs(Number.parseInt(diplomeCountInput.value || "0", 10) || 0);
-
-        form.addEventListener("submit", function (event) {
-          clearFieldErrors();
-          let hasError = false;
-
-          if (!nomInput.value.trim()) { setFieldError("nom", "Le nom est obligatoire."); showPopup("Le nom est obligatoire."); hasError = true; }
-          if (!prenomInput.value.trim()) { setFieldError("prenom", "Le prénom est obligatoire."); showPopup("Le prénom est obligatoire."); hasError = true; }
-          if (!emailInput.value.trim()) { setFieldError("email", "L'email est obligatoire."); showPopup("L'email est obligatoire."); hasError = true; }
-          else if (!isValidEmail(emailInput.value.trim())) { setFieldError("email", "Veuillez saisir une adresse email valide."); showPopup("Veuillez saisir une adresse email valide."); hasError = true; }
-          if (!passwordInput.value) { setFieldError("password", "Le mot de passe est obligatoire."); showPopup("Le mot de passe est obligatoire."); hasError = true; }
-          else if (passwordInput.value.length < 6) { setFieldError("password", "Le mot de passe doit contenir au moins 6 caractères."); showPopup("Le mot de passe doit contenir au moins 6 caractères."); hasError = true; }
-          if (!confirmPasswordInput.value) { setFieldError("confirmPassword", "La confirmation du mot de passe est obligatoire."); showPopup("La confirmation du mot de passe est obligatoire."); hasError = true; }
-          else if (passwordInput.value !== confirmPasswordInput.value) { setFieldError("confirmPassword", "La confirmation ne correspond pas au mot de passe."); showPopup("La confirmation ne correspond pas au mot de passe."); hasError = true; }
-          if (!telephoneInput.value.trim()) { setFieldError("telephone", "Le téléphone est obligatoire."); showPopup("Le téléphone est obligatoire."); hasError = true; }
-          else if (window.PhoneInputEnhancer) {
-            const phoneValidation = window.PhoneInputEnhancer.validateField(form, true);
-            if (!phoneValidation.isValid) {
-              setFieldError("telephone", phoneValidation.message);
-              showPopup(phoneValidation.message);
-              hasError = true;
-            }
-          }
-          if (!specialiteInput.value.trim()) { setFieldError("specialite", "La spécialité est obligatoire."); showPopup("La spécialité est obligatoire."); hasError = true; }
-
-          const diplomeCount = Number.parseInt(diplomeCountInput.value || "0", 10);
-          if (!Number.isInteger(diplomeCount) || diplomeCount <= 0) {
-            setFieldError("diplomes", "Le nombre de diplômes est obligatoire.");
-            showPopup("Le nombre de diplômes est obligatoire.");
-            hasError = true;
-          } else if (diplomeCount > 20) {
-            setFieldError("diplomes", "Le nombre de diplômes est trop élevé.");
-            showPopup("Le nombre de diplômes est trop élevé.");
-            hasError = true;
-          } else {
-            for (let i = 1; i <= diplomeCount; i += 1) {
-              const input = document.getElementById("diplome" + i);
-              const file = input && input.files ? input.files[0] : null;
-              if (!file) {
-                setFieldError("diplomes", "Tous les diplômes sont obligatoires.");
-                showPopup("Tous les diplômes sont obligatoires.");
-                hasError = true;
-                break;
-              }
-              if (!file.name.toLowerCase().endsWith(".pdf")) {
-                setFieldError("diplomes", "Chaque diplôme doit être un PDF.");
-                showPopup("Chaque diplôme doit être un PDF.");
-                hasError = true;
-                break;
-              }
-            }
-          }
-
-          if (!experienceInput.value.trim()) { setFieldError("experience", "L'expérience est obligatoire."); showPopup("L'expérience est obligatoire."); hasError = true; }
-
-          const cvFile = cvInput.files[0];
-          if (!cvFile) {
-            setFieldError("cv", "Le CV est obligatoire.");
-            showPopup("Le CV est obligatoire.");
-            hasError = true;
-          } else if (!cvFile.name.toLowerCase().endsWith(".pdf")) {
-            setFieldError("cv", "Le CV doit être au format PDF.");
-            showPopup("Le CV doit être au format PDF.");
-            hasError = true;
-          }
-
-          if (hasError) {
-            event.preventDefault();
-            showMessage("Les champs en rouge doivent être corrigés.", "danger");
-            return;
-          }
-
-          showMessage("Inscription en cours...", "success");
-        });
+        countInput.addEventListener("input", renderDiplomaInputs);
+        renderDiplomaInputs();
       })();
     </script>
+    <script src="<?= BASE_URL ?>Views/assets/js/password-toggle.js"></script>
+    <script src="<?= BASE_URL ?>Views/assets/js/signup-validation.js"></script>
 </body>
 </html>
-

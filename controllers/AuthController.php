@@ -2,6 +2,7 @@
 
 class AuthController
 {
+    private const CAPTCHA_THRESHOLD = 2;
     private UserModel $userModel;
     private FormateurModel $formateurModel;
     private EntrepriseModel $entrepriseModel;
@@ -17,6 +18,9 @@ class AuthController
     {
         $this->ensureSessionStarted();
         $state = $this->createInitialLoginState();
+        $recaptchaConfig = $this->getRecaptchaConfig();
+        $state['recaptchaSiteKey'] = (string) ($recaptchaConfig['site_key'] ?? '');
+        $state['requireCaptcha'] = $this->shouldRequireCaptcha($recaptchaConfig);
 
         if (!isset($_POST['login'])) {
             return $state;
@@ -36,10 +40,29 @@ class AuthController
             return $state;
         }
 
+        if ($state['requireCaptcha']) {
+            $captchaResponse = trim((string) ($_POST['g-recaptcha-response'] ?? ''));
+            if ($captchaResponse === '') {
+                $state['errors']['captcha'] = 'Veuillez verifier que vous n\'etes pas un robot.';
+                $this->incrementLoginFailedAttempts();
+                $state['requireCaptcha'] = $this->shouldRequireCaptcha($recaptchaConfig);
+                return $state;
+            }
+
+            if (!$this->verifyRecaptcha($captchaResponse, $recaptchaConfig)) {
+                $state['errors']['captcha'] = 'Veuillez verifier que vous n\'etes pas un robot.';
+                $this->incrementLoginFailedAttempts();
+                $state['requireCaptcha'] = $this->shouldRequireCaptcha($recaptchaConfig);
+                return $state;
+            }
+        }
+
         if ($this->authenticateAndRedirect($email, $password)) {
             return $state;
         }
 
+        $this->incrementLoginFailedAttempts();
+        $state['requireCaptcha'] = $this->shouldRequireCaptcha($recaptchaConfig);
         $state['message'] = 'Identifiants incorrects. Vérifiez votre email et votre mot de passe.';
 
         return $state;
@@ -75,9 +98,12 @@ class AuthController
             'errors' => [
                 'email' => '',
                 'password' => '',
+                'captcha' => '',
             ],
             'emailValue' => '',
             'passwordValue' => '',
+            'requireCaptcha' => false,
+            'recaptchaSiteKey' => '',
         ];
     }
 
@@ -122,6 +148,12 @@ class AuthController
             $account = $entry['lookup']();
 
             if ($account && $this->isMatchingPassword($password, (string) $account['password'])) {
+                $this->resetLoginFailedAttempts();
+                if (array_key_exists('email_verified', $account) && (int) $account['email_verified'] === 0) {
+                    $this->storePendingVerification($entry['role'], (string) $account['email']);
+                    header('Location: index.php?page=verifier-email');
+                    exit;
+                }
                 $this->storeAuthenticatedSession($entry['role'], $account);
                 $this->redirectToDashboard();
             }
@@ -160,6 +192,19 @@ class AuthController
         $_SESSION['nom'] = $_SESSION['user_name'];
     }
 
+    private function storePendingVerification(string $role, string $email): void
+    {
+        $this->ensureSessionStarted();
+        $_SESSION['pending_verification'] = [
+            'email' => $email,
+            'role' => $role,
+        ];
+        $_SESSION['verification_flash'] = [
+            'type' => 'warning',
+            'message' => 'Veuillez verifier votre email avant de vous connecter.',
+        ];
+    }
+
     private function redirectToDashboard(): void
     {
         session_write_close();
@@ -173,6 +218,8 @@ class AuthController
         $errors = $loginState['errors'];
         $emailValue = $loginState['emailValue'];
         $passwordValue = $loginState['passwordValue'];
+        $requireCaptcha = $loginState['requireCaptcha'];
+        $recaptchaSiteKey = $loginState['recaptchaSiteKey'];
 
         require_once __DIR__ . '/../Views/login.view.php';
     }
@@ -182,6 +229,85 @@ class AuthController
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
+    }
+
+    private function shouldRequireCaptcha(array $recaptchaConfig): bool
+    {
+        if (empty($recaptchaConfig['enabled']) || empty($recaptchaConfig['site_key']) || empty($recaptchaConfig['secret_key'])) {
+            return false;
+        }
+
+        return $this->getLoginFailedAttempts() >= self::CAPTCHA_THRESHOLD;
+    }
+
+    private function getLoginFailedAttempts(): int
+    {
+        return (int) ($_SESSION['login_failed_attempts'] ?? 0);
+    }
+
+    private function incrementLoginFailedAttempts(): void
+    {
+        $_SESSION['login_failed_attempts'] = $this->getLoginFailedAttempts() + 1;
+    }
+
+    private function resetLoginFailedAttempts(): void
+    {
+        $_SESSION['login_failed_attempts'] = 0;
+    }
+
+    private function getRecaptchaConfig(): array
+    {
+        $path = __DIR__ . '/../config/recaptcha.php';
+        if (!file_exists($path)) {
+            return [];
+        }
+
+        $config = require $path;
+        return is_array($config) ? $config : [];
+    }
+
+    private function verifyRecaptcha(string $response, array $recaptchaConfig): bool
+    {
+        $secret = (string) ($recaptchaConfig['secret_key'] ?? '');
+        if ($secret === '') {
+            return false;
+        }
+
+        $payload = http_build_query([
+            'secret' => $secret,
+            'response' => $response,
+            'remoteip' => $_SERVER['REMOTE_ADDR'] ?? '',
+        ]);
+
+        $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
+        $result = null;
+
+        if (function_exists('curl_init')) {
+            $ch = curl_init($verifyUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+            $result = curl_exec($ch);
+            curl_close($ch);
+        } else {
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'POST',
+                    'header' => "Content-type: application/x-www-form-urlencoded\r\n",
+                    'content' => $payload,
+                    'timeout' => 8,
+                ],
+            ]);
+            $result = @file_get_contents($verifyUrl, false, $context);
+        }
+
+        if ($result === false || $result === null) {
+            return false;
+        }
+
+        $decoded = json_decode($result, true);
+        return is_array($decoded) && !empty($decoded['success']);
     }
 }
 

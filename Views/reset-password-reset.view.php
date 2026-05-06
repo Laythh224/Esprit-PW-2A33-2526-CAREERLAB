@@ -80,7 +80,7 @@ $state = $state ?? [
                                         required
                                         minlength="8"
                                     >
-                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword" data-toggle-password data-toggle-target="password">
                                         👁️
                                     </button>
                                 </div>
@@ -111,7 +111,7 @@ $state = $state ?? [
                                         required
                                         minlength="8"
                                     >
-                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirm">
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirm" data-toggle-password data-toggle-target="confirmPassword">
                                         👁️
                                     </button>
                                 </div>
@@ -140,18 +140,8 @@ $state = $state ?? [
         </div>
     </div>
 
+    <script src="<?= BASE_URL ?>Views/assets/js/password-toggle.js"></script>
     <script>
-        // Afficher/masquer mot de passe
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            const field = document.getElementById('password');
-            field.type = field.type === 'password' ? 'text' : 'password';
-        });
-
-        document.getElementById('toggleConfirm').addEventListener('click', function() {
-            const field = document.getElementById('confirmPassword');
-            field.type = field.type === 'password' ? 'text' : 'password';
-        });
-
         // Indicateur de force du mot de passe
         const passwordField = document.getElementById('password');
         passwordField.addEventListener('input', function() {

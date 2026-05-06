@@ -75,6 +75,38 @@ body-text-color: #575962
 white-color: #ffffff
 black-color: #191919
 transparent-bg : transparent
+
+.was-validated .form-control:valid,
+.form-control.is-valid,
+.was-validated .form-select:valid,
+.form-select.is-valid {
+   border-color: #006400;
+}
+
+.was-validated .form-control:valid:focus,
+.form-control.is-valid:focus,
+.was-validated .form-select:valid:focus,
+.form-select.is-valid:focus {
+   border-color: #006400;
+   box-shadow: 0 0 0 0.25rem rgba(0, 100, 0, 0.25);
+}
+
+.was-validated .form-check-input:valid,
+.form-check-input.is-valid {
+   border-color: #006400;
+}
+
+.was-validated .form-check-input:valid:checked,
+.form-check-input.is-valid:checked {
+   background-color: #006400;
+}
+
+.was-validated .form-check-input:valid ~ .form-check-label,
+.form-check-input.is-valid ~ .form-check-label,
+.valid-feedback,
+.valid-tooltip {
+   color: #006400;
+}
 default-color : #282a3c
 primary-color : #177dff
 secondary-color : #716aca

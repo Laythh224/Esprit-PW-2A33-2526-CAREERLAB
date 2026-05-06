@@ -12,6 +12,9 @@ class AdminController
         'formateurs' => 'gestion-formateurs',
         'entreprises' => 'gestion-entreprises',
         'companies' => 'gestion-entreprises',
+        'demandes' => 'demandes-ia',
+        'ai' => 'demandes-ia',
+        'support' => 'demandes-ia',
     ];
 
     public function resolveAdminPage(?string $view, string $fallback = 'dashboard-admin'): string

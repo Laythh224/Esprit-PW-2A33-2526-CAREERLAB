@@ -13,77 +13,64 @@ class StatisticsController
         $this->statisticsModel = new StatisticsModel($db->connection());
     }
 
-    private function getCommonStats(): array
+    private function getCommonStats(?string $startDate = null, ?string $endDate = null): array
     {
-        $stats = [];
-        // Simples stats
-        $stats['totalUsers'] = $this->statisticsModel->getTotalUsers();
-        $stats['usersToday'] = $this->statisticsModel->getUsersToday();
-        $stats['usersThisMonth'] = $this->statisticsModel->getUsersThisMonth();
+        $dashboardStats = $this->statisticsModel->getDashboardStats($startDate, $endDate);
 
-        $stats['totalEntreprises'] = $this->statisticsModel->getTotalEntreprises();
-        $stats['entreprisesThisMonth'] = $this->statisticsModel->getEntreprisesThisMonth();
-        $stats['entreprisesActives'] = $this->statisticsModel->getEntreprisesActives();
-
-        $stats['totalFormateurs'] = $this->statisticsModel->getTotalFormateurs();
-        $stats['formateursThisMonth'] = $this->statisticsModel->getFormateursThisMonth();
-        $stats['avgInscriptionsPerFormateur'] = $this->statisticsModel->getAvgInscriptionsPerFormateur();
-
-        $stats['totalInscriptions'] = $this->statisticsModel->getTotalInscriptions();
-        $stats['inscriptionsToday'] = $this->statisticsModel->getInscriptionsToday();
-        $stats['inscriptionsThisMonth'] = $this->statisticsModel->getInscriptionsThisMonth();
-
-        $monthsArr = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-
-        // 1. Line Chart: Utilisateurs par mois
-        $usersByMonth = $this->statisticsModel->getUsersByMonth();
-        $usersChartLabels = [];
-        $usersChartData = [];
-        foreach ($usersByMonth as $row) {
-            $usersChartLabels[] = $monthsArr[$row['mois'] - 1] . ' ' . $row['annee'];
-            $usersChartData[] = $row['total'];
-        }
-        $stats['usersChartLabels'] = $usersChartLabels;
-        $stats['usersChartData'] = $usersChartData;
-
-        // 2. Bar Chart: Inscriptions par mois
-        $inscriptionsByMonth = $this->statisticsModel->getAllInscriptionsByMonth();
-        $inscriptionsChartLabels = [];
-        $inscriptionsChartData = [];
-        foreach ($inscriptionsByMonth as $row) {
-            $inscriptionsChartLabels[] = $monthsArr[$row['mois'] - 1] . ' ' . $row['annee'];
-            $inscriptionsChartData[] = $row['total'];
-        }
-        $stats['inscriptionsChartLabels'] = $inscriptionsChartLabels;
-        $stats['inscriptionsChartData'] = $inscriptionsChartData;
-
-        // 3. Pie Chart: Repartition
-        $repartition = $this->statisticsModel->getInscriptionsRepartition();
-        $repartitionChartLabels = [];
-        $repartitionChartData = [];
-        foreach ($repartition as $row) {
-            $repartitionChartLabels[] = $row['label'];
-            $repartitionChartData[] = $row['total'];
-        }
-        $stats['repartitionChartLabels'] = $repartitionChartLabels;
-        $stats['repartitionChartData'] = $repartitionChartData;
-
-        // Repartition en texte
-        $stats['repartitionEntreprise'] = $repartitionChartData[0] ?? 0;
-        $stats['repartitionFormateur'] = $repartitionChartData[1] ?? 0;
-
-        return $stats;
+        return [
+            'usersStats' => $dashboardStats['users'],
+            'entreprisesStats' => $dashboardStats['entreprises'],
+            'formateursStats' => $dashboardStats['formateurs'],
+            'globalPieStats' => $dashboardStats['globalPie'],
+            // Compatibilite avec la carte deja presente dans index.view.php
+            'totalUsers' => $dashboardStats['users']['total'],
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+        ];
     }
 
     public function index(): void
     {
-        extract($this->getCommonStats());
+        $startDate = $this->sanitizeDate($_GET['start_date'] ?? null);
+        $endDate = $this->sanitizeDate($_GET['end_date'] ?? null);
+        extract($this->getCommonStats($startDate, $endDate));
         require __DIR__ . '/../Views/statistics.view.php';
     }
 
     public function dashboardAdmin(): void
     {
-        extract($this->getCommonStats());
+        $startDate = $this->sanitizeDate($_GET['start_date'] ?? null);
+        $endDate = $this->sanitizeDate($_GET['end_date'] ?? null);
+        extract($this->getCommonStats($startDate, $endDate));
         require __DIR__ . '/../Views/index.view.php';
+    }
+
+    public function api(): void
+    {
+        $startDate = $this->sanitizeDate($_GET['start_date'] ?? null);
+        $endDate = $this->sanitizeDate($_GET['end_date'] ?? null);
+
+        JsonResponse::send(true, [
+            'stats' => $this->getCommonStats($startDate, $endDate),
+        ]);
+    }
+
+    private function sanitizeDate(mixed $value): ?string
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        $date = DateTime::createFromFormat('Y-m-d', $value);
+        if ($date === false || $date->format('Y-m-d') !== $value) {
+            return null;
+        }
+
+        return $value;
     }
 }

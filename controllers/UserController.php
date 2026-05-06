@@ -3,10 +3,14 @@
 class UserController
 {
     private UserModel $model;
+    private EmailService $verificationService;
+    private ?Mailer $mailer;
 
-    public function __construct(UserModel $model)
+    public function __construct(UserModel $model, EmailService $verificationService, ?Mailer $mailer = null)
     {
         $this->model = $model;
+        $this->verificationService = $verificationService;
+        $this->mailer = $mailer;
     }
 
     public function signup(): void
@@ -14,6 +18,7 @@ class UserController
         $formState = $this->createInitialSignupState();
 
         if (isset($_POST['submit'])) {
+            $_POST['telephone'] = $this->normalizePhoneValue($_POST);
             $entity = $this->hydrateEntityFromPost($_POST);
             $formState['values'] = $this->extractValuesFromEntity($entity);
             $formState['errors'] = $this->model->validateSignup($entity, $_FILES);
@@ -21,8 +26,22 @@ class UserController
 
             if (!$this->hasSignupErrors($formState)) {
                 try {
-                    $this->model->registerFromEntity($entity, $_FILES);
-                    header('Location: index.php');
+                    $data = $this->model->prepareRegistrationData($entity, $_FILES);
+                    $this->ensureSessionStarted();
+                    try {
+                        $this->verificationService->startRegistrationSession('utilisateur', $entity->getEmail(), $data);
+                        $_SESSION['verification_flash'] = [
+                            'type' => 'success',
+                            'message' => 'Un code de verification a ete envoye a votre email.',
+                        ];
+                    } catch (Throwable $exception) {
+                        $_SESSION['verification_flash'] = [
+                            'type' => 'warning',
+                            'message' => 'Erreur: ' . $exception->getMessage(),
+                        ];
+                    }
+
+                    header('Location: index.php?page=verifier-email');
                     exit;
                 } catch (Throwable $exception) {
                     $this->mapSignupExceptionToFieldError($formState, $exception);
@@ -45,6 +64,7 @@ class UserController
             'values' => [
                 'nom' => '',
                 'prenom' => '',
+                'sexe' => '',
                 'email' => '',
                 'telephone' => '',
                 'password' => '',
@@ -56,6 +76,7 @@ class UserController
             'errors' => [
                 'nom' => '',
                 'prenom' => '',
+                'sexe' => '',
                 'email' => '',
                 'telephone' => '',
                 'password' => '',
@@ -72,15 +93,16 @@ class UserController
         $entity = new UserEntity();
 
         $entity
-            ->setNom(trim((string) ($post['nom'] ?? '')))
-            ->setPrenom(trim((string) ($post['prenom'] ?? '')))
-            ->setEmail(trim((string) ($post['email'] ?? '')))
-            ->setTelephone(trim((string) ($post['telephone'] ?? '')))
+            ->setNom($this->cleanText((string) ($post['nom'] ?? '')))
+            ->setPrenom($this->cleanText((string) ($post['prenom'] ?? '')))
+            ->setSexe($this->cleanText((string) ($post['sexe'] ?? '')))
+            ->setEmail($this->cleanEmail((string) ($post['email'] ?? '')))
+            ->setTelephone($this->normalizePhoneValue($post))
             ->setPassword((string) ($post['password'] ?? ''))
             ->setConfirmPassword((string) ($post['confirm_password'] ?? ''))
-            ->setNiveau(trim((string) ($post['niveau'] ?? '')))
-            ->setDomaine(trim((string) ($post['domaine'] ?? '')))
-            ->setCompetences(trim((string) ($post['competences'] ?? '')));
+            ->setNiveau($this->cleanText((string) ($post['niveau'] ?? '')))
+            ->setDomaine($this->cleanText((string) ($post['domaine'] ?? '')))
+            ->setCompetences($this->cleanMultilineText((string) ($post['competences'] ?? '')));
 
         return $entity;
     }
@@ -90,6 +112,7 @@ class UserController
         return [
             'nom' => $entity->getNom(),
             'prenom' => $entity->getPrenom(),
+            'sexe' => $entity->getSexe(),
             'email' => $entity->getEmail(),
             'telephone' => $entity->getTelephone(),
             'password' => $entity->getPassword(),
@@ -137,16 +160,60 @@ class UserController
             return;
         }
 
+        if (str_contains($lowerMessage, 'telephone')) {
+            $formState['errors']['telephone'] = $message;
+            return;
+        }
+
         $formState['message'] = $message;
+    }
+
+    private function normalizePhoneValue(array $post): string
+    {
+        $rawPhone = trim((string) ($post['telephone'] ?? ''));
+        if ($rawPhone === '') {
+            $rawPhone = trim((string) ($post['full_phone'] ?? ''));
+        }
+        if ($rawPhone === '') {
+            $rawPhone = trim((string) ($post['phone'] ?? ''));
+        }
+
+        $sanitised = preg_replace('/[^\d+]/', '', $rawPhone) ?? '';
+        return preg_replace('/(?!^)\+/', '', $sanitised) ?? '';
+    }
+
+    private function cleanText(string $value): string
+    {
+        return trim(strip_tags($value));
+    }
+
+    private function cleanMultilineText(string $value): string
+    {
+        return trim(strip_tags(str_replace(["\r\n", "\r"], "\n", $value)));
+    }
+
+    private function cleanEmail(string $value): string
+    {
+        return trim(mb_strtolower(strip_tags($value), 'UTF-8'));
+    }
+
+    private function ensureSessionStarted(): void
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
     }
 
     public function api(): void
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
+        $this->ensureAdminApiAccess();
+
         if ($method === 'GET') {
+            $verificationFilter = $this->sanitizeVerificationFilter((string) ($_GET['verified'] ?? 'all'));
             JsonResponse::send(true, [
-                'users' => $this->model->all(),
+                'users' => $this->model->all($verificationFilter),
                 'stats' => ['total' => $this->model->count()],
             ]);
         }
@@ -178,10 +245,58 @@ class UserController
                 JsonResponse::send(true, ['message' => 'Utilisateur supprimé avec succès.']);
             }
 
+            if ($action === 'toggleVerification') {
+                $this->toggleVerificationStatus((int) ($input['id'] ?? 0), (bool) ($input['verified'] ?? false));
+                return;
+            }
+
             JsonResponse::send(false, ['message' => 'Action non supportée.'], 400);
         } catch (InvalidArgumentException $exception) {
             JsonResponse::send(false, ['message' => $exception->getMessage()], 422);
         }
     }
-}
 
+    private function toggleVerificationStatus(int $id, bool $verified): void
+    {
+        $account = $this->model->findById($id);
+        if ($account === null) {
+            JsonResponse::send(false, ['message' => 'Compte introuvable.'], 404);
+        }
+
+        $adminId = (int) ($_SESSION['user_id'] ?? 0);
+        $previousVerified = (int) ($account['verified'] ?? 0) === 1;
+        $this->model->updateVerificationStatus($id, $verified, $adminId > 0 ? $adminId : null);
+        $this->model->logVerificationChange($id, $adminId > 0 ? $adminId : null, $previousVerified, $verified);
+
+        if ($verified && $this->mailer !== null) {
+            try {
+                $displayName = trim((string) ($account['prenom'] ?? '') . ' ' . (string) ($account['nom'] ?? '')) ?: (string) ($account['email'] ?? '');
+                $this->mailer->sendAccountVerifiedNotification((string) $account['email'], $displayName);
+            } catch (Throwable $exception) {
+                error_log('Account verification email failed: ' . $exception->getMessage());
+            }
+        }
+
+        JsonResponse::send(true, [
+            'message' => $verified ? 'Compte vérifié avec succès.' : 'Vérification retirée avec succès.',
+        ]);
+    }
+
+    private function sanitizeVerificationFilter(string $value): string
+    {
+        $value = strtolower(trim($value));
+
+        return in_array($value, ['verified', 'unverified'], true) ? $value : 'all';
+    }
+
+    private function ensureAdminApiAccess(): void
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (($_SESSION['role'] ?? '') !== 'admin') {
+            JsonResponse::send(false, ['message' => 'Accès administrateur requis.'], 403);
+        }
+    }
+}

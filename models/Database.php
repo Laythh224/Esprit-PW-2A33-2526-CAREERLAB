@@ -8,7 +8,7 @@ class Database
         string $host = 'localhost',
         string $user = 'root',
         string $password = '',
-        string $database = 'plateforme_emploi'
+        string $database = 'plateforme_unique'
     ) {
         if (!extension_loaded('pdo_mysql')) {
             throw new RuntimeException("L'extension pdo_mysql est requise.");
