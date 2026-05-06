@@ -1,0 +1,65 @@
+/* Evaluation Module Styles */
+.quiz-card {
+    border: 0;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(9, 30, 62, 0.16);
+    background: #fff;
+    margin-bottom: 30px;
+}
+
+.metier-card {
+    transition: all 0.3s ease;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.metier-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    border-color: #06A3DA;
+}
+
+.question-block {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.question-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #091E3E;
+    margin-bottom: 15px;
+}
+
+.reponse-option {
+    display: block;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.reponse-option:hover {
+    background: #e9ecef;
+}
+
+.reponse-option input {
+    margin-right: 10px;
+}
+
+.score-display {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #06A3DA;
+}
+
+.niveau-badge {
+    font-size: 1.5rem;
+    padding: 10px 20px;
+    border-radius: 50px;
+}

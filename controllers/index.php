@@ -126,7 +126,6 @@ try {
         $formateurModel,
         $entrepriseModel
     );
-    $passwordResetController = new PasswordResetController($passwordService);
     
     // Système de réinitialisation avec TOKEN (nouveau)
     $tokenResetModel = new TokenResetModel($conn);
@@ -152,7 +151,6 @@ try {
     $inscEntrepriseController = new InscriptionEntrepriseController($inscEntrepriseModel, $userModel, $entrepriseModel);
     $inscFormateurController = new InscriptionFormateurController($inscFormateurModel, $userModel, $formateurModel);
 
-
     require_once __DIR__ . '/StatisticsController.php';
     $statisticsController = new StatisticsController();
 
@@ -163,7 +161,6 @@ try {
         'mot-de-passe-oublie' => [$tokenResetController, 'requestReset'],
         'mot-de-passe-oublie-code' => [$tokenResetController, 'requestReset'],
         'mot-de-passe-oublie-reset' => [$tokenResetController, 'requestReset'],
-        // Nouvelles routes avec TOKEN (remplacent le système de code)
         'reset-password-request' => [$tokenResetController, 'requestReset'],
         'reset-password-sent' => [$tokenResetController, 'resetPasswordSent'],
         'reset-password' => [$tokenResetController, 'resetPassword'],
@@ -177,10 +174,8 @@ try {
         'api-check-email' => [$signupValidationController, 'emailAvailability'],
         'ai-support' => [$aiSupportController, 'submit'],
         'demandes-ia' => [$aiSupportController, 'adminIndex'],
-        // Routes Actions des Inscriptions (Affiche la vue et gère le POST CRUD)
         'inscription-entreprise' => [$inscEntrepriseController, 'index'],
         'inscription-formateur' => [$inscFormateurController, 'index'],
-        // Route pour les statistiques avancées
         'statistiques' => [$statisticsController, 'index'],
         'dashboard-admin' => [$statisticsController, 'dashboardAdmin'],
         'api-statistiques' => [$statisticsController, 'api'],
@@ -204,7 +199,6 @@ try {
     }
 } catch (Throwable $exception) {
     $statusCode = 500;
-
     error_log('[mon_site] Unhandled exception: ' . $exception->getMessage());
 
     if ($isApiRoute) {

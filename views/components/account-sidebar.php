@@ -1,6 +1,6 @@
 <?php
 $activeAccountPage = $activeAccountPage ?? '';
-$pathPrefix = (strpos($_SERVER['SCRIPT_NAME'], 'startup2-1.0.0') !== false) ? '../' : '';
+$pathPrefix = (strpos($_SERVER['SCRIPT_NAME'], 'startup2-1.0.0') !== false || strpos($_SERVER['SCRIPT_NAME'], 'projet_web') !== false) ? '../' : '';
 ?>
 <div class="sidebar sidebar-style-2" data-background-color="dark">
     <div class="sidebar-logo">
@@ -96,6 +96,13 @@ $pathPrefix = (strpos($_SERVER['SCRIPT_NAME'], 'startup2-1.0.0') !== false) ? '.
                             </li>
                         </ul>
                     </div>
+                </li>
+
+                <li class="nav-item <?php echo $activeAccountPage === 'evaluation' ? 'active' : ''; ?>">
+                    <a href="<?php echo $pathPrefix; ?>projet_web/index.php?route=evaluation">
+                        <i class="fas fa-check-square"></i>
+                        <p>Gestion Évaluations</p>
+                    </a>
                 </li>
 
                 <li class="nav-item">

@@ -139,7 +139,7 @@ $aiSupportErrors = is_array($aiSupportFlash['errors'] ?? null) ? $aiSupportFlash
                 <div class="navbar-nav ms-auto py-0">
                     <a href="index.php?page=accueil" class="nav-item nav-link active">Accueil</a>
                     <a href="startup2-1.0.0/index.php?action=metiers" class="nav-item nav-link">Métiers</a>
-                    <a href="index.php?page=evaluation" class="nav-item nav-link">Evaluation</a>
+                    <a href="projet_web/index.php?route=team" class="nav-item nav-link">Evaluation</a>
                     <a href="index.php?page=offres" class="nav-item nav-link">Offres</a>
                     <a href="index.php?page=e-learnings" class="nav-item nav-link">E-learnings</a>
                     <a href="index.php?page=blog" class="nav-item nav-link">Blog</a>
