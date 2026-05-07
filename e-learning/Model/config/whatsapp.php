@@ -8,8 +8,8 @@ careerlabb_load_dotenv_file(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . '.env');
 /**
  * Notification WhatsApp apres inscription (CallMeBot, Twilio ou webhook).
  *
- * Secrets Twilio : fichier e-learning/.env (copier .env.example) ou variables
- * d'environnement serveur TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN (et optionnellement
+ * Secrets Twilio : e-learning/.env (copier .env.example) ou variables d'environnement
+ * serveur TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN (et optionnellement
  * TWILIO_API_KEY_SID / TWILIO_API_KEY_SECRET, TWILIO_WHATSAPP_FROM, TWILIO_CONTENT_SID).
  *
  * --- CallMeBot ---
