@@ -2,6 +2,7 @@
 
 class Database
 {
+    private static ?Database $instance = null;
     private PDO $connection;
 
     public function __construct(
@@ -20,11 +21,22 @@ class Database
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
         ]);
+        self::$instance = $this;
+    }
+
+    public static function getInstance(): Database {
+        if (self::$instance === null) {
+            self::$instance = new Database();
+        }
+        return self::$instance;
     }
 
     public function connection(): PDO
     {
         return $this->connection;
     }
-}
 
+    public function getConnection(): PDO {
+        return $this->connection;
+    }
+}

@@ -9,6 +9,11 @@ if (is_file($vendorAutoload)) {
 require_once __DIR__ . '/../models/Metier.php';
 require_once __DIR__ . '/MetiersController.php';
 
+// Offres Module
+require_once __DIR__ . '/../models/Offre.php';
+require_once __DIR__ . '/../models/Candidature.php';
+require_once __DIR__ . '/OffresController.php';
+
 spl_autoload_register(function (string $className): void {
     $paths = [
         __DIR__ . '/../Models/' . $className . '.php',
@@ -151,6 +156,8 @@ try {
     $inscEntrepriseController = new InscriptionEntrepriseController($inscEntrepriseModel, $userModel, $entrepriseModel);
     $inscFormateurController = new InscriptionFormateurController($inscFormateurModel, $userModel, $formateurModel);
 
+    $offresController = new OffresController();
+
     require_once __DIR__ . '/StatisticsController.php';
     $statisticsController = new StatisticsController();
 
@@ -181,6 +188,12 @@ try {
         'api-statistiques' => [$statisticsController, 'api'],
         'profile' => [$profileController, 'index'],
         'metiers' => [$metiersController, 'index'],
+        'offres' => [$offresController, 'index'],
+        'offre-details' => [$offresController, 'details'],
+        'postuler' => [$offresController, 'postuler'],
+        'admin-offres' => [$offresController, 'adminList'],
+        'admin-offre-delete' => [$offresController, 'delete'],
+        'admin-offre-add' => [$offresController, 'store'],
     ];
 
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $page)) {

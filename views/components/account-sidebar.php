@@ -105,6 +105,13 @@ $pathPrefix = (strpos($_SERVER['SCRIPT_NAME'], 'startup2-1.0.0') !== false || st
                     </a>
                 </li>
 
+                <li class="nav-item <?php echo $activeAccountPage === 'offres' ? 'active' : ''; ?>">
+                    <a href="<?php echo $pathPrefix; ?>index.php?page=admin-offres">
+                        <i class="fas fa-bullhorn"></i>
+                        <p>Gestion Offres</p>
+                    </a>
+                </li>
+
                 <li class="nav-item">
                     <a href="<?php echo $pathPrefix; ?>index.php?r=main">
                         <i class="fas fa-globe"></i>
