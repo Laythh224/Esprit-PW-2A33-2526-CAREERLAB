@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Controller\BackOffice\ClientController as BackClientController;
 use App\Controller\BackOffice\FormationController as BackFormationController;
 use App\Controller\BackOffice\SessionController as BackSessionController;
 use App\Controller\FrontOffice\FormationController as FrontFormationController;
 use App\Controller\FrontOffice\HomeController as FrontHomeController;
+use App\Controller\FrontOffice\InscriptionController as FrontInscriptionController;
 
 session_start();
 
@@ -50,6 +52,8 @@ $routes = [
     // Front office routes.
     'front' => [FrontHomeController::class, 'index', ['GET']],
     'front/formations' => [FrontFormationController::class, 'index', ['GET']],
+    'front/inscription' => [FrontInscriptionController::class, 'form', ['GET']],
+    'front/inscription/submit' => [FrontInscriptionController::class, 'submit', ['POST']],
 
     // Back office routes.
     'back/formations' => [BackFormationController::class, 'index', ['GET']],
@@ -60,6 +64,8 @@ $routes = [
     'back/sessions/store' => [BackSessionController::class, 'store', ['POST']],
     'back/sessions/update' => [BackSessionController::class, 'update', ['POST']],
     'back/sessions/delete' => [BackSessionController::class, 'delete', ['POST']],
+    'back/clients' => [BackClientController::class, 'index', ['GET']],
+    'back/clients/delete' => [BackClientController::class, 'delete', ['POST']],
 ];
 
 if (!isset($routes[$route])) {

@@ -18,7 +18,7 @@ class FormationModel
     public function all(): array
     {
         $statement = $this->db->query(
-            'SELECT nom_formation, specialite, description, niveau, nb_place
+            'SELECT nom_formation, specialite, description, niveau
              FROM formation
              ORDER BY nom_formation ASC'
         );
@@ -47,15 +47,14 @@ class FormationModel
     public function create(array $data): void
     {
         $statement = $this->db->prepare(
-            'INSERT INTO formation (nom_formation, specialite, description, niveau, nb_place)
-             VALUES (:nom_formation, :specialite, :description, :niveau, :nb_place)'
+            'INSERT INTO formation (nom_formation, specialite, description, niveau)
+             VALUES (:nom_formation, :specialite, :description, :niveau)'
         );
         $statement->execute([
             ':nom_formation' => $data['nom_formation'],
             ':specialite' => $data['specialite'],
             ':description' => $data['description'],
             ':niveau' => $data['niveau'],
-            ':nb_place' => $data['nb_place'],
         ]);
     }
 
@@ -66,8 +65,7 @@ class FormationModel
              SET nom_formation = :nom_formation,
                  specialite = :specialite,
                  description = :description,
-                 niveau = :niveau,
-                 nb_place = :nb_place
+                 niveau = :niveau
              WHERE nom_formation = :old_nom_formation'
         );
         $statement->execute([
@@ -75,7 +73,6 @@ class FormationModel
             ':specialite' => $data['specialite'],
             ':description' => $data['description'],
             ':niveau' => $data['niveau'],
-            ':nb_place' => $data['nb_place'],
             ':old_nom_formation' => $oldNomFormation,
         ]);
     }

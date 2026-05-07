@@ -96,8 +96,9 @@ class SessionController extends BaseController
         $dureePresentiel = trim((string) ($_POST['duree_presentiel'] ?? ''));
         $dateDebut = trim((string) ($_POST['date_debut'] ?? ''));
         $dateFin = trim((string) ($_POST['date_fin'] ?? ''));
+        $nbPlace = (int) ($_POST['nb_place'] ?? 0);
 
-        if ($nomFormation === '' || $type === '' || $dateDebut === '' || $dateFin === '') {
+        if ($nomFormation === '' || $type === '' || $dateDebut === '' || $dateFin === '' || $nbPlace <= 0) {
             return null;
         }
 
@@ -150,6 +151,7 @@ class SessionController extends BaseController
             'duree_presentiel' => $dureePresentiel !== null ? ($dureePresentiel !== '' ? (int) $dureePresentiel : null) : null,
             'date_debut' => $dateDebut,
             'date_fin' => $dateFin,
+            'nb_place' => $nbPlace,
         ];
     }
 
@@ -166,6 +168,7 @@ class SessionController extends BaseController
             'duree_presentiel' => trim((string) ($_POST['duree_presentiel'] ?? '')),
             'date_debut' => trim((string) ($_POST['date_debut'] ?? '')),
             'date_fin' => trim((string) ($_POST['date_fin'] ?? '')),
+            'nb_place' => (string) ($_POST['nb_place'] ?? ''),
         ];
     }
 

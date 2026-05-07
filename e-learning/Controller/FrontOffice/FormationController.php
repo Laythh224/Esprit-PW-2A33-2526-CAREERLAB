@@ -29,7 +29,6 @@ class FormationController extends BaseController
                     'specialite' => $row['specialite'],
                     'description' => $row['description'],
                     'niveau' => $row['niveau'],
-                    'nb_place' => $row['nb_place'],
                     'sessions' => [],
                 ];
             }
@@ -37,6 +36,7 @@ class FormationController extends BaseController
             if ($row['session_id'] !== null) {
                 $formations[$nomFormation]['sessions'][] = [
                     'id' => (int) $row['session_id'],
+                    'nb_place' => (int) ($row['session_nb_place'] ?? 0),
                     'type' => $row['type'],
                     'lien' => $row['lien'],
                     'duree_online' => $row['duree_online'],
@@ -53,6 +53,7 @@ class FormationController extends BaseController
             'title' => 'Formations',
             'active' => 'formations',
             'formations' => array_values($formations),
+            'flash' => $this->getFlash(),
         ]);
     }
 }

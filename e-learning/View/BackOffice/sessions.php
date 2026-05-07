@@ -13,6 +13,7 @@ require __DIR__ . '/../Layouts/back_header.php';
 ?>
 <header class="back-topbar">
   <h1>Sessions</h1>
+  <p>Planifiez les sessions et gerez leur disponibilite.</p>
 </header>
 <div class="back-content">
   <?php if (!empty($flash)): ?>
@@ -25,7 +26,7 @@ require __DIR__ . '/../Layouts/back_header.php';
       <input type="hidden" name="id" id="session_id" value="<?= htmlspecialchars((string) ($oldInput['id'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
       <div class="form-grid">
         <div class="form-group">
-          <label for="nom_formation_select">formation</label>
+          <label for="nom_formation_select">Formation</label>
           <select id="nom_formation_select" name="nom_formation" required>
             <option value="">Choisir une formation</option>
             <?php foreach ($formationChoices as $formationName): ?>
@@ -36,11 +37,11 @@ require __DIR__ . '/../Layouts/back_header.php';
           </select>
         </div>
         <div class="form-group">
-          <label for="session_type">type</label>
+          <label for="session_type">Type</label>
           <select id="session_type" name="type" required>
             <option value="">Choisir un type</option>
-            <option value="online" <?= (($oldInput['type'] ?? '') === 'online') ? 'selected' : '' ?>>online</option>
-            <option value="presentiel" <?= (($oldInput['type'] ?? '') === 'presentiel') ? 'selected' : '' ?>>presentiel</option>
+            <option value="online" <?= (($oldInput['type'] ?? '') === 'online') ? 'selected' : '' ?>>En ligne</option>
+            <option value="presentiel" <?= (($oldInput['type'] ?? '') === 'presentiel') ? 'selected' : '' ?>>Presentiel</option>
           </select>
         </div>
         <div class="form-group js-online-field<?= $onlineVisible ? ' is-visible' : '' ?>">
@@ -48,28 +49,32 @@ require __DIR__ . '/../Layouts/back_header.php';
           <input type="url" name="lien" id="lien" value="<?= htmlspecialchars((string) ($oldInput['lien'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
         </div>
         <div class="form-group js-online-field<?= $onlineVisible ? ' is-visible' : '' ?>">
-          <label for="duree_online">duree_online</label>
+          <label for="duree_online">Duree en ligne (heures)</label>
           <input type="number" min="1" name="duree_online" id="duree_online" value="<?= htmlspecialchars((string) ($oldInput['duree_online'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
         </div>
         <div class="form-group js-presentiel-field<?= $presentielVisible ? ' is-visible' : '' ?>">
-          <label for="adresse">adresse</label>
+          <label for="adresse">Adresse</label>
           <input type="text" name="adresse" id="adresse" value="<?= htmlspecialchars((string) ($oldInput['adresse'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
         </div>
         <div class="form-group js-presentiel-field<?= $presentielVisible ? ' is-visible' : '' ?>">
-          <label for="salle">salle</label>
+          <label for="salle">Salle</label>
           <input type="text" name="salle" id="salle" value="<?= htmlspecialchars((string) ($oldInput['salle'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
         </div>
         <div class="form-group js-presentiel-field<?= $presentielVisible ? ' is-visible' : '' ?>">
-          <label for="duree_presentiel">duree_presentiel</label>
+          <label for="duree_presentiel">Duree presentiel (heures)</label>
           <input type="number" min="1" name="duree_presentiel" id="duree_presentiel" value="<?= htmlspecialchars((string) ($oldInput['duree_presentiel'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
         </div>
         <div class="form-group">
-          <label for="date_debut">date_debut</label>
+          <label for="date_debut">Date debut</label>
           <input type="date" name="date_debut" id="date_debut" value="<?= htmlspecialchars((string) ($oldInput['date_debut'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required />
         </div>
         <div class="form-group">
-          <label for="date_fin">date_fin</label>
+          <label for="date_fin">Date fin</label>
           <input type="date" name="date_fin" id="date_fin" value="<?= htmlspecialchars((string) ($oldInput['date_fin'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required />
+        </div>
+        <div class="form-group">
+          <label for="session_nb_place">Nombre de places</label>
+          <input type="number" min="1" name="nb_place" id="session_nb_place" value="<?= htmlspecialchars((string) ($oldInput['nb_place'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required />
         </div>
       </div>
       <div class="actions-row">
@@ -92,6 +97,7 @@ require __DIR__ . '/../Layouts/back_header.php';
           <option value="za">Z-A</option>
         </select>
       </div>
+      <p class="table-tools__result" id="sessions-result-count"></p>
       <button type="button" class="btn-secondary" id="sessions-word-btn">Exporter Word</button>
     </div>
     <div id="sessions-stats" class="stats-circles stats-circles--session-type"></div>
@@ -99,16 +105,17 @@ require __DIR__ . '/../Layouts/back_header.php';
       <table class="data-table" id="sessions-table">
         <thead>
           <tr>
-            <th>id</th>
-            <th>formation</th>
-            <th>type</th>
-            <th>date_debut</th>
-            <th>date_fin</th>
-            <th>lien</th>
-            <th>duree_online</th>
-            <th>adresse</th>
-            <th>salle</th>
-            <th>duree_presentiel</th>
+            <th>ID</th>
+            <th>Formation</th>
+            <th>Type</th>
+            <th>Date debut</th>
+            <th>Date fin</th>
+            <th>Lien</th>
+            <th>Duree en ligne</th>
+            <th>Adresse</th>
+            <th>Salle</th>
+            <th>Duree presentiel</th>
+            <th>Places</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -136,6 +143,7 @@ require __DIR__ . '/../Layouts/back_header.php';
               <td><?= htmlspecialchars($session['adresse'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
               <td><?= htmlspecialchars($session['salle'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
               <td><?= htmlspecialchars((string) ($session['duree_presentiel'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
+              <td><?= (int) ($session['nb_place'] ?? 0) ?></td>
               <td>
                 <button
                   type="button"
@@ -150,10 +158,11 @@ require __DIR__ . '/../Layouts/back_header.php';
                   data-adresse="<?= htmlspecialchars($session['adresse'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                   data-salle="<?= htmlspecialchars($session['salle'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                   data-duree-presentiel="<?= htmlspecialchars((string) ($session['duree_presentiel'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                  data-nb-place="<?= (int) ($session['nb_place'] ?? 0) ?>"
                 >
                   Modifier
                 </button>
-                <form method="post" action="index.php?r=back/sessions/delete" style="display:inline-block;">
+                <form method="post" action="index.php?r=back/sessions/delete" class="inline-form">
                   <input type="hidden" name="id" value="<?= (int) $session['id'] ?>" />
                   <button type="submit" class="btn-sm btn-sm--danger">Supprimer</button>
                 </form>

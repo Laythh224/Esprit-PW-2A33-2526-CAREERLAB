@@ -88,9 +88,8 @@ class FormationController extends BaseController
         $specialite = $this->normalizeSpaces($_POST['specialite'] ?? '');
         $description = $this->normalizeSpaces($_POST['description'] ?? '');
         $niveau = $this->normalizeSpaces($_POST['niveau'] ?? '');
-        $nbPlace = (int) ($_POST['nb_place'] ?? 0);
 
-        if ($nomFormation === '' || $specialite === '' || $description === '' || $niveau === '' || $nbPlace <= 0) {
+        if ($nomFormation === '' || $specialite === '' || $description === '' || $niveau === '') {
             return null;
         }
 
@@ -99,7 +98,6 @@ class FormationController extends BaseController
             'specialite' => $specialite,
             'description' => $description,
             'niveau' => $niveau,
-            'nb_place' => $nbPlace,
         ];
     }
 
@@ -111,7 +109,6 @@ class FormationController extends BaseController
             'specialite' => $this->normalizeSpaces($_POST['specialite'] ?? ''),
             'description' => $this->normalizeSpaces($_POST['description'] ?? ''),
             'niveau' => $this->normalizeSpaces($_POST['niveau'] ?? ''),
-            'nb_place' => (string) ($_POST['nb_place'] ?? ''),
         ];
     }
 

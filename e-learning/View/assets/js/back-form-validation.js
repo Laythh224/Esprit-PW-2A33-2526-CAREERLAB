@@ -10,11 +10,40 @@
       return;
     }
 
-    window.alert(message);
+    const banner = document.createElement('div');
+    banner.className = 'back-card back-card--note';
+    banner.textContent = message;
+    flashNode.parentNode.insertBefore(banner, flashNode.nextSibling);
   }
 
   function normalizeSpaces(value) {
     return String(value).trim().replace(/\s+/g, ' ');
+  }
+
+  function showFormMessage(form, message, type) {
+    if (!form) {
+      return;
+    }
+    let feedback = form.querySelector('.js-form-feedback');
+    if (!feedback) {
+      feedback = document.createElement('div');
+      feedback.className = 'back-card back-card--note js-form-feedback';
+      form.insertBefore(feedback, form.firstChild);
+    }
+    feedback.textContent = message;
+    feedback.style.background = type === 'error' ? '#fff1f2' : '#ecfdf3';
+    feedback.style.borderColor = type === 'error' ? '#fecdd3' : '#bbf7d0';
+    feedback.style.color = type === 'error' ? '#9f1239' : '#166534';
+  }
+
+  function clearFormMessage(form) {
+    if (!form) {
+      return;
+    }
+    const feedback = form.querySelector('.js-form-feedback');
+    if (feedback) {
+      feedback.remove();
+    }
   }
 
   function isStrictIsoDate(value) {
@@ -59,28 +88,21 @@
     const specialiteInput = document.getElementById('specialite');
     const descriptionInput = document.getElementById('description');
     const niveauInput = document.getElementById('niveau');
-    const nbPlaceInput = document.getElementById('nb_place');
     const cancelBtn = document.getElementById('formation-cancel-btn');
     const title = document.getElementById('formation-form-title');
 
     form.setAttribute('novalidate', 'novalidate');
 
     form.addEventListener('submit', function (event) {
+      clearFormMessage(form);
       const nom = normalizeSpaces(nomInput.value);
       const specialite = normalizeSpaces(specialiteInput.value);
       const description = normalizeSpaces(descriptionInput.value);
       const niveau = normalizeSpaces(niveauInput.value);
-      const nbPlace = Number(nbPlaceInput.value);
 
-      if (!nom || !specialite || !description || !niveau || !nbPlaceInput.value.trim()) {
+      if (!nom || !specialite || !description || !niveau) {
         event.preventDefault();
-        window.alert('Tous les champs formation sont obligatoires.');
-        return;
-      }
-
-      if (!Number.isInteger(nbPlace) || nbPlace <= 0) {
-        event.preventDefault();
-        window.alert('nb_place doit etre un entier positif.');
+        showFormMessage(form, 'Tous les champs formation sont obligatoires.', 'error');
         return;
       }
 
@@ -97,7 +119,6 @@
         specialiteInput.value = this.dataset.specialite || '';
         descriptionInput.value = this.dataset.description || '';
         niveauInput.value = this.dataset.niveau || '';
-        nbPlaceInput.value = this.dataset.nbPlace || '';
         form.action = 'index.php?r=back/formations/update';
         if (title) {
           title.textContent = 'Modifier une formation';
@@ -107,12 +128,12 @@
 
     if (cancelBtn) {
       cancelBtn.addEventListener('click', function () {
+        clearFormMessage(form);
         oldNomInput.value = '';
         nomInput.value = '';
         specialiteInput.value = '';
         descriptionInput.value = '';
         niveauInput.value = '';
-        nbPlaceInput.value = '';
         form.action = 'index.php?r=back/formations/store';
         if (title) {
           title.textContent = 'Ajouter une formation';
@@ -156,6 +177,7 @@
     const adresseInput = document.getElementById('adresse');
     const salleInput = document.getElementById('salle');
     const dureePresentielInput = document.getElementById('duree_presentiel');
+    const nbPlaceInput = document.getElementById('session_nb_place');
     const title = document.getElementById('session-form-title');
     const cancelBtn = document.getElementById('session-cancel-btn');
 
@@ -169,6 +191,7 @@
     toggleSessionFields();
 
     form.addEventListener('submit', function (event) {
+      clearFormMessage(form);
       const type = typeInput.value;
       const nomFormation = nomFormationInput.value;
       const dateDebut = normalizeSpaces(dateDebutInput.value);
@@ -176,31 +199,38 @@
 
       if (!nomFormation || !type) {
         event.preventDefault();
-        window.alert('nom_formation et type sont obligatoires.');
+        showFormMessage(form, 'La formation et le type sont obligatoires.', 'error');
         return;
       }
 
       if (!dateDebut || !dateFin) {
         event.preventDefault();
-        window.alert('date_debut et date_fin sont obligatoires.');
+        showFormMessage(form, 'Les dates de debut et fin sont obligatoires.', 'error');
         return;
       }
 
       if (!isStrictIsoDate(dateDebut) || !isStrictIsoDate(dateFin)) {
         event.preventDefault();
-        window.alert('Les dates doivent respecter le format YYYY-MM-DD.');
+        showFormMessage(form, 'Les dates doivent respecter le format YYYY-MM-DD.', 'error');
         return;
       }
 
       if (dateDebut < getTodayIsoDate()) {
         event.preventDefault();
-        window.alert('date_debut ne peut pas etre une date passee.');
+        showFormMessage(form, 'La date de debut ne peut pas etre dans le passe.', 'error');
         return;
       }
 
       if (!isDateAfter(dateFin, dateDebut)) {
         event.preventDefault();
-        window.alert('date_fin doit etre au moins 1 jour apres date_debut.');
+        showFormMessage(form, 'La date de fin doit etre au moins 1 jour apres la date de debut.', 'error');
+        return;
+      }
+
+      const nbPlace = nbPlaceInput ? Number(nbPlaceInput.value) : NaN;
+      if (!nbPlaceInput || !nbPlaceInput.value.trim() || !Number.isInteger(nbPlace) || nbPlace <= 0) {
+        event.preventDefault();
+        showFormMessage(form, 'Le nombre de places doit etre un entier positif.', 'error');
         return;
       }
 
@@ -210,7 +240,7 @@
 
         if (!lienValue || !dureeOnlineInput.value.trim()) {
           event.preventDefault();
-          window.alert('lien et duree_online sont obligatoires pour online.');
+          showFormMessage(form, 'Le lien et la duree en ligne sont obligatoires pour une session en ligne.', 'error');
           return;
         }
 
@@ -219,13 +249,13 @@
           new URL(lienValue);
         } catch (_error) {
           event.preventDefault();
-          window.alert('lien doit etre une URL valide.');
+          showFormMessage(form, 'Le lien doit etre une URL valide.', 'error');
           return;
         }
 
         if (!Number.isInteger(dureeOnlineValue) || dureeOnlineValue <= 0) {
           event.preventDefault();
-          window.alert('duree_online doit etre un entier positif.');
+          showFormMessage(form, 'La duree en ligne doit etre un entier positif.', 'error');
           return;
         }
       } else if (type === 'presentiel') {
@@ -233,18 +263,18 @@
 
         if (!adresseInput.value.trim() || !salleInput.value.trim() || !dureePresentielInput.value.trim()) {
           event.preventDefault();
-          window.alert('adresse, salle et duree_presentiel sont obligatoires pour presentiel.');
+          showFormMessage(form, 'Adresse, salle et duree presentiel sont obligatoires.', 'error');
           return;
         }
 
         if (!Number.isInteger(dureePresentielValue) || dureePresentielValue <= 0) {
           event.preventDefault();
-          window.alert('duree_presentiel doit etre un entier positif.');
+          showFormMessage(form, 'La duree presentiel doit etre un entier positif.', 'error');
           return;
         }
       } else {
         event.preventDefault();
-        window.alert('Type invalide.');
+        showFormMessage(form, 'Type de session invalide.', 'error');
         return;
       }
     });
@@ -261,6 +291,9 @@
         adresseInput.value = this.dataset.adresse || '';
         salleInput.value = this.dataset.salle || '';
         dureePresentielInput.value = this.dataset.dureePresentiel || '';
+        if (nbPlaceInput) {
+          nbPlaceInput.value = this.dataset.nbPlace || '';
+        }
         form.action = 'index.php?r=back/sessions/update';
         toggleSessionFields();
         if (title) {
@@ -271,6 +304,7 @@
 
     if (cancelBtn) {
       cancelBtn.addEventListener('click', function () {
+        clearFormMessage(form);
         idInput.value = '';
         nomFormationInput.value = '';
         typeInput.value = '';
@@ -281,6 +315,9 @@
         adresseInput.value = '';
         salleInput.value = '';
         dureePresentielInput.value = '';
+        if (nbPlaceInput) {
+          nbPlaceInput.value = '';
+        }
         form.action = 'index.php?r=back/sessions/store';
         toggleSessionFields();
         if (title) {
@@ -418,7 +455,7 @@
     const headers = Array.from(table.querySelectorAll('thead th'));
     const columnIndexes = headers
       .map((th, index) => ({ text: normalizeSearchText(th.textContent || ''), index }))
-      .filter((item) => item.text !== 'actions')
+      .filter((item) => item.text !== 'actions' && item.text !== 'action')
       .map((item) => item.index);
 
     const thead = columnIndexes
@@ -483,6 +520,7 @@
     const sortInput = document.getElementById(config.sortId);
     const statsContainer = document.getElementById(config.statsId);
     const exportButton = document.getElementById(config.exportButtonId);
+    const resultCount = document.getElementById(config.resultCountId);
 
     if (!table || !searchInput || !sortInput || !statsContainer || !exportButton) {
       return;
@@ -495,6 +533,7 @@
 
     const allRows = Array.from(tbody.querySelectorAll('tr'));
     let visibleRows = allRows.slice();
+    let debounceTimer = null;
 
     function rowMatchesSearch(row, query) {
       if (!query) {
@@ -523,12 +562,28 @@
           return sortDirection === 'za' ? -order : order;
         });
 
-      tbody.innerHTML = '';
-      visibleRows.forEach((row) => tbody.appendChild(row));
+      const fragment = document.createDocumentFragment();
+      visibleRows.forEach((row) => {
+        row.hidden = false;
+        fragment.appendChild(row);
+      });
+      allRows.forEach((row) => {
+        if (!visibleRows.includes(row)) {
+          row.hidden = true;
+          fragment.appendChild(row);
+        }
+      });
+      tbody.appendChild(fragment);
       renderStatsCircles(statsContainer, visibleRows, config.statsField, config.statsPresetLabels);
+      if (resultCount) {
+        resultCount.textContent = visibleRows.length + ' resultat(s) affiche(s)';
+      }
     }
 
-    searchInput.addEventListener('input', applyTableState);
+    searchInput.addEventListener('input', function () {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(applyTableState, 180);
+    });
     sortInput.addEventListener('change', applyTableState);
     exportButton.addEventListener('click', async function () {
       await exportWordDocument(config.title, table, allRows, config.logoUrl);
@@ -540,6 +595,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     showFlashAlert('formation-flash-message');
     showFlashAlert('session-flash-message');
+    showFlashAlert('client-flash-message');
     bindFormationForm();
     bindSessionForm();
     bindTableEnhancements({
@@ -553,6 +609,7 @@
       searchFields: ['name', 'specialite'],
       sortField: 'name',
       statsField: 'specialite',
+      resultCountId: 'formations-result-count',
     });
     bindTableEnhancements({
       title: 'Sessions',
@@ -566,6 +623,20 @@
       sortField: 'name',
       statsField: 'type',
       statsPresetLabels: ['En ligne', 'Présentiel'],
+      resultCountId: 'sessions-result-count',
+    });
+    bindTableEnhancements({
+      title: 'Clients',
+      tableId: 'clients-table',
+      searchId: 'clients-search',
+      sortId: 'clients-sort',
+      statsId: 'clients-stats',
+      exportButtonId: 'clients-word-btn',
+      logoUrl: '/careerlabb/e-learning/View/assets/img/careerlab-logo.png',
+      searchFields: ['name', 'email', 'cin', 'niveau', 'formation'],
+      sortField: 'name',
+      statsField: 'niveau',
+      resultCountId: 'clients-result-count',
     });
   });
 })();

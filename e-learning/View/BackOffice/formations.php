@@ -9,6 +9,7 @@ require __DIR__ . '/../Layouts/back_header.php';
 ?>
 <header class="back-topbar">
   <h1>Formations</h1>
+  <p>Creez et mettez a jour les parcours de formation.</p>
 </header>
 <div class="back-content">
   <?php if (!empty($flash)): ?>
@@ -21,24 +22,20 @@ require __DIR__ . '/../Layouts/back_header.php';
       <input type="hidden" name="old_nom_formation" id="old_nom_formation" value="<?= htmlspecialchars((string) ($oldInput['old_nom_formation'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
       <div class="form-grid">
         <div class="form-group">
-          <label for="nom_formation">nom_formation</label>
+          <label for="nom_formation">Nom de la formation</label>
           <input type="text" name="nom_formation" id="nom_formation" value="<?= htmlspecialchars((string) ($oldInput['nom_formation'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required />
         </div>
         <div class="form-group">
-          <label for="specialite">specialite</label>
+          <label for="specialite">Specialite</label>
           <input type="text" name="specialite" id="specialite" value="<?= htmlspecialchars((string) ($oldInput['specialite'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required />
         </div>
-        <div class="form-group" style="grid-column: 1 / -1">
-          <label for="description">description</label>
+        <div class="form-group form-group--full">
+          <label for="description">Description</label>
           <textarea name="description" id="description" required><?= htmlspecialchars((string) ($oldInput['description'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
         </div>
         <div class="form-group">
-          <label for="niveau">niveau</label>
+          <label for="niveau">Niveau</label>
           <input type="text" name="niveau" id="niveau" value="<?= htmlspecialchars((string) ($oldInput['niveau'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required />
-        </div>
-        <div class="form-group">
-          <label for="nb_place">nb_place</label>
-          <input type="number" min="1" name="nb_place" id="nb_place" value="<?= htmlspecialchars((string) ($oldInput['nb_place'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required />
         </div>
       </div>
       <div class="actions-row">
@@ -52,7 +49,7 @@ require __DIR__ . '/../Layouts/back_header.php';
     <div class="table-tools">
       <div class="table-tools__group">
         <label for="formations-search">Recherche</label>
-        <input type="search" id="formations-search" class="table-tools__input" placeholder="Rechercher formation ou specialite..." />
+        <input type="search" id="formations-search" class="table-tools__input" placeholder="Rechercher une formation ou une specialite..." />
       </div>
       <div class="table-tools__group">
         <label for="formations-sort">Tri</label>
@@ -61,6 +58,7 @@ require __DIR__ . '/../Layouts/back_header.php';
           <option value="za">Z-A</option>
         </select>
       </div>
+      <p class="table-tools__result" id="formations-result-count"></p>
       <button type="button" class="btn-secondary" id="formations-word-btn">Exporter Word</button>
     </div>
     <div id="formations-stats" class="stats-circles"></div>
@@ -68,11 +66,10 @@ require __DIR__ . '/../Layouts/back_header.php';
       <table class="data-table" id="formations-table">
         <thead>
           <tr>
-            <th>nom_formation</th>
-            <th>specialite</th>
-            <th>description</th>
-            <th>niveau</th>
-            <th>nb_place</th>
+            <th>Nom de la formation</th>
+            <th>Specialite</th>
+            <th>Description</th>
+            <th>Niveau</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -87,7 +84,6 @@ require __DIR__ . '/../Layouts/back_header.php';
               <td><?= htmlspecialchars($formation['specialite'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
               <td><?= htmlspecialchars($formation['description'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
               <td><?= htmlspecialchars($formation['niveau'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
-              <td><?= (int) ($formation['nb_place'] ?? 0) ?></td>
               <td>
                 <button
                   type="button"
@@ -96,11 +92,10 @@ require __DIR__ . '/../Layouts/back_header.php';
                   data-specialite="<?= htmlspecialchars($formation['specialite'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                   data-description="<?= htmlspecialchars($formation['description'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                   data-niveau="<?= htmlspecialchars($formation['niveau'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
-                  data-nb-place="<?= (int) ($formation['nb_place'] ?? 0) ?>"
                 >
                   Modifier
                 </button>
-                <form method="post" action="index.php?r=back/formations/delete" style="display:inline-block;">
+                <form method="post" action="index.php?r=back/formations/delete" class="inline-form">
                   <input type="hidden" name="nom_formation" value="<?= htmlspecialchars($formation['nom_formation'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
                   <button type="submit" class="btn-sm btn-sm--danger">Supprimer</button>
                 </form>

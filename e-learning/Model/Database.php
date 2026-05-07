@@ -102,20 +102,14 @@ class Database
                         specialite VARCHAR(150) NOT NULL,
                         description TEXT NOT NULL,
                         niveau VARCHAR(80) NOT NULL,
-                        nb_place INT NOT NULL,
                         PRIMARY KEY (nom_formation)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
                 );
             }
 
-            try {
-                self::ensureFormationNbPlaceColumn($connection);
-            } catch (\Throwable $exception) {
-                // Column migration failed; formation queries may error until fixed manually.
-            }
-
             if ($sessionExists) {
                 self::ensureSessionDateColumns($connection);
+                self::ensureSessionNbPlaceColumn($connection);
             }
 
             if (!$sessionExists) {
@@ -131,6 +125,7 @@ class Database
                         duree_presentiel INT DEFAULT NULL,
                         date_debut DATE NOT NULL,
                         date_fin DATE NOT NULL,
+                        nb_place INT NOT NULL DEFAULT 1,
                         PRIMARY KEY (id),
                         INDEX idx_session_formation (nom_formation),
                         CONSTRAINT fk_session_formation
@@ -138,6 +133,42 @@ class Database
                             ON DELETE CASCADE ON UPDATE CASCADE
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
                 );
+            }
+
+            try {
+                self::migrateFormationNbPlaceToSession($connection);
+            } catch (\Throwable $exception) {
+                // Migration nb_place ; peut necessiter execution manuelle du script SQL.
+            }
+
+            $clientCheck = $connection->query("SHOW TABLES LIKE 'client'");
+            if ($clientCheck !== false && $clientCheck->fetch() === false) {
+                $connection->exec(
+                    "CREATE TABLE client (
+                        cin VARCHAR(8) NOT NULL,
+                        nom VARCHAR(80) NOT NULL,
+                        prenom VARCHAR(80) NOT NULL,
+                        adresse VARCHAR(200) NOT NULL,
+                        niveau VARCHAR(80) NOT NULL,
+                        age TINYINT UNSIGNED NOT NULL,
+                        tel VARCHAR(8) NOT NULL,
+                        nom_formation VARCHAR(150) DEFAULT NULL,
+                        session_id INT DEFAULT NULL,
+                        PRIMARY KEY (cin)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
+                );
+            }
+
+            try {
+                self::ensureClientNomFormationColumn($connection);
+            } catch (\Throwable $exception) {
+                // Migration nom_formation client.
+            }
+
+            try {
+                self::ensureClientSessionIdColumn($connection);
+            } catch (\Throwable $exception) {
+                // Migration session_id client.
             }
         } catch (\Throwable $exception) {
             // Keep application running; controllers will surface useful errors if needed.
@@ -165,7 +196,75 @@ class Database
         );
     }
 
-    private static function ensureFormationNbPlaceColumn(PDO $connection): void
+    private static function ensureClientNomFormationColumn(PDO $connection): void
+    {
+        $clientCheck = $connection->query("SHOW TABLES LIKE 'client'");
+        if ($clientCheck === false || $clientCheck->fetch() === false) {
+            return;
+        }
+
+        $statement = $connection->query(
+            "SELECT COUNT(*) AS c FROM information_schema.columns
+             WHERE table_schema = DATABASE() AND table_name = 'client' AND column_name = 'nom_formation'"
+        );
+        if ($statement === false) {
+            return;
+        }
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if ((int) ($row['c'] ?? 0) > 0) {
+            return;
+        }
+
+        $connection->exec(
+            'ALTER TABLE client ADD COLUMN nom_formation VARCHAR(150) DEFAULT NULL'
+        );
+    }
+
+    private static function ensureClientSessionIdColumn(PDO $connection): void
+    {
+        $clientCheck = $connection->query("SHOW TABLES LIKE 'client'");
+        if ($clientCheck === false || $clientCheck->fetch() === false) {
+            return;
+        }
+
+        $statement = $connection->query(
+            "SELECT COUNT(*) AS c FROM information_schema.columns
+             WHERE table_schema = DATABASE() AND table_name = 'client' AND column_name = 'session_id'"
+        );
+        if ($statement === false) {
+            return;
+        }
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if ((int) ($row['c'] ?? 0) > 0) {
+            return;
+        }
+
+        $connection->exec(
+            'ALTER TABLE client ADD COLUMN session_id INT DEFAULT NULL'
+        );
+    }
+
+    private static function ensureSessionNbPlaceColumn(PDO $connection): void
+    {
+        $statement = $connection->query(
+            "SELECT COUNT(*) AS c FROM information_schema.columns
+             WHERE table_schema = DATABASE() AND table_name = 'session' AND column_name = 'nb_place'"
+        );
+        if ($statement === false) {
+            return;
+        }
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if ((int) ($row['c'] ?? 0) > 0) {
+            return;
+        }
+
+        $connection->exec('ALTER TABLE `session` ADD COLUMN nb_place INT NOT NULL DEFAULT 1');
+    }
+
+    /**
+     * Ancienne colonne formation.nb_place -> session.nb_place puis suppression sur formation.
+     */
+    private static function migrateFormationNbPlaceToSession(PDO $connection): void
     {
         $formationCheck = $connection->query("SHOW TABLES LIKE 'formation'");
         if ($formationCheck === false || $formationCheck->fetch() === false) {
@@ -176,12 +275,37 @@ class Database
             "SELECT COUNT(*) AS c FROM information_schema.columns
              WHERE table_schema = DATABASE() AND table_name = 'formation' AND column_name = 'nb_place'"
         );
-        if ($statement !== false) {
-            $row = $statement->fetch(PDO::FETCH_ASSOC);
-            if ((int) ($row['c'] ?? 0) === 0) {
-                $connection->exec('ALTER TABLE formation ADD COLUMN nb_place INT NOT NULL DEFAULT 1');
-            }
+        if ($statement === false) {
+            return;
         }
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if ((int) ($row['c'] ?? 0) === 0) {
+            foreach (['date_debut', 'date_fin', 'duree'] as $column) {
+                $colStmt = $connection->query(
+                    "SELECT COUNT(*) AS c FROM information_schema.columns
+                     WHERE table_schema = DATABASE() AND table_name = 'formation' AND column_name = " . $connection->quote($column)
+                );
+                if ($colStmt === false) {
+                    continue;
+                }
+                $colRow = $colStmt->fetch(PDO::FETCH_ASSOC);
+                if ((int) ($colRow['c'] ?? 0) > 0) {
+                    $connection->exec('ALTER TABLE formation DROP COLUMN `' . str_replace('`', '``', $column) . '`');
+                }
+            }
+
+            return;
+        }
+
+        $sessionCheck = $connection->query("SHOW TABLES LIKE 'session'");
+        if ($sessionCheck !== false && $sessionCheck->fetch() !== false) {
+            self::ensureSessionNbPlaceColumn($connection);
+            $connection->exec(
+                'UPDATE `session` s INNER JOIN formation f ON s.nom_formation = f.nom_formation SET s.nb_place = f.nb_place'
+            );
+        }
+
+        $connection->exec('ALTER TABLE formation DROP COLUMN nb_place');
 
         foreach (['date_debut', 'date_fin', 'duree'] as $column) {
             $colStmt = $connection->query(

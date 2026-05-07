@@ -15,15 +15,11 @@ $active = $active ?? '';
       <div class="site-header__inner">
         <a href="index.php?r=front/formations" class="logo">
           <img src="/careerlabb/e-learning/View/assets/img/careerlab-logo.png" alt="CareerLab" class="logo__image" />
-          <span class="logo__text">e_learning</span>
+          <span class="logo__text">CareerLab Learning</span>
         </a>
         <nav class="nav-main" aria-label="Navigation principale">
-          <a href="index.php?r=front/formations" class="<?= $active === 'formations' ? 'is-active' : '' ?>">Formations</a>
-          <a
-            href="/careerlabb/indexF.html"
-            class="nav-main__button"
-            onclick="if (window.history.length > 1) { event.preventDefault(); window.history.back(); }"
-          >Main page</a>
+          <a href="index.php?r=front/formations" class="<?= $active === 'formations' ? 'is-active' : '' ?>">Catalogue</a>
+          <a href="/careerlabb/indexF.html" class="nav-main__button">Retour au site</a>
         </nav>
       </div>
     </header>
