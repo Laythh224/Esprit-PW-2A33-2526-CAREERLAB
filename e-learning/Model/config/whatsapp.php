@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
+require_once dirname(__DIR__) . '/Env/load_dotenv.php';
+careerlabb_load_dotenv_file(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . '.env');
+
 /**
  * Notification WhatsApp apres inscription (CallMeBot, Twilio ou webhook).
  *
- * Secrets : ne commitez pas les tokens. Renseignez Model/config/twilio.credentials.ini
- * (copiez twilio.credentials.ini.example ; fichier ignore par git) ou variables
- * TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN (voir aussi TWILIO_API_KEY_SID / SECRET).
+ * Secrets Twilio : fichier e-learning/.env (copier .env.example) ou variables
+ * d'environnement serveur TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN (et optionnellement
+ * TWILIO_API_KEY_SID / TWILIO_API_KEY_SECRET, TWILIO_WHATSAPP_FROM, TWILIO_CONTENT_SID).
  *
  * --- CallMeBot ---
  * https://www.callmebot.com/blog/free-api-whatsapp-messages/
@@ -113,19 +116,6 @@ if (is_file($localPath)) {
     $local = require $localPath;
     if (is_array($local)) {
         $config = array_replace_recursive($config, $local);
-    }
-}
-
-$credIniPath = __DIR__ . '/twilio.credentials.ini';
-if (is_file($credIniPath)) {
-    $ini = @parse_ini_file($credIniPath, true, INI_SCANNER_RAW);
-    if (is_array($ini) && isset($ini['twilio']) && is_array($ini['twilio'])) {
-        foreach ($ini['twilio'] as $key => $value) {
-            if ($value === null || $value === '') {
-                continue;
-            }
-            $config['twilio'][$key] = is_string($value) ? trim($value) : $value;
-        }
     }
 }
 

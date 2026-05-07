@@ -74,7 +74,7 @@ class WhatsappService
         if ($provider === 'twilio' && !$this->twilioCredentialsReady($config)) {
             $this->debugLog(
                 $config,
-                'SKIP Twilio : pas de AC + token dans twilio.credentials.ini (ou variables TWILIO_*). Pas d appel API — inscription OK.'
+                'SKIP Twilio : pas de AC + token (.env TWILIO_* ou variables serveur). Pas d appel API — inscription OK.'
             );
 
             return '';
@@ -333,8 +333,8 @@ class WhatsappService
             (stripos($token, 'REMPLACEZ') !== false || stripos($token, 'collez') !== false)
             || (stripos($sid, 'xxxx') !== false)
         ) {
-            $this->debugLog($config, 'ERREUR Twilio : remplacez les placeholders dans Model/config/twilio.credentials.ini (ou variables denvironnement).');
-            throw new \RuntimeException('Twilio : configurez auth_token dans twilio.credentials.ini');
+            $this->debugLog($config, 'ERREUR Twilio : renseignez TWILIO_AUTH_TOKEN dans .env (ou API Key / variables serveur).');
+            throw new \RuntimeException('Twilio : configurez TWILIO_AUTH_TOKEN ou API Key dans .env');
         }
 
         $useApiKey = $apiKeySid !== '' && $apiKeySecret !== '';

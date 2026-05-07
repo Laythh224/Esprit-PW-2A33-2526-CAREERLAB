@@ -26,6 +26,8 @@ $configPath = $base . '/Model/config/whatsapp.php';
 $localPath = $base . '/Model/config/whatsapp.local.php';
 
 echo "Config : " . $configPath . PHP_EOL;
+$envFile = $base . DIRECTORY_SEPARATOR . '.env';
+echo ".env    : " . (is_file($envFile) ? 'oui (' . $envFile . ')' : 'non (copier .env.example -> .env)') . PHP_EOL;
 echo "Local  : " . (is_file($localPath) ? 'oui (' . $localPath . ')' : 'non') . PHP_EOL;
 
 $raw = require $configPath;

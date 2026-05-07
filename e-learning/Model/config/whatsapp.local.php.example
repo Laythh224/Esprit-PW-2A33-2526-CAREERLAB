@@ -12,5 +12,5 @@ return [
     'enabled' => true,
     'provider' => 'twilio',
     // 'flash_whatsapp_debug' => true,
-    // Secrets Twilio : fichier twilio.credentials.ini (voir twilio.credentials.ini.example).
+    // Secrets Twilio : e-learning/.env (voir .env.example).
 ];
