@@ -208,7 +208,11 @@ class AuthController
     private function redirectToDashboard(): void
     {
         session_write_close();
-        header('Location: index.php');
+        if (isset($_SESSION['role']) && $_SESSION['role'] === 'entreprise') {
+            header('Location: index.php?page=offres');
+        } else {
+            header('Location: index.php');
+        }
         exit;
     }
 
@@ -308,6 +312,24 @@ class AuthController
 
         $decoded = json_decode($result, true);
         return is_array($decoded) && !empty($decoded['success']);
+    }
+
+    private function forceSessionCookie(): void
+    {
+        if (headers_sent()) {
+            return;
+        }
+
+        $params = session_get_cookie_params();
+        setcookie(
+            session_name(),
+            session_id(),
+            time() + (86400 * 30),
+            $params['path'],
+            $params['domain'],
+            $params['secure'],
+            $params['httponly']
+        );
     }
 }
 

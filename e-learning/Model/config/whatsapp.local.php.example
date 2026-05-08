@@ -1,0 +1,16 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Copiez ce fichier vers whatsapp.local.php et renseignez les valeurs.
+ * whatsapp.local.php est ignore par git — ne commitez pas les secrets.
+ *
+ * Les cles absentes restent celles de whatsapp.php.
+ */
+return [
+    'enabled' => true,
+    'provider' => 'twilio',
+    // 'flash_whatsapp_debug' => true,
+    // Secrets Twilio : e-learning/.env (voir .env.example).
+];

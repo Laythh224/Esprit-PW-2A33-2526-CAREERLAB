@@ -2,7 +2,13 @@
 
 class OffresController {
     public function index() {
-        $_GET['action'] = 'offres';
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'entreprise') {
+            header('Location: index.php?page=login');
+            exit;
+        }
+        if (empty($_GET['action'])) {
+            $_GET['action'] = 'offres';
+        }
         $this->loadModule();
     }
 
@@ -17,8 +23,16 @@ class OffresController {
     }
 
     public function adminList() {
-        // Rediriger vers admin.php du module
-        require __DIR__ . '/../projet wweb/admin.php';
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'entreprise') {
+            header('Location: index.php?page=login');
+            exit;
+        }
+        $view = $_GET['view'] ?? 'offres';
+        if ($view === 'about') {
+            require __DIR__ . '/../projet wweb/admin_about.php';
+        } else {
+            require __DIR__ . '/../projet wweb/admin.php';
+        }
     }
 
     public function store() {

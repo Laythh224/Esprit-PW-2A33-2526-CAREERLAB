@@ -99,23 +99,51 @@ $pathPrefix = (strpos($_SERVER['SCRIPT_NAME'], 'startup2-1.0.0') !== false || st
                 </li>
 
                 <li class="nav-item <?php echo $activeAccountPage === 'evaluation' ? 'active' : ''; ?>">
-                    <a href="<?php echo $pathPrefix; ?>projet_web/index.php?route=evaluation">
+                    <a href="<?php echo $pathPrefix; ?>index.php?page=evaluation">
                         <i class="fas fa-check-square"></i>
                         <p>Gestion Évaluations</p>
                     </a>
                 </li>
 
-                <li class="nav-item <?php echo $activeAccountPage === 'offres' ? 'active' : ''; ?>">
-                    <a href="<?php echo $pathPrefix; ?>index.php?page=admin-offres">
+                <li class="nav-item">
+                    <a href="<?php echo $pathPrefix; ?>e-learning/index.php?r=back/formations">
+                        <i class="fas fa-graduation-cap"></i>
+                        <p>E-learning</p>
+                    </a>
+                </li>
+
+                <li class="nav-item <?php echo $activeAccountPage === 'offres' ? 'active submenu' : ''; ?>">
+                    <a data-bs-toggle="collapse" href="#offresSub" class="<?php echo $activeAccountPage === 'offres' ? '' : 'collapsed'; ?>" aria-expanded="<?php echo $activeAccountPage === 'offres' ? 'true' : 'false'; ?>">
                         <i class="fas fa-bullhorn"></i>
                         <p>Gestion Offres</p>
+                        <span class="caret"></span>
                     </a>
+                    <div class="collapse <?php echo $activeAccountPage === 'offres' ? 'show' : ''; ?>" id="offresSub">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="<?php echo $pathPrefix; ?>index.php?page=admin-offres">
+                                    <span class="sub-item">les offres</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php echo $pathPrefix; ?>index.php?page=admin-offres&view=about">
+                                    <span class="sub-item">à propos</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
 
                 <li class="nav-item">
                     <a href="<?php echo $pathPrefix; ?>index.php?r=main">
                         <i class="fas fa-globe"></i>
                         <p>Front</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?php echo $pathPrefix; ?>index.php?page=logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <p>Déconnexion</p>
                     </a>
                 </li>
             </ul>

@@ -108,67 +108,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
 <div class="wrapper">
 
   <!-- ===================== SIDEBAR ===================== -->
-  <div class="sidebar" data-background-color="dark">
-    <div class="sidebar-logo">
-      <div class="logo-header" data-background-color="dark">
-        <a href="index.php?page=offres&action=offres">
-          <span class="sub-item">Career Lab</span>
-        </a>
-        <div class="nav-toggle">
-          <button class="btn btn-toggle toggle-sidebar"><i class="gg-menu-right"></i></button>
-          <button class="btn btn-toggle sidenav-toggler"><i class="gg-menu-left"></i></button>
-        </div>
-        <button class="topbar-toggler more"><i class="gg-more-vertical-alt"></i></button>
-      </div>
-    </div>
-    <div class="sidebar-wrapper scrollbar scrollbar-inner">
-      <div class="sidebar-content">
-        <ul class="nav nav-secondary">
-          <li class="nav-section">
-            <span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span>
-            <h4 class="text-section">Gestion</h4>
-          </li>
-          <li class="nav-item active submenu">
-            <a data-bs-toggle="collapse" href="#tables">
-              <i class="fas fa-table"></i><p>les offres</p><span class="caret"></span>
-            </a>
-            <div class="collapse show" id="tables">
-              <ul class="nav nav-collapse">
-                <li class="active"><a href="admin.php"><span class="sub-item">les offres</span></a></li>
-                <li><a href="admin_about.php"><span class="sub-item">à propos</span></a></li>
-              </ul>
-            </div>
-          </li>
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-graduation-cap"></i><p>E-learning</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-user-tie"></i><p>Métiers</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-newspaper"></i><p>Blog</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-users"></i><p>Utilisateurs</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-clipboard-check"></i><p>Evaluation</p>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-  <!-- ===================== END SIDEBAR ===================== -->
+  <?php $activeAccountPage = 'offres'; include __DIR__ . '/../views/components/account-sidebar.php'; ?>
+  <!-- End Sidebar -->
 
   <div class="main-panel">
     <div class="content">
@@ -437,9 +378,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
           <span class="fw-mediumbold">Modifier</span>
           <span class="fw-light"> l'opportunité</span>
         </h5>
-        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form action="index.php?page=offres&action=update" method="POST">
         <div class="modal-body">
@@ -517,7 +456,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/projet%20wweb/";
     <div class="modal-content">
       <div class="modal-header border-0">
         <h5 class="modal-title">Modifier le Niveau d'Expérience</h5>
-        <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form action="index.php?page=offres&action=update" method="POST">
         <input type="hidden" name="id" id="edit-exp-id">
@@ -693,7 +632,7 @@ function confirmDelete(id, type) {
             }
         });
     } else {
-        if (confirm("Êtes-vous sûr de vouloir supprimer cette offre ?")) {
+        if (confirm("Êtes-vous sûr de vouloir supprimer cet élément ?")) {
             window.location.href = "index.php?page=offres&action=delete&id=" + id + "&type=" + type + "&redirect=tables";
         }
     }

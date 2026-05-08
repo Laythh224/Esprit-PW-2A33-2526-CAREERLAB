@@ -76,9 +76,13 @@ switch ($action) {
         $redirect = $_GET['redirect'] ?? 'index.php?action=offres';
         header('Location: ' . $redirect);
         exit();
-    case 'deleteCandidature':
+    case 'refuseCandidature':
         $controller = new OffreController();
-        $controller->deleteCandidature();
+        $controller->refuseCandidature();
+        break;
+    case 'acceptCandidature':
+        $controller = new OffreController();
+        $controller->acceptCandidature();
         break;
 
     default:

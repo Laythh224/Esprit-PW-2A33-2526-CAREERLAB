@@ -1,7 +1,7 @@
 <!-- Navbar Start -->
 <div class="container-fluid position-relative p-0">
     <nav class="navbar navbar-expand-lg navbar-dark px-5 py-3 py-lg-0">
-        <a href="index.php?page=offres&action=home" class="navbar-brand p-0">
+        <a href="index.php?page=accueil" class="navbar-brand p-0">
             <h1 class="m-0"><i class="fa fa-user-tie me-2"></i>Carrer Lab</h1>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
@@ -9,8 +9,7 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto py-0">
-                <a href="index.php?page=offres&action=home" class="nav-item nav-link <?php echo ($action === 'home') ? 'active' : ''; ?>">Home</a>
-                <a href="index.php?page=offres&action=about" class="nav-item nav-link <?php echo ($action === 'about') ? 'active' : ''; ?>">À propos</a>
+                <a href="index.php?page=accueil" class="nav-item nav-link <?php echo ($action === 'home') ? 'active' : ''; ?>">Home</a>
                 
                 <div class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Services</a>
@@ -22,8 +21,12 @@
                         <a href="index.php?page=offres&action=quote" class="dropdown-item">E_learning</a>
                     </div>
                 </div>
-                <a href="index.php?page=offres&action=contact" class="nav-item nav-link <?php echo ($action === 'contact') ? 'active' : ''; ?>">Contact</a>
             </div>
+            <?php if (!empty($_SESSION['is_logged_in'])): ?>
+                <a href="index.php?page=logout" class="nav-item nav-link">Déconnexion</a>
+            <?php else: ?>
+                <a href="index.php?page=login" class="nav-item nav-link">Connexion</a>
+            <?php endif; ?>
             <button type="button" class="btn text-primary ms-3" data-bs-toggle="modal" data-bs-target="#searchModal"><i class="fa fa-search"></i></button>
 
         </div>

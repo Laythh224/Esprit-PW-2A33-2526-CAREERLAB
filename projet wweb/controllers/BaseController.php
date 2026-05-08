@@ -33,7 +33,7 @@ class BaseController {
     }
 
     protected function redirect(string $action, array $params = []): void {
-        $url = "index.php?action=" . $action;
+        $url = "index.php?page=offres&action=" . $action;
         foreach ($params as $key => $value) {
             $url .= "&" . urlencode($key) . "=" . urlencode($value);
         }

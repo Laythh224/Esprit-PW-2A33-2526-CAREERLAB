@@ -44,68 +44,9 @@ $isLoggedIn = true; // Always logged in now
 
 <div class="wrapper">
 
-  <!-- ===================== SIDEBAR ===================== -->
-  <div class="sidebar" data-background-color="dark">
-    <div class="sidebar-logo">
-      <div class="logo-header" data-background-color="dark">
-        <a href="index.php?page=offres&action=home">
-          <span class="sub-item">Career Lab</span>
-        </a>
-        <div class="nav-toggle">
-          <button class="btn btn-toggle toggle-sidebar"><i class="gg-menu-right"></i></button>
-          <button class="btn btn-toggle sidenav-toggler"><i class="gg-menu-left"></i></button>
-        </div>
-        <button class="topbar-toggler more"><i class="gg-more-vertical-alt"></i></button>
-      </div>
-    </div>
-    <div class="sidebar-wrapper scrollbar scrollbar-inner">
-      <div class="sidebar-content">
-        <ul class="nav nav-secondary">
-          <li class="nav-section">
-            <span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span>
-            <h4 class="text-section">Gestion</h4>
-          </li>
-          <li class="nav-item submenu">
-            <a data-bs-toggle="collapse" href="#tables">
-              <i class="fas fa-table"></i><p>les offres</p><span class="caret"></span>
-            </a>
-            <div class="collapse show" id="tables">
-              <ul class="nav nav-collapse">
-                <li><a href="admin.php"><span class="sub-item">les offres</span></a></li>
-                <li class="active"><a href="admin_about.php"><span class="sub-item">à propos</span></a></li>
-              </ul>
-            </div>
-          </li>
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-graduation-cap"></i><p>E-learning</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-user-tie"></i><p>Métiers</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-newspaper"></i><p>Blog</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-users"></i><p>Utilisateurs</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-clipboard-check"></i><p>Evaluation</p>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-  <!-- ===================== END SIDEBAR ===================== -->
+  <!-- Sidebar -->
+  <?php $activeAccountPage = 'offres'; include __DIR__ . '/../views/components/account-sidebar.php'; ?>
+  <!-- End Sidebar -->
 
   <div class="main-panel">
     <div class="content">
@@ -129,6 +70,94 @@ $isLoggedIn = true; // Always logged in now
         <div class="mb-4">
             <h2 class="fw-bold text-primary" style="font-size: 2rem; letter-spacing: -0.5px;">Intéressé par cette offre</h2>
             <p class="text-muted">Gérez et suivez l'ensemble de vos candidatures envoyées.</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <?php
+            $isEntreprise = isset($_SESSION['role']) && $_SESSION['role'] === 'entreprise';
+            $companyName = $_SESSION['user_name'] ?? '';
+
+            $statsSql = "
+                SELECT c.statut, COUNT(*) as count 
+                FROM Candidature c
+                JOIN OpportuniteTravail t ON c.offre_id = t.id
+            ";
+            
+            if ($isEntreprise && !empty($companyName)) {
+                $statsSql .= " WHERE t.entreprise = :company ";
+            }
+            
+            $statsSql .= " GROUP BY c.statut ";
+            
+            $statsStmt = $pdo->prepare($statsSql);
+            if ($isEntreprise && !empty($companyName)) {
+                $statsStmt->bindValue(':company', $companyName);
+            }
+            $statsStmt->execute();
+            $statsData = $statsStmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            
+            $acceptedCount = $statsData['accepte'] ?? 0;
+            $refusedCount = $statsData['refuse'] ?? 0;
+            $pendingCount = $statsData['en_attente'] ?? 0;
+            ?>
+            <div class="col-md-4">
+                <div class="card card-stats card-round shadow-sm" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 15px;">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-icon">
+                                <div class="icon-big text-center icon-success bubble-shadow-small">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            </div>
+                            <div class="col col-stats ms-3 ms-sm-0">
+                                <div class="numbers">
+                                    <p class="card-category text-white" style="opacity: 0.8;">Candidatures Acceptées</p>
+                                    <h4 class="card-title text-white fw-bold"><?= $acceptedCount ?></h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-stats card-round shadow-sm" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white; border: none; border-radius: 15px;">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-icon">
+                                <div class="icon-big text-center icon-danger bubble-shadow-small">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                            </div>
+                            <div class="col col-stats ms-3 ms-sm-0">
+                                <div class="numbers">
+                                    <p class="card-category text-white" style="opacity: 0.8;">Candidatures Refusées</p>
+                                    <h4 class="card-title text-white fw-bold"><?= $refusedCount ?></h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-stats card-round shadow-sm" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; border-radius: 15px;">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-icon">
+                                <div class="icon-big text-center icon-primary bubble-shadow-small">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                            </div>
+                            <div class="col col-stats ms-3 ms-sm-0">
+                                <div class="numbers">
+                                    <p class="card-category text-white" style="opacity: 0.8;">Candidatures en Attente</p>
+                                    <h4 class="card-title text-white fw-bold"><?= $pendingCount ?></h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="card shadow-lg border-0" style="border-radius: 20px; overflow: hidden;">
@@ -172,12 +201,26 @@ $isLoggedIn = true; // Always logged in now
                 feedback TEXT NULL
             )");
 
-            $stmt = $pdo->prepare("
+            $isEntreprise = isset($_SESSION['role']) && $_SESSION['role'] === 'entreprise';
+            $companyName = $_SESSION['user_name'] ?? '';
+
+            $sql = "
                 SELECT c.*, t.titre, t.entreprise, t.localisation, t.domaine, t.type_contrat
                 FROM Candidature c
                 JOIN OpportuniteTravail t ON c.offre_id = t.id
-                ORDER BY c.score_ia DESC, c.date_postulation DESC
-            ");
+            ";
+            
+            if ($isEntreprise && !empty($companyName)) {
+                $sql .= " WHERE t.entreprise = :company ";
+            }
+            
+            $sql .= " ORDER BY c.score_ia DESC, c.date_postulation DESC ";
+            
+            $stmt = $pdo->prepare($sql);
+            if ($isEntreprise && !empty($companyName)) {
+                $stmt->bindValue(':company', $companyName);
+            }
+            
             $stmt->execute();
             $applications = $stmt->fetchAll();
             ?>
@@ -197,6 +240,7 @@ $isLoggedIn = true; // Always logged in now
                         <thead style="background: #f8fafc;">
                             <tr>
                                 <th class="ps-4 py-3 border-0">CANDIDAT</th>
+                                <th class="py-3 border-0">ENTREPRISE</th>
                                 <th class="py-3 border-0">POSTE</th>
                                 <th class="py-3 border-0 text-center">SCORE IA</th>
                                 <th class="py-3 border-0 text-center">RECOMMANDATION</th>
@@ -215,7 +259,25 @@ $isLoggedIn = true; // Always logged in now
                                             <?php endif; ?>
                                         </span>
                                         <small class="text-muted"><i class="fas fa-envelope me-1"></i><?= htmlspecialchars($app['email_candidat'] ?? 'N/A') ?></small>
-                                        <small class="text-muted mt-1"><i class="far fa-clock me-1"></i><?= date('d M, Y', strtotime($app['date_postulation'])) ?></small>
+                                                                                 <small class="text-muted mt-1"><i class="far fa-clock me-1"></i><?= date('d M, Y', strtotime($app['date_postulation'])) ?></small>
+                                         <div class="mt-2">
+                                             <?php if ($app['statut'] === 'accepte'): ?>
+                                                 <span class="badge bg-success" style="font-size: 0.7rem;"><i class="fas fa-check me-1"></i>Accepté</span>
+                                             <?php elseif ($app['statut'] === 'refuse'): ?>
+                                                 <span class="badge bg-danger" style="font-size: 0.7rem;"><i class="fas fa-times me-1"></i>Refusé</span>
+                                             <?php else: ?>
+                                                 <span class="badge bg-warning text-dark" style="font-size: 0.7rem;"><i class="fas fa-hourglass-half me-1"></i>En attente</span>
+                                             <?php endif; ?>
+                                             <span class="badge bg-light text-dark border ms-1" style="font-size: 0.7rem;"><i class="fas fa-building me-1"></i><?= htmlspecialchars($app['entreprise'] ?? 'N/A') ?></span>
+                                         </div>
+                                    </div>
+                                </td>
+                                <td class="py-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-building text-info"></i>
+                                        </div>
+                                        <div class="fw-bold text-dark"><?= htmlspecialchars($app['entreprise'] ?? 'Inconnue') ?></div>
                                     </div>
                                 </td>
                                 <td class="py-4">
@@ -253,9 +315,16 @@ $isLoggedIn = true; // Always logged in now
                                         <button class="btn btn-sm btn-info rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#feedbackModal<?= $app['id'] ?>">
                                             <i class="fas fa-robot me-1"></i> Détails IA
                                         </button>
-                                        <a href="index.php?page=offres&action=deleteCandidature&id=<?= $app['id'] ?>" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="return confirm('Voulez-vous vraiment annuler cette candidature ?')">
-                                            Refuser
-                                        </a>
+                                        <?php if (($app['statut'] ?? 'en_attente') === 'en_attente'): ?>
+                                            <a href="index.php?page=offres&action=acceptCandidature&id=<?= $app['id'] ?>" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm">
+                                                <i class="fas fa-check me-1"></i> Accepter
+                                            </a>
+                                            <a href="index.php?page=offres&action=refuseCandidature&id=<?= $app['id'] ?>" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="return confirm('Voulez-vous vraiment refuser cette candidature ?')">
+                                                <i class="fas fa-times me-1"></i> Refuser
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="text-muted small italic">Traité</span>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>

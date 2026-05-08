@@ -1,0 +1,33 @@
+/* Targeted branding overrides layered on top of dashboard-theme.css */
+
+.sidebar-brand span {
+  letter-spacing: 0.02em;
+}
+
+.sidebar-link.is-active {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.heading-row h1 {
+  letter-spacing: -0.02em;
+}
+
+.sales-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.sales-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -24px -40px auto;
+  width: 160px;
+  height: 160px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.status-pill {
+  min-width: 78px;
+  justify-content: center;
+}

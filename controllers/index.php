@@ -46,6 +46,11 @@ $adminAliasController = new AdminController();
 $routeR = isset($_GET['r']) ? strtolower(trim((string) $_GET['r'])) : '';
 $page = isset($_GET['page']) ? (string) $_GET['page'] : '';
 
+// Prise en charge du paramètre 'route' (utilisé par le module évaluation)
+if ($page === '' && $routeR === '' && isset($_GET['route'])) {
+    $page = (string) $_GET['route'];
+}
+
 if ($page === '' && $routeR !== '') {
     $page = $routeAliases[$routeR] ?? $routeR;
 
@@ -158,8 +163,13 @@ try {
 
     $offresController = new OffresController();
 
+    require_once __DIR__ . '/EvaluationController.php';
+    $evaluationController = new EvaluationController();
+
     require_once __DIR__ . '/StatisticsController.php';
     $statisticsController = new StatisticsController();
+
+    $elearningBridgeController = new ElearningBridgeController();
 
     $controllerRoutes = [
         'login' => [$authController, 'login'],
@@ -189,11 +199,13 @@ try {
         'profile' => [$profileController, 'index'],
         'metiers' => [$metiersController, 'index'],
         'offres' => [$offresController, 'index'],
+        'evaluation' => [$evaluationController, 'index'],
         'offre-details' => [$offresController, 'details'],
         'postuler' => [$offresController, 'postuler'],
         'admin-offres' => [$offresController, 'adminList'],
         'admin-offre-delete' => [$offresController, 'delete'],
         'admin-offre-add' => [$offresController, 'store'],
+        'e-learnings' => [$elearningBridgeController, 'frontCatalog'],
     ];
 
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $page)) {

@@ -115,6 +115,7 @@
 </style>
 
 <!-- Form Section (Publier une offre) -->
+<?php if (!empty($isEntreprise)): ?>
 <div class="container-fluid form-section">
     <div class="container">
         <?php if (!empty($entreprise_nom)): ?>
@@ -164,11 +165,11 @@
                     <div id="notif-publication" class="hidden alert-box mb-3"></div>
 
                     <!-- Formulaire Opportunité de Travail -->
-                    <form id="form-add-travail" action="index.php?action=publish" method="POST">
+                    <form id="form-add-travail" action="index.php?page=offres&action=publish" method="POST">
                         <input type="hidden" name="type_offre" value="travail">
                         <div class="row g-3">
                             <div class="col-md-6"><label class="form-label">Titre</label><input type="text" class="form-control" name="titre" placeholder="Titre de l'offre" required></div>
-                            <div class="col-md-6"><label class="form-label">Entreprise</label><input type="text" class="form-control" name="entreprise" placeholder="Entreprise" required></div>
+                            <div class="col-md-6"><label class="form-label">Entreprise</label><input type="text" class="form-control" name="entreprise" placeholder="Entreprise" value="<?= htmlspecialchars($entreprise_nom ?? '') ?>" <?= !empty($entreprise_nom) ? 'readonly' : '' ?> required></div>
                             <div class="col-12"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="3" placeholder="Description" required></textarea></div>
                             <div class="col-md-6"><label class="form-label">Localisation</label><input type="text" class="form-control" name="localisation" placeholder="Ville" required></div>
                             <div class="col-md-6"><label class="form-label">Type de contrat</label><input type="text" class="form-control" name="type_contrat" placeholder="CDI, CDD..."></div>
@@ -181,14 +182,23 @@
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="col-md-6"><label class="form-label">Domaine</label><input type="text" class="form-control" name="domaine" placeholder="Domaine"></div>
+                                                        <div class="col-md-6">
+                                <label class="form-label">Domaine</label>
+                                <select class="form-select" name="domaine" required>
+                                    <option value="" disabled selected>Sélectionnez un domaine...</option>
+                                    <option value="informatique">Informatique</option>
+                                    <option value="economie">Économie</option>
+                                    <option value="architecture">Architecture</option>
+                                    <option value="electromecanique">Électromécanique</option>
+                                </select>
+                            </div>
                             <div class="col-md-6"><label class="form-label">Expiration</label><input type="date" class="form-control" name="date_expiration"></div>
                         </div>
                         <div class="mt-4"><button type="submit" class="btn btn-primary w-100">Publier l'Offre</button></div>
                     </form>
 
                     <!-- Formulaire Expérience (Caché par défaut) -->
-                    <form id="form-add-experience" action="index.php?action=publish" method="POST" class="hidden">
+                    <form id="form-add-experience" action="index.php?page=offres&action=publish" method="POST" class="hidden">
                         <div class="mb-4 text-center">
                             <h4>🎓 Ajouter un niveau d'expérience</h4>
                         </div>
@@ -225,6 +235,30 @@
         </div>
     </div>
 </div>
+<?php else: ?>
+<!-- Message pour les non-entreprises -->
+<div class="container-fluid form-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-9">
+                <div class="form-card text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-lock" style="font-size: 3rem; color: #94a3b8;"></i>
+                    </div>
+                    <h3 style="color: #475569;">Accès réservé aux entreprises</h3>
+                    <p class="text-muted">Seuls les comptes entreprise peuvent publier des opportunités de travail et gérer les offres.</p>
+                    <?php if (empty($isLoggedIn)): ?>
+                        <a href="index.php?page=login" class="btn btn-primary" style="border-radius: 1rem; padding: 0.8rem 2rem; font-weight: 700;">Se connecter</a>
+                        <p class="mt-3"><a href="index.php?page=entreprise" class="text-decoration-none">Créer un compte entreprise</a></p>
+                    <?php else: ?>
+                        <p class="mt-2 text-muted"><small>Vous êtes connecté en tant qu'utilisateur/formateur. Pour publier des offres, connectez-vous avec un compte entreprise.</small></p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Hero Selection -->
 <div class="offres-hero">
@@ -240,6 +274,7 @@
 
   <!-- Search -->
   <form method="GET" action="index.php" class="search-bar">
+    <input type="hidden" name="page" value="offres">
     <input type="hidden" name="action" value="offres">
     <div class="row g-2 align-items-center">
       <div class="col-md-7"><input type="text" name="q" class="form-control" placeholder="🔎 Rechercher..." value="<?= htmlspecialchars($search) ?>"></div>
@@ -257,11 +292,13 @@
   </form>
 
   <!-- Toggle Edit -->
+  <?php if (!empty($isEntreprise)): ?>
   <div class="text-center mb-4">
     <button id="toggleEditMode" class="btn btn-manage-toggle edit-mode-btn shadow-sm">
       <i class="fas fa-edit me-2"></i>Gérer mes publications
     </button>
   </div>
+  <?php endif; ?>
 
   <!-- Emplois -->
   <div class="section-title">💼 Opportunités d'Emploi</div>
@@ -274,9 +311,10 @@
         <div class="company"><i class="fas fa-building me-1"></i><?= htmlspecialchars($t['entreprise'] ?? '') ?></div>
         <div class="meta"><?= htmlspecialchars($t['localisation'] ?? '') ?> | <?= htmlspecialchars($t['domaine'] ?? '') ?></div>
         <div class="description"><?= htmlspecialchars(substr($t['description'] ?? '', 0, 100)) ?>...</div>
-        <a href="index.php?action=viewOffre&id=<?= $t['id'] ?>&type=travail" class="btn-view-item">
+        <a href="index.php?page=offres&action=viewOffre&id=<?= $t['id'] ?>&type=travail" class="btn-view-item">
           <i class="fas fa-eye"></i> Afficher
         </a>
+        <?php if (!empty($isEntreprise)): ?>
         <div class="edit-controls">
           <button class="btn-edit-item w-100" data-bs-toggle="modal" data-bs-target="#editModal" data-type="travail" data-id="<?= $t['id'] ?>" 
               data-titre="<?= htmlspecialchars($t['titre']) ?>" 
@@ -291,6 +329,7 @@
           </button>
           <button class="btn-delete-item w-100" onclick="confirmDelete(<?= $t['id'] ?>, 'travail')">Supprimer</button>
         </div>
+        <?php endif; ?>
       </div>
     </div>
     <?php endforeach; ?>
@@ -311,10 +350,11 @@
         <h5><?= htmlspecialchars($exp['niveau']) ?></h5>
         <div class="description"><?= htmlspecialchars($exp['description'] ?? 'Aucune description.') ?></div>
         
-        <a href="index.php?action=viewOffre&id=<?= $exp['id'] ?>&type=experience" class="btn-view-item">
+        <a href="index.php?page=offres&action=viewOffre&id=<?= $exp['id'] ?>&type=experience" class="btn-view-item">
           <i class="fas fa-eye"></i> Afficher
         </a>
         
+        <?php if (!empty($isEntreprise)): ?>
         <div class="edit-controls">
           <button class="btn-edit-item w-100" data-bs-toggle="modal" data-bs-target="#editExpModal" 
               data-id="<?= $exp['id'] ?>" 
@@ -326,6 +366,7 @@
           </button>
           <button class="btn-delete-item w-100" onclick="confirmDelete(<?= $exp['id'] ?>, 'experience')">Supprimer</button>
         </div>
+        <?php endif; ?>
       </div>
     </div>
     <?php endforeach; ?>
@@ -345,7 +386,7 @@
         <h5 class="modal-title fw-bold" id="editModalLabel"><i class="fas fa-edit me-2"></i>Modifier l'offre</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form id="form-edit-offre" action="index.php?action=update" method="POST">
+      <form id="form-edit-offre" action="index.php?page=offres&action=update" method="POST">
         <div class="modal-body p-4">
           <input type="hidden" name="id" id="edit-id">
           <input type="hidden" name="type_offre" value="travail">
@@ -387,7 +428,7 @@
         <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i>Modifier l'expérience</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <form action="index.php?action=update" method="POST">
+      <form action="index.php?page=offres&action=update" method="POST">
         <div class="modal-body p-4">
           <input type="hidden" name="id" id="edit-exp-id">
           <input type="hidden" name="type_offre" value="experience">
@@ -428,7 +469,7 @@
 <script>
   function confirmDelete(id, type) {
       if (confirm("Supprimer cette offre ?")) {
-          window.location.href = "index.php?action=delete&id=" + id + "&type=" + type;
+          window.location.href = "index.php?page=offres&action=delete&id=" + id + "&type=" + type;
       }
   }
 
@@ -517,6 +558,36 @@
 
   document.querySelector('#editExpModal form')?.addEventListener('submit', function(e) {
       if (!validateExperienceForm(this)) e.preventDefault();
+  });
+
+  // Notifications
+  document.addEventListener('DOMContentLoaded', function() {
+      const params = new URLSearchParams(window.location.search);
+      const notif = document.getElementById('notification');
+      
+      const messages = {
+          'experience': '✅ Niveau d\'expérience ajouté avec succès !',
+          'travail': '✅ Offre publiée avec succès !',
+          'postule': '✅ Candidature envoyée avec succès !',
+          'update': '✅ Modification enregistrée avec succès !',
+          'deleted': '🗑️ Suppression effectuée avec succès.',
+          'error': '❌ Une erreur est survenue lors de l\'opération.',
+          'insertion_echouee': '❌ Échec de l\'insertion dans la base de données. Vérifiez vos tables.',
+          'niveau_requis': '⚠️ Le niveau d\'expérience est requis.'
+      };
+
+      if (params.has('success')) {
+          const key = params.get('success');
+          notif.textContent = messages[key] || 'Opération réussie !';
+          notif.classList.remove('hidden');
+          notif.classList.add('alert-success');
+          setTimeout(() => notif.classList.add('hidden'), 5000);
+      } else if (params.has('error')) {
+          const key = params.get('error');
+          notif.textContent = messages[key] || messages['error'];
+          notif.classList.remove('hidden');
+          notif.classList.add('alert-error');
+      }
   });
 
   // Auto-ouverture du modal si edit_id est présent dans l'URL

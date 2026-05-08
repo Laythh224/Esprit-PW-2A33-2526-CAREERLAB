@@ -112,6 +112,8 @@ class EntrepriseModel
         $secteur = trim((string) ($data['secteur'] ?? ''));
         $description = trim((string) ($data['description'] ?? ''));
         $siteWeb = trim((string) ($data['site_web'] ?? ''));
+        $codeFiscal = trim((string) ($data['code_fiscal'] ?? ''));
+        $cv = trim((string) ($data['cv'] ?? ''));
         $password = (string) ($data['password'] ?? '');
 
         if ($nomEntreprise === '' || $email === '' || $password === '') {
@@ -120,8 +122,8 @@ class EntrepriseModel
 
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-        $stmt = $this->conn->prepare('INSERT INTO entreprise (nom_entreprise, email, password, telephone, adresse, ville, secteur, description, site_web, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)');
-        $stmt->execute([$nomEntreprise, $email, $passwordHash, $telephone, $adresse, $ville, $secteur, $description, $siteWeb]);
+        $stmt = $this->conn->prepare('INSERT INTO entreprise (nom_entreprise, email, password, telephone, adresse, ville, secteur, description, site_web, code_fiscal, cv, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)');
+        $stmt->execute([$nomEntreprise, $email, $passwordHash, $telephone, $adresse, $ville, $secteur, $description, $siteWeb, $codeFiscal, $cv]);
     }
 
     public function update(array $data): void
@@ -135,6 +137,7 @@ class EntrepriseModel
         $secteur = trim((string) ($data['secteur'] ?? ''));
         $description = trim((string) ($data['description'] ?? ''));
         $siteWeb = trim((string) ($data['site_web'] ?? ''));
+        $codeFiscal = trim((string) ($data['code_fiscal'] ?? ''));
         $password = (string) ($data['password'] ?? '');
 
         if ($id <= 0 || $nomEntreprise === '' || $email === '') {
@@ -143,13 +146,13 @@ class EntrepriseModel
 
         if ($password !== '') {
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $this->conn->prepare('UPDATE entreprise SET nom_entreprise = ?, email = ?, telephone = ?, adresse = ?, ville = ?, secteur = ?, description = ?, site_web = ?, password = ? WHERE id = ?');
-            $stmt->execute([$nomEntreprise, $email, $telephone, $adresse, $ville, $secteur, $description, $siteWeb, $passwordHash, $id]);
+            $stmt = $this->conn->prepare('UPDATE entreprise SET nom_entreprise = ?, email = ?, telephone = ?, adresse = ?, ville = ?, secteur = ?, description = ?, site_web = ?, code_fiscal = ?, password = ? WHERE id = ?');
+            $stmt->execute([$nomEntreprise, $email, $telephone, $adresse, $ville, $secteur, $description, $siteWeb, $codeFiscal, $passwordHash, $id]);
             return;
         }
 
-        $stmt = $this->conn->prepare('UPDATE entreprise SET nom_entreprise = ?, email = ?, telephone = ?, adresse = ?, ville = ?, secteur = ?, description = ?, site_web = ? WHERE id = ?');
-        $stmt->execute([$nomEntreprise, $email, $telephone, $adresse, $ville, $secteur, $description, $siteWeb, $id]);
+        $stmt = $this->conn->prepare('UPDATE entreprise SET nom_entreprise = ?, email = ?, telephone = ?, adresse = ?, ville = ?, secteur = ?, description = ?, site_web = ?, code_fiscal = ? WHERE id = ?');
+        $stmt->execute([$nomEntreprise, $email, $telephone, $adresse, $ville, $secteur, $description, $siteWeb, $codeFiscal, $id]);
     }
 
     public function delete(int $id): void

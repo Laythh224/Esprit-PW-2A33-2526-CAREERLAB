@@ -113,7 +113,7 @@
 </style>
 
 <div class="container detail-container">
-    <a href="index.php?action=offres" class="btn-back">
+    <a href="index.php?page=offres&action=offres" class="btn-back">
         <i class="fas fa-arrow-left"></i> Retour aux offres
     </a>
 
@@ -191,9 +191,15 @@
 
                 <?php if ($type === 'travail'): ?>
                 <div class="mt-5 text-center">
-                    <button type="button" class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-lg fw-bold" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); border: none;" data-bs-toggle="modal" data-bs-target="#applyModal">
-                        <i class="fas fa-paper-plane me-2"></i> Postuler maintenant
-                    </button>
+                    <?php if (empty($isLoggedIn)): ?>
+                        <a href="index.php?page=login" class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-lg fw-bold" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); border: none; text-decoration: none;">
+                            <i class="fas fa-sign-in-alt me-2"></i> Connectez-vous pour postuler
+                        </a>
+                    <?php else: ?>
+                        <button type="button" class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-lg fw-bold" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); border: none;" data-bs-toggle="modal" data-bs-target="#applyModal">
+                            <i class="fas fa-paper-plane me-2"></i> Postuler maintenant
+                        </button>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Apply Modal -->
@@ -204,7 +210,7 @@
                         <h5 class="modal-title fw-bold" id="applyModalLabel"><i class="fas fa-rocket me-2"></i> Candidature IA - <?= htmlspecialchars($offre['titre']) ?></h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
-                      <form action="index.php?action=apply" method="POST">
+                      <form action="index.php?page=offres&action=apply" method="POST">
                           <input type="hidden" name="offre_id" value="<?= $offre['id'] ?>">
                           <div class="modal-body p-4 p-md-5 bg-light">
                               <div class="row g-4 text-start">
@@ -225,16 +231,7 @@
                                   <div class="col-12 mt-4">
                                       <h5 class="fw-bold text-primary mb-3"><i class="fas fa-brain me-2"></i> Test Technique Dynamique</h5>
                                       
-                                      <div class="mb-4">
-                                          <label class="form-label fw-bold text-dark">Choisissez votre domaine pour le test :</label>
-                                          <select name="qcm_domaine" id="qcmDomaine" class="form-select form-select-lg rounded-3 border-0 shadow-sm" required onchange="showQCM()">
-                                              <option value="" disabled selected>Sélectionnez un domaine...</option>
-                                              <option value="informatique">Informatique</option>
-                                              <option value="economie">Économie</option>
-                                              <option value="architecture">Architecture</option>
-                                              <option value="electromecanique">Électromécanique</option>
-                                          </select>
-                                      </div>
+                                      <input type="hidden" name="qcm_domaine" id="qcmDomaine" value="<?= htmlspecialchars($offre['domaine'] ?? '') ?>">
 
                                       <!-- QCM Informatique -->
                                       <div id="qcm_informatique" class="qcm-block" style="display: none;">
@@ -405,24 +402,42 @@
                       </form>
                       <script>
                         function showQCM() {
-                            var domaine = document.getElementById('qcmDomaine').value;
+                            var domaine = document.getElementById('qcmDomaine').value.toLowerCase().trim();
+                            // Handle plural 's' if necessary (e.g., economies -> economie)
+                            if (domaine.endsWith('s')) {
+                                var singular = domaine.slice(0, -1);
+                                if (document.getElementById('qcm_' + singular)) {
+                                    domaine = singular;
+                                }
+                            }
+                            
                             var blocks = document.getElementsByClassName('qcm-block');
                             for (var i = 0; i < blocks.length; i++) {
                                 blocks[i].style.display = 'none';
                                 var inputs = blocks[i].querySelectorAll('input');
                                 inputs.forEach(inp => inp.required = false);
                             }
+                            
                             if (domaine) {
                                 var selectedBlock = document.getElementById('qcm_' + domaine);
-                                selectedBlock.style.display = 'block';
-                                var inputs = selectedBlock.querySelectorAll('input[type="radio"]');
-                                var names = new Set();
-                                inputs.forEach(inp => names.add(inp.name));
-                                names.forEach(name => {
-                                    var radios = document.querySelectorAll('input[name="'+name+'"]');
-                                    if(radios.length > 0) radios[0].required = true;
-                                });
+                                if (selectedBlock) {
+                                    selectedBlock.style.display = 'block';
+                                    var inputs = selectedBlock.querySelectorAll('input[type="radio"]');
+                                    var names = new Set();
+                                    inputs.forEach(inp => names.add(inp.name));
+                                    names.forEach(name => {
+                                        var radios = document.querySelectorAll('input[name="'+name+'"]');
+                                        if(radios.length > 0) radios[0].required = true;
+                                    });
+                                }
                             }
+                        }
+                        
+                        // Show QCM on page load AND when modal opens
+                        document.addEventListener('DOMContentLoaded', showQCM);
+                        var applyModalEl = document.getElementById('applyModal');
+                        if (applyModalEl) {
+                            applyModalEl.addEventListener('shown.bs.modal', showQCM);
                         }
                       </script>
                     </div>

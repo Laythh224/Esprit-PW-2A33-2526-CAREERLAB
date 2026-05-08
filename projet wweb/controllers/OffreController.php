@@ -46,6 +46,9 @@ class OffreController extends BaseController {
         $stmtE = $pdo->query("SELECT * FROM Experience ORDER BY id ASC");
         $experiences = $stmtE->fetchAll();
 
+        $isEntreprise = isset($_SESSION['role']) && $_SESSION['role'] === 'entreprise';
+        $isLoggedIn = !empty($_SESSION['is_logged_in']);
+
         $this->render('offres/list', [
             'action' => 'offres',
             'title'  => 'Les Offres - Career Lab',
@@ -54,13 +57,23 @@ class OffreController extends BaseController {
             'sort'    => $sort,
             'totalTravail' => count($travaux),
             'experiences' => $experiences,
-            'entreprise_nom' => $_SESSION['entreprise_nom'] ?? null
+            'entreprise_nom' => $_SESSION['entreprise_nom'] ?? ($_SESSION['user_name'] ?? null),
+            'isEntreprise' => $isEntreprise,
+            'isLoggedIn' => $isLoggedIn,
         ]);
     }
 
 
 
+    private function requireEntreprise(): void {
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'entreprise') {
+            $this->redirect('offres', ['error' => 'acces_refuse']);
+            exit();
+        }
+    }
+
     public function publish(): void {
+        $this->requireEntreprise();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('offres');
             return;
@@ -96,10 +109,12 @@ class OffreController extends BaseController {
 
     private function publierTravail(): void {
         $pdo = $this->getDb();
+        $entreprise_nom = $_SESSION['entreprise_nom'] ?? ($_SESSION['user_name'] ?? $_POST['entreprise'] ?? '');
+        
         $data = [
             ':titre'           => $this->clean($_POST['titre'] ?? ''),
             ':description'     => $this->clean($_POST['description'] ?? ''),
-            ':entreprise'      => $this->clean($_POST['entreprise'] ?? ''),
+            ':entreprise'      => $this->clean($entreprise_nom),
             ':localisation'    => $this->clean($_POST['localisation'] ?? ''),
             ':type_contrat'    => $this->clean($_POST['type_contrat'] ?? ''),
             ':date_expiration' => !empty($_POST['date_expiration']) ? $_POST['date_expiration'] : null,
@@ -120,6 +135,7 @@ class OffreController extends BaseController {
     }
 
     public function update(): void {
+        $this->requireEntreprise();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->redirect('offres');
 
         $pdo = $this->getDb();
@@ -129,6 +145,8 @@ class OffreController extends BaseController {
 
         $success = false;
         if ($type === 'travail') {
+            $entreprise_nom = $_SESSION['entreprise_nom'] ?? ($_SESSION['user_name'] ?? $_POST['entreprise'] ?? '');
+            
             $sql = "UPDATE OpportuniteTravail SET titre=:titre, description=:description, entreprise=:entreprise, 
                            localisation=:localisation, type_contrat=:type_contrat, date_expiration=:date_expiration, 
                            experience_id=:experience_id, domaine=:domaine WHERE id=:id";
@@ -137,7 +155,7 @@ class OffreController extends BaseController {
                 ':id'              => $id,
                 ':titre'           => $this->clean($_POST['titre'] ?? ''),
                 ':description'     => $this->clean($_POST['description'] ?? ''),
-                ':entreprise'      => $this->clean($_POST['entreprise'] ?? ''),
+                ':entreprise'      => $this->clean($entreprise_nom),
                 ':localisation'    => $this->clean($_POST['localisation'] ?? ''),
                 ':type_contrat'    => $this->clean($_POST['type_contrat'] ?? ''),
                 ':date_expiration' => !empty($_POST['date_expiration']) ? $_POST['date_expiration'] : null,
@@ -157,13 +175,25 @@ class OffreController extends BaseController {
         }
 
         $redirect = $_POST['redirect'] ?? 'offres';
-        $location = ($redirect === 'tables') ? "admin.php?success=update" : "index.php?action=offres&success=update";
-        if (!$success) $location = ($redirect === 'tables') ? "admin.php?error=update" : "index.php?action=offres&error=update_echoue";
+        if ($redirect === 'tables') {
+            $location = "index.php?page=admin-offres&success=update";
+        } else {
+            $location = "index.php?page=offres&action=offres&success=update";
+        }
+        
+        if (!$success) {
+            if ($redirect === 'tables') {
+                $location = "index.php?page=admin-offres&error=update";
+            } else {
+                $location = "index.php?page=offres&action=offres&error=update_echoue";
+            }
+        }
         header("Location: $location");
         exit();
     }
 
     public function delete(): void {
+        $this->requireEntreprise();
         $pdo = $this->getDb();
         $id = (int)($_GET['id'] ?? 0);
         $type = $_GET['type'] ?? '';
@@ -174,8 +204,19 @@ class OffreController extends BaseController {
         $success = $stmt->execute([':id' => $id]);
 
         $redirect = $_GET['redirect'] ?? 'offres';
-        $location = ($redirect === 'tables') ? "admin.php?success=deleted" : "index.php?action=offres&success=deleted";
-        if (!$success) $location = ($redirect === 'tables') ? "admin.php?error=delete" : "index.php?action=offres&error=delete_echoue";
+        if ($redirect === 'tables') {
+            $location = "index.php?page=admin-offres&success=deleted";
+        } else {
+            $location = "index.php?page=offres&action=offres&success=deleted";
+        }
+
+        if (!$success) {
+            if ($redirect === 'tables') {
+                $location = "index.php?page=admin-offres&error=delete";
+            } else {
+                $location = "index.php?page=offres&action=offres&error=delete_echoue";
+            }
+        }
         header("Location: $location");
         exit();
     }
@@ -202,12 +243,21 @@ class OffreController extends BaseController {
 
         if (!$offre) { $this->redirect('offres', ['error' => 'offre_introuvable']); return; }
 
-        $this->render('offres/detail', [ 'action' => 'offres', 'title'  => $title, 'offre'  => $offre, 'type'   => $type ]);
+        $isEntreprise = isset($_SESSION['role']) && $_SESSION['role'] === 'entreprise';
+        $isLoggedIn = !empty($_SESSION['is_logged_in']);
+
+        $this->render('offres/detail', [ 'action' => 'offres', 'title'  => $title, 'offre'  => $offre, 'type'   => $type, 'isEntreprise' => $isEntreprise, 'isLoggedIn' => $isLoggedIn ]);
     }
 
     public function apply(): void {
         $pdo = $this->getDb();
         
+        // Sécurité : Seuls les utilisateurs connectés peuvent postuler
+        if (!isset($_SESSION['is_logged_in'])) {
+            $this->redirect('offres', ['error' => 'acces_interdit_candidat']);
+            return;
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = (int)($_POST['offre_id'] ?? 0);
             if (!$id) { $this->redirect('offres', ['error' => 'id_manquant']); return; }
@@ -283,15 +333,27 @@ class OffreController extends BaseController {
         }
     }
 
-    public function deleteCandidature(): void {
+    public function refuseCandidature(): void {
         $pdo = $this->getDb();
         $id = (int)($_GET['id'] ?? 0);
-        if (!$id) { header("Location: admin_about.php?error=id_manquant"); exit(); }
+        if (!$id) { header("Location: index.php?page=admin-offres&view=about&error=id_manquant"); exit(); }
 
-        $stmt = $pdo->prepare("DELETE FROM Candidature WHERE id = :id");
+        $stmt = $pdo->prepare("UPDATE Candidature SET statut = 'refuse' WHERE id = :id");
         $success = $stmt->execute([':id' => $id]);
 
-        header("Location: admin_about.php?success=" . ($success ? "deleted" : "error"));
+        header("Location: index.php?page=admin-offres&view=about&success=" . ($success ? "refused" : "error"));
+        exit();
+    }
+
+    public function acceptCandidature(): void {
+        $pdo = $this->getDb();
+        $id = (int)($_GET['id'] ?? 0);
+        if (!$id) { header("Location: index.php?page=admin-offres&view=about&error=id_manquant"); exit(); }
+
+        $stmt = $pdo->prepare("UPDATE Candidature SET statut = 'accepte' WHERE id = :id");
+        $success = $stmt->execute([':id' => $id]);
+
+        header("Location: index.php?page=admin-offres&view=about&success=" . ($success ? "accepted" : "error"));
         exit();
     }
 }

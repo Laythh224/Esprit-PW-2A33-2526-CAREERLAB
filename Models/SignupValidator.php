@@ -90,11 +90,6 @@ class SignupValidator
             $errors['confirm_password'] = 'La confirmation du mot de passe doit etre identique.';
         }
 
-        $cvValidation = $this->validatePdfFile($files['cv'] ?? null, 'Le CV');
-        if (!$cvValidation['ok']) {
-            $errors['cv'] = $cvValidation['message'];
-        }
-
         if ($entity->getCodeFiscal() === '') {
             $errors['code_fiscal'] = 'Le code fiscal est obligatoire.';
         } elseif (!preg_match('/^[A-Za-z0-9-]{6,20}$/', $entity->getCodeFiscal())) {
@@ -289,7 +284,10 @@ class SignupValidator
             throw new RuntimeException('Cet email est deja utilise.');
         }
 
-        $upload = $this->cvUploadService->uploadPdf($files['cv'] ?? []);
+        $upload = null;
+        if (isset($files['cv']) && (int)($files['cv']['error'] ?? 1) === 0) {
+            $upload = $this->cvUploadService->uploadPdf($files['cv']);
+        }
 
         return [
             'nom_entreprise' => $entity->getNom(),
@@ -302,7 +300,7 @@ class SignupValidator
             'description' => $entity->getDescription(),
             'site_web' => $entity->getSite(),
             'code_fiscal' => $entity->getCodeFiscal(),
-            'cv' => $upload['publicPath'],
+            'cv' => $upload ? $upload['publicPath'] : null,
         ];
     }
 
