@@ -639,7 +639,7 @@
       statsId: 'clients-stats',
       exportButtonId: 'clients-word-btn',
       logoUrl: logoUrl,
-      searchFields: ['name', 'email', 'cin', 'niveau', 'formation'],
+      searchFields: ['name', 'email', 'cin', 'niveau', 'formation', 'type'],
       sortField: 'name',
       statsField: 'niveau',
       resultCountId: 'clients-result-count',

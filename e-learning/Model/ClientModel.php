@@ -18,9 +18,11 @@ class ClientModel
     public function all(): array
     {
         $statement = $this->db->query(
-            'SELECT cin, nom, prenom, adresse, niveau, age, tel, nom_formation, session_id
-             FROM client
-             ORDER BY nom ASC, prenom ASC'
+            'SELECT c.cin, c.nom, c.prenom, c.adresse, c.niveau, c.age, c.tel, c.nom_formation, c.session_id,
+                    s.type AS session_type
+             FROM client c
+             LEFT JOIN `session` s ON s.id = c.session_id
+             ORDER BY c.nom ASC, c.prenom ASC'
         );
 
         return $statement->fetchAll();

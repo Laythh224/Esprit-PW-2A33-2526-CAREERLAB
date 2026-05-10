@@ -18,7 +18,7 @@ require __DIR__ . '/../Layouts/back_header.php';
     <div class="table-tools">
       <div class="table-tools__group">
         <label for="clients-search">Recherche</label>
-        <input type="search" id="clients-search" class="table-tools__input" placeholder="Rechercher nom, prenom, e-mail, CIN, niveau ou formation..." />
+        <input type="search" id="clients-search" class="table-tools__input" placeholder="Rechercher nom, prenom, e-mail, CIN, niveau, formation ou modalité..." />
       </div>
       <div class="table-tools__group">
         <label for="clients-sort">Tri</label>
@@ -41,6 +41,7 @@ require __DIR__ . '/../Layouts/back_header.php';
             <th>E-mail</th>
             <th>Niveau</th>
             <th>Formation</th>
+            <th>Modalité</th>
             <th>Age</th>
             <th>Telephone</th>
             <th>Actions</th>
@@ -54,6 +55,13 @@ require __DIR__ . '/../Layouts/back_header.php';
               $fullNameKey = strtolower(trim($nom . ' ' . $prenom));
               $niveau = (string) ($client['niveau'] ?? '');
               $nomFormationRow = (string) ($client['nom_formation'] ?? '');
+              $sessionType = strtolower(trim((string) ($client['session_type'] ?? '')));
+              $typeSearch = $sessionType;
+              if ($sessionType === 'online') {
+                  $typeSearch .= ' en ligne distance';
+              } elseif ($sessionType === 'presentiel') {
+                  $typeSearch .= ' presentiel sur site';
+              }
             ?>
             <tr
               data-name="<?= htmlspecialchars($fullNameKey, ENT_QUOTES, 'UTF-8') ?>"
@@ -62,6 +70,7 @@ require __DIR__ . '/../Layouts/back_header.php';
               data-niveau="<?= htmlspecialchars(strtolower($niveau), ENT_QUOTES, 'UTF-8') ?>"
               data-niveau-label="<?= htmlspecialchars($niveau, ENT_QUOTES, 'UTF-8') ?>"
               data-formation="<?= htmlspecialchars(strtolower($nomFormationRow), ENT_QUOTES, 'UTF-8') ?>"
+              data-type="<?= htmlspecialchars(strtolower(trim($typeSearch)), ENT_QUOTES, 'UTF-8') ?>"
             >
               <td><?= htmlspecialchars((string) ($client['cin'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
               <td><?= htmlspecialchars($nom, ENT_QUOTES, 'UTF-8') ?></td>
@@ -69,6 +78,15 @@ require __DIR__ . '/../Layouts/back_header.php';
               <td><?= htmlspecialchars((string) ($client['adresse'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
               <td><?= htmlspecialchars($niveau, ENT_QUOTES, 'UTF-8') ?></td>
               <td><?= htmlspecialchars($nomFormationRow !== '' ? $nomFormationRow : '—', ENT_QUOTES, 'UTF-8') ?></td>
+              <td><?php
+                if ($sessionType === 'online') {
+                    echo htmlspecialchars('En ligne', ENT_QUOTES, 'UTF-8');
+                } elseif ($sessionType === 'presentiel') {
+                    echo htmlspecialchars('Présentiel', ENT_QUOTES, 'UTF-8');
+                } else {
+                    echo '—';
+                }
+              ?></td>
               <td><?= (int) ($client['age'] ?? 0) ?></td>
               <td><?= htmlspecialchars((string) ($client['tel'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
               <td>

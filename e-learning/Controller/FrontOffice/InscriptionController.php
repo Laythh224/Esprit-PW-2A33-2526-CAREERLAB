@@ -177,10 +177,26 @@ class InscriptionController extends BaseController
         }
 
         $whatsapp = new WhatsappService();
-        $whatsappSuffix = $whatsapp->notifyInscription($data['tel'], $nomFormation);
+        $whatsappSuffix = $whatsapp->notifyInscription($data['tel'], $nomFormation, $this->participantLabelForWhatsapp($data));
 
         $this->setFlash('Inscription reussie pour la formation : ' . $nomFormation . '.' . $whatsappSuffix);
         $this->redirect('front/formations');
+    }
+
+    /**
+     * Libellé pour les notifications WhatsApp : prénom + nom, ou raison sociale (entreprise).
+     *
+     * @param array<string, mixed> $data Payload client (create/update)
+     */
+    private function participantLabelForWhatsapp(array $data): string
+    {
+        $nom = trim((string) ($data['nom'] ?? ''));
+        $prenom = trim((string) ($data['prenom'] ?? ''));
+        if ($prenom === '' || $prenom === '-') {
+            return $nom;
+        }
+
+        return trim($prenom . ' ' . $nom);
     }
 
     private function isPlatformUserLoggedIn(): bool

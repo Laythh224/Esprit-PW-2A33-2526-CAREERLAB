@@ -1,16 +1,11 @@
 <?php
-
-declare(strict_types=1);
-
-/**
- * Copiez ce fichier vers whatsapp.local.php et renseignez les valeurs.
- * whatsapp.local.php est ignore par git — ne commitez pas les secrets.
- *
- * Les cles absentes restent celles de whatsapp.php.
- */
 return [
     'enabled' => true,
     'provider' => 'twilio',
-    // 'flash_whatsapp_debug' => true,
-    // Secrets Twilio : e-learning/.env (voir .env.example).
+    'flash_whatsapp_debug' => true,  // temporaire : texte court après inscription
+    'curl_ssl_verify' => false,      // XAMPP Windows si erreur SSL en dev uniquement
+    'twilio' => [
+        'send_to_admin_phone' => true,
+        'admin_phone' => '+216XXXXXXXX',  // ton numéro en E.164 avec +
+    ],
 ];

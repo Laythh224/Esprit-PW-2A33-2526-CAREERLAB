@@ -2,3 +2,5 @@
 e-learning/.env
 e-learning/Model/config/whatsapp.local.php
 e-learning/Model/config/twilio.credentials.ini
+e-learning/storage/logs/
+*.log

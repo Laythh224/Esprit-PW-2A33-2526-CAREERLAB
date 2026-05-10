@@ -10,23 +10,38 @@ class WhatsappService
 
     /**
      * Suffixe optionnel pour le message flash (si flash_whatsapp_debug dans la config).
+     *
+     * @param string $participantDisplayName Prénom + nom (ou raison sociale entreprise), pour le corps du message
      */
-    public function notifyInscription(string $phoneLocal8, string $nomFormation): string
+    public function notifyInscription(string $phoneLocal8, string $nomFormation, string $participantDisplayName = ''): string
     {
         $config = $this->loadConfig();
 
+        $participantDisplayName = trim($participantDisplayName);
+
         $this->debugLog($config, '----------');
-        $this->debugLog($config, 'Inscription : tel=' . $phoneLocal8 . ', formation=' . $nomFormation);
+        $this->debugLog(
+            $config,
+            'Inscription : tel=' . $phoneLocal8 . ', formation=' . $nomFormation . ', participant=' . ($participantDisplayName !== '' ? $participantDisplayName : '(non renseigne)')
+        );
 
         if (empty($config['enabled'])) {
             $this->debugLog($config, 'SKIP : enabled=false dans Model/config/whatsapp.php -> passer a true et renseigner le provider.');
             return $this->flashSuffix($config, 'WhatsApp desactive dans config');
         }
 
-        $baseMessage = sprintf(
-            'CareerLab : votre inscription a la formation « %s » est confirmee. Merci !',
-            $nomFormation
-        );
+        if ($participantDisplayName !== '') {
+            $baseMessage = sprintf(
+                'CareerLab : Bonjour %s, votre inscription a la formation « %s » est confirmee. Merci !',
+                $participantDisplayName,
+                $nomFormation
+            );
+        } else {
+            $baseMessage = sprintf(
+                'CareerLab : votre inscription a la formation « %s » est confirmee. Merci !',
+                $nomFormation
+            );
+        }
 
         $e164Client = $this->toE164($phoneLocal8, (string) ($config['country_calling_code'] ?? '216'));
         if ($e164Client === null) {
@@ -52,11 +67,7 @@ class WhatsappService
                 return $this->flashSuffix($config, 'WhatsApp : admin_phone invalide');
             }
             $destination = $adminPhone;
-            $message = sprintf(
-                '[CareerLab] Nouvelle inscription — formation « %s ». Tel client : %s',
-                $nomFormation,
-                $e164Client
-            );
+            $message = $this->buildAdminInscriptionMessage($nomFormation, $e164Client, $participantDisplayName);
         } elseif ($provider === 'twilio' && !empty($twilioCfg['send_to_admin_phone'])) {
             $adminTwilio = trim((string) ($twilioCfg['admin_phone'] ?? ''));
             if ($adminTwilio === '' || $adminTwilio[0] !== '+') {
@@ -64,18 +75,11 @@ class WhatsappService
                 return $this->flashSuffix($config, 'WhatsApp : admin_phone invalide');
             }
             $destination = $adminTwilio;
-            $message = sprintf(
-                '[CareerLab] Nouvelle inscription — formation « %s ». Tel client : %s',
-                $nomFormation,
-                $e164Client
-            );
+            $message = $this->buildAdminInscriptionMessage($nomFormation, $e164Client, $participantDisplayName);
         }
 
         if ($provider === 'twilio' && !$this->twilioCredentialsReady($config)) {
-            $this->debugLog(
-                $config,
-                'SKIP Twilio : pas de AC + token (.env TWILIO_* ou variables serveur). Pas d appel API — inscription OK.'
-            );
+            $this->debugLog($config, 'SKIP Twilio : identifiants invalides ou absents — ' . $this->twilioCredentialHint($config));
 
             return '';
         }
@@ -84,7 +88,7 @@ class WhatsappService
             if ($provider === 'callmebot') {
                 $this->sendViaCallMeBot($config, $destination, $message);
             } elseif ($provider === 'twilio') {
-                $this->sendViaTwilioWhatsapp($config, $destination, $message, $nomFormation, $e164Client);
+                $this->sendViaTwilioWhatsapp($config, $destination, $message, $nomFormation, $e164Client, $participantDisplayName);
             } elseif ($provider === 'webhook') {
                 $this->sendViaWebhook($config, $destination, $message);
             } else {
@@ -99,6 +103,25 @@ class WhatsappService
             error_log('WhatsApp: ' . $e->getMessage());
             return $this->flashSuffix($config, 'WhatsApp erreur — voir storage/logs/whatsapp.log');
         }
+    }
+
+    private function buildAdminInscriptionMessage(string $nomFormation, string $e164Client, string $participantDisplayName): string
+    {
+        $participantDisplayName = trim($participantDisplayName);
+        if ($participantDisplayName !== '') {
+            return sprintf(
+                '[CareerLab] Nouvelle inscription — %s — formation « %s ». Tel client : %s',
+                $participantDisplayName,
+                $nomFormation,
+                $e164Client
+            );
+        }
+
+        return sprintf(
+            '[CareerLab] Nouvelle inscription — formation « %s ». Tel client : %s',
+            $nomFormation,
+            $e164Client
+        );
     }
 
     private function flashSuffix(array $config, string $shortMessage): string
@@ -160,6 +183,28 @@ class WhatsappService
         }
 
         return true;
+    }
+
+    /**
+     * Message court pour whatsapp.log si Twilio ne peut pas etre appele.
+     */
+    private function twilioCredentialHint(array $config): string
+    {
+        $t = $config['twilio'] ?? [];
+        $sid = trim((string) ($t['account_sid'] ?? ''));
+        $token = trim((string) ($t['auth_token'] ?? ''));
+
+        if ($sid === '' || strncmp($sid, 'AC', 2) !== 0) {
+            return 'renseignez TWILIO_ACCOUNT_SID dans e-learning/.env (Console Twilio > Account, commence par AC).';
+        }
+        if (stripos($sid, 'xxxx') !== false) {
+            return 'remplacez ACxxxxxxxx par votre vrai Account SID (pas l exemple du fichier .env.example).';
+        }
+        if ($token === '' || stripos($token, 'xxxx') !== false) {
+            return 'remplacez TWILIO_AUTH_TOKEN par le token reel (Console Twilio > Account ; pas xxxxxxxx).';
+        }
+
+        return 'verifiez e-learning/.env (copie depuis .env.example) et rechargez PHP.';
     }
 
     private function loadConfig(): array
@@ -302,15 +347,17 @@ class WhatsappService
     }
 
     /**
-     * @param string $formationName nom de formation (pour ContentVariables)
-     * @param string $clientE164    tel client +216...
+     * @param string $formationName      nom de formation (pour ContentVariables)
+     * @param string $clientE164         tel client +216...
+     * @param string $participantDisplayName nom affiche (modeles Twilio : cle participant)
      */
     private function sendViaTwilioWhatsapp(
         array $config,
         string $toE164,
         string $body,
         string $formationName = '',
-        string $clientE164 = ''
+        string $clientE164 = '',
+        string $participantDisplayName = ''
     ): void {
         $twilio = $config['twilio'] ?? [];
         $sid = trim((string) ($twilio['account_sid'] ?? ''));
@@ -352,7 +399,7 @@ class WhatsappService
 
         $contentSid = trim((string) ($twilio['content_sid'] ?? ''));
         if ($contentSid !== '') {
-            $vars = $this->buildTwilioContentVariables($twilio, $body, $formationName, $clientE164);
+            $vars = $this->buildTwilioContentVariables($twilio, $body, $formationName, $clientE164, $participantDisplayName);
             $encodedVars = json_encode($vars, JSON_UNESCAPED_UNICODE);
             if ($encodedVars === false) {
                 throw new \RuntimeException('Twilio ContentVariables JSON encode failed');
@@ -385,12 +432,17 @@ class WhatsappService
     }
 
     /**
-     * Mappe content_variable_map (cles = indices du modele "1","2",...) vers formation | tel | message.
+     * Mappe content_variable_map (cles = indices du modele "1","2",...) vers formation | tel | message | participant.
      *
      * @return array<string, string>
      */
-    private function buildTwilioContentVariables(array $twilio, string $body, string $formationName, string $clientE164): array
-    {
+    private function buildTwilioContentVariables(
+        array $twilio,
+        string $body,
+        string $formationName,
+        string $clientE164,
+        string $participantDisplayName = ''
+    ): array {
         $map = $twilio['content_variable_map'] ?? null;
         if ($map === null || !is_array($map) || $map === []) {
             return ['1' => $formationName !== '' ? $formationName : $body];
@@ -406,6 +458,8 @@ class WhatsappService
                 $out[$slotKey] = $clientE164;
             } elseif ($src === 'message') {
                 $out[$slotKey] = $body;
+            } elseif ($src === 'participant') {
+                $out[$slotKey] = $participantDisplayName;
             } else {
                 $out[$slotKey] = $src;
             }

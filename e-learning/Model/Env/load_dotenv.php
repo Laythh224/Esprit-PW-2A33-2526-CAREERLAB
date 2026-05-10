@@ -16,6 +16,11 @@ function careerlabb_load_dotenv_file(string $path): void
         return;
     }
 
+    // BOM UTF-8 : sinon la premiere cle (ex. TWILIO_*) est ignoree.
+    if (str_starts_with($raw, "\xEF\xBB\xBF")) {
+        $raw = substr($raw, 3);
+    }
+
     $lines = preg_split("/\r\n|\n|\r/", $raw);
     if ($lines === false) {
         return;
@@ -37,7 +42,10 @@ function careerlabb_load_dotenv_file(string $path): void
             continue;
         }
 
-        if (getenv($name) !== false) {
+        // Ne pas ecraser une variable deja definie avec une valeur non vide (Apache / OS).
+        // Si elle est vide ou absente, le .env peut la renseigner.
+        $existing = getenv($name);
+        if ($existing !== false && $existing !== '') {
             continue;
         }
 

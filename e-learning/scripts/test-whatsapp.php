@@ -42,8 +42,8 @@ $tokOk = trim((string) ($tw['auth_token'] ?? '')) !== '';
 echo "twilio   : account_sid " . ($sidOk ? 'renseigne' : 'VIDE') . ", auth_token " . ($tokOk ? 'renseigne' : 'VIDE') . PHP_EOL;
 
 echo '---' . PHP_EOL;
-echo "Appel notifyInscription(12345678, 'Test')..." . PHP_EOL;
+echo "Appel notifyInscription(12345678, 'Test', 'Jean Dupont')..." . PHP_EOL;
 
 $svc = new WhatsappService();
-$suffix = $svc->notifyInscription('12345678', 'Test');
+$suffix = $svc->notifyInscription('12345678', 'Test', 'Jean Dupont');
 echo "Suffixe flash (comme apres inscription) : " . ($suffix === '' ? '(vide)' : $suffix) . PHP_EOL;

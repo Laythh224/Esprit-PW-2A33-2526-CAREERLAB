@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/Env/load_dotenv.php';
+// e-learning/.env en priorite, puis racine careerlabb/.env pour les variables encore vides.
 careerlabb_load_dotenv_file(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . '.env');
+careerlabb_load_dotenv_file(dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . '.env');
 
 /**
  * Notification WhatsApp apres inscription (CallMeBot, Twilio ou webhook).
@@ -85,9 +87,9 @@ $config = [
          */
         'content_sid' => '',
         /**
-         * Indices du modele (1, 2, ...) => source : formation | tel | message | texte fixe.
+         * Indices du modele (1, 2, ...) => source : formation | tel | message | participant | texte fixe.
          * Ex. memes variables que le curl : '1' => 'formation', '2' => 'message'
-         * ou '1' => '12/1' pour une valeur fixe.
+         * ou '1' => 'participant', '2' => 'formation' pour inclure le nom affiche.
          */
         'content_variable_map' => [
             // '1' => 'formation',
